@@ -13,15 +13,26 @@ export interface DashboardDeck {
 
 export function DeckList({ decks }: { decks: DashboardDeck[] }) {
   const [items, setItems] = useState(decks);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   async function remove(deck: DashboardDeck) {
-    const response = await fetch(`/api/decks/${deck.id}`, { method: "DELETE" });
-    if (response.ok) setItems((current) => current.filter((item) => item.id !== deck.id));
+    setDeleteError(null);
+    try {
+      const response = await fetch(`/api/decks/${deck.id}`, { method: "DELETE" });
+      if (response.ok) {
+        setItems((current) => current.filter((item) => item.id !== deck.id));
+      } else {
+        setDeleteError(`Failed to delete "${deck.title}" — please try again.`);
+      }
+    } catch {
+      setDeleteError(`Failed to delete "${deck.title}" — please try again.`);
+    }
   }
 
   return (
     <main>
       <h1>Your decks</h1>
+      {deleteError && <p role="alert">{deleteError}</p>}
       <ul>
         {items.map((deck) => (
           <li key={deck.id}>
