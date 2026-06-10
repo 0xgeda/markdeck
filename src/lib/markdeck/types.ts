@@ -1,4 +1,5 @@
-export type SlideType = "cover" | "content" | "quote" | "two-col" | "stat" | "image-full";
+export const SLIDE_TYPES = ["cover", "content", "quote", "two-col", "stat", "image-full"] as const;
+export type SlideType = (typeof SLIDE_TYPES)[number];
 export type ThemeName = "editorial" | "bold" | "modern" | "minimal";
 
 export interface DeckImage {

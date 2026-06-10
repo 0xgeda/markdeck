@@ -1,6 +1,5 @@
+import { SLIDE_TYPES } from "./types";
 import type { LayoutSelection, ParsedSlide, SlideType } from "./types";
-
-const layouts: SlideType[] = ["cover", "content", "quote", "two-col", "stat", "image-full"];
 
 export const DEEPSEEK_LAYOUT_SYSTEM_PROMPT = `You are Markdeck's layout selector.
 Return JSON only, with no markdown fences and no prose.
@@ -15,7 +14,7 @@ interface DeepSeekResponse {
 }
 
 function isSlideType(value: string): value is SlideType {
-  return layouts.includes(value as SlideType);
+  return (SLIDE_TYPES as readonly string[]).includes(value);
 }
 
 export async function selectLayouts(slides: ParsedSlide[], apiKey: string): Promise<LayoutSelection[]> {
@@ -53,7 +52,13 @@ export async function selectLayouts(slides: ParsedSlide[], apiKey: string): Prom
   const content = json.choices?.[0]?.message?.content;
   if (!content) throw new Error("DeepSeek layout selection returned an empty response");
 
-  const parsed = JSON.parse(content) as { layouts?: Array<{ slideId?: string; layout?: string }> };
+  let parsed: { layouts?: Array<{ slideId?: string; layout?: string }> };
+  try {
+    parsed = JSON.parse(content) as typeof parsed;
+  } catch {
+    throw new Error("DeepSeek layout selection returned non-JSON content");
+  }
+
   return slides.map((slide) => {
     const selected = parsed.layouts?.find((item) => item.slideId === slide.id)?.layout;
     return { slideId: slide.id, layout: selected && isSlideType(selected) ? selected : slide.type };
