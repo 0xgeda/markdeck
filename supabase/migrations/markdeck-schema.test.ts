@@ -1,8 +1,9 @@
 import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 describe("Markdeck schema migration", () => {
-  const sql = readFileSync("supabase/migrations/202606100001_markdeck_schema.sql", "utf8");
+  const sql = readFileSync(join(__dirname, "202606100001_markdeck_schema.sql"), "utf8");
 
   it("creates required tables and RLS policies", () => {
     expect(sql).toContain("create table if not exists public.users");

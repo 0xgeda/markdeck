@@ -40,14 +40,23 @@ create policy "users can insert own profile"
 on public.users for insert
 with check (auth.uid() = id);
 
+-- All created decks are publicly shareable via /d/:slug — SELECT open to all.
+create policy "public can read hosted decks"
+on public.decks for select
+using (true);
+
 create policy "users can manage own decks"
-on public.decks for all
+on public.decks for insert
+with check (auth.uid() = user_id);
+
+create policy "users can update own decks"
+on public.decks for update
 using (auth.uid() = user_id)
 with check (auth.uid() = user_id);
 
-create policy "public can read hosted decks"
-on public.decks for select
-using (slug is not null);
+create policy "users can delete own decks"
+on public.decks for delete
+using (auth.uid() = user_id);
 
 create policy "users can manage own deck assets"
 on public.deck_assets for all

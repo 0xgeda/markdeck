@@ -6,7 +6,7 @@ export interface Database {
       users: {
         Row: { id: string; email: string; created_at: string };
         Insert: { id: string; email: string; created_at?: string };
-        Update: { id?: string; email?: string; created_at?: string };
+        Update: { email?: string; created_at?: string };
       };
       decks: {
         Row: {
