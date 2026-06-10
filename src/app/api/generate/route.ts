@@ -8,6 +8,7 @@ import type { ThemeName } from "@/lib/markdeck/types";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const themes: ThemeName[] = ["editorial", "bold", "modern", "minimal"];
+const MAX_MARKDOWN_LENGTH = 50_000;
 
 function titleFromMarkdown(markdown: string): string {
   return markdown.match(/^#\s+(.+)$/m)?.[1]?.trim() ?? "Untitled proposal";
@@ -15,7 +16,13 @@ function titleFromMarkdown(markdown: string): string {
 
 export async function POST(request: Request) {
   const body = (await request.json()) as { markdown?: string; theme?: ThemeName };
-  if (!body.markdown || !body.theme || !themes.includes(body.theme)) {
+  if (
+    typeof body.markdown !== "string" ||
+    body.markdown.length === 0 ||
+    body.markdown.length > MAX_MARKDOWN_LENGTH ||
+    !body.theme ||
+    !themes.includes(body.theme)
+  ) {
     return NextResponse.json({ error: "markdown and a valid theme are required" }, { status: 400 });
   }
 
@@ -23,19 +30,23 @@ export async function POST(request: Request) {
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) return NextResponse.json({ error: "authentication required" }, { status: 401 });
 
-  await supabase.from("users").upsert({ id: userData.user.id, email: userData.user.email ?? "" });
+  const { error: upsertError } = await supabase
+    .from("users")
+    .upsert({ id: userData.user.id, email: userData.user.email ?? "" });
+  if (upsertError) return NextResponse.json({ error: "failed to sync user profile" }, { status: 500 });
 
+  const title = titleFromMarkdown(body.markdown);
   const slides = parseMarkdownToSlides(body.markdown);
   const layouts = await selectLayouts(slides, env.DEEPSEEK_API_KEY);
   const html = renderDeckHtml(slides, layouts, body.theme);
-  const slug = `${titleFromMarkdown(body.markdown).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}-${nanoid(6)}`;
+  const slug = `${title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}-${nanoid(6)}`;
 
   const { data, error } = await supabase
     .from("decks")
     .insert({
       user_id: userData.user.id,
       slug,
-      title: titleFromMarkdown(body.markdown),
+      title,
       theme: body.theme,
       html_snapshot: html,
       source_md: body.markdown,
