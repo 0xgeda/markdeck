@@ -6,7 +6,8 @@ function escapeHtml(value: string): string {
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+    .replaceAll("'", "&#039;")
+    .replaceAll("`", "&#096;");
 }
 
 function renderBody(slide: ParsedSlide): string {
@@ -14,7 +15,7 @@ function renderBody(slide: ParsedSlide): string {
 }
 
 function editorialContent(slide: ParsedSlide): string {
-  return `<section class="slide editorial-content" data-slide-id="${slide.id}" data-layout="content">
+  return `<section class="slide editorial-content" data-slide-id="${escapeHtml(slide.id)}" data-layout="content">
     <div class="kicker">Markdeck Proposal</div>
     <h1 data-editable="text" data-field="title">${escapeHtml(slide.title)}</h1>
     <div class="body">${renderBody(slide)}</div>
@@ -24,7 +25,7 @@ function editorialContent(slide: ParsedSlide): string {
 function renderSlide(slide: ParsedSlide, layout: SlideType, theme: ThemeName): string {
   if (theme === "editorial" && layout === "content") return editorialContent(slide);
   const images = slide.images.map((image) => `<img data-editable="image" src="${escapeHtml(image.src)}" alt="${escapeHtml(image.alt)}" />`).join("");
-  return `<section class="slide ${theme}-${layout}" data-slide-id="${slide.id}" data-layout="${layout}">
+  return `<section class="slide ${escapeHtml(theme)}-${escapeHtml(layout)}" data-slide-id="${escapeHtml(slide.id)}" data-layout="${escapeHtml(layout)}">
     <h1 data-editable="text" data-field="title">${escapeHtml(slide.title)}</h1>
     <div class="body">${renderBody(slide)}</div>
     <div class="images">${images}</div>
