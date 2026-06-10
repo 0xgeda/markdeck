@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 export function PreviewEditor({ deckId, initialHtml }: { deckId: string; initialHtml: string }) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [editMode, setEditMode] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   function setEditable(next: boolean) {
     setEditMode(next);
@@ -13,12 +14,18 @@ export function PreviewEditor({ deckId, initialHtml }: { deckId: string; initial
   }
 
   async function save() {
+    setSaveError(null);
     const html = iframeRef.current?.contentDocument?.documentElement?.outerHTML ?? "";
-    await fetch(`/api/decks/${deckId}/save`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ html }),
-    });
+    try {
+      const response = await fetch(`/api/decks/${deckId}/save`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ html }),
+      });
+      if (!response.ok) throw new Error("Save failed — please try again.");
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Save failed — please try again.");
+    }
   }
 
   function exportHtml() {
@@ -39,9 +46,14 @@ export function PreviewEditor({ deckId, initialHtml }: { deckId: string; initial
     if (!file || !image) return;
     const formData = new FormData();
     formData.append("file", file);
-    const response = await fetch(`/api/decks/${deckId}/assets`, { method: "POST", body: formData });
-    const result = (await response.json()) as { storage_url: string };
-    image.src = result.storage_url;
+    try {
+      const response = await fetch(`/api/decks/${deckId}/assets`, { method: "POST", body: formData });
+      if (!response.ok) throw new Error("Upload failed");
+      const result = (await response.json()) as { storage_url: string };
+      image.src = result.storage_url;
+    } catch {
+      setSaveError("Image upload failed — please try again.");
+    }
   }
 
   return (
@@ -54,6 +66,7 @@ export function PreviewEditor({ deckId, initialHtml }: { deckId: string; initial
         <button type="button" onClick={save}>Save</button>
         <button type="button" onClick={exportHtml}>Export HTML</button>
       </div>
+      {saveError && <p role="alert">{saveError}</p>}
       <iframe
         ref={iframeRef}
         title="Deck preview"

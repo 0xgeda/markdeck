@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
+const MAX_HTML_LENGTH = 512_000;
+
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const { html } = (await request.json()) as { html?: string };
-  if (!html) return NextResponse.json({ error: "html is required" }, { status: 400 });
+  if (!html || typeof html !== "string" || html.length > MAX_HTML_LENGTH) {
+    return NextResponse.json({ error: "html is required and must be under 512 KB" }, { status: 400 });
+  }
 
   const supabase = await createSupabaseServerClient();
   const { data: userData } = await supabase.auth.getUser();
