@@ -10,18 +10,29 @@ export function UploadForm({ navigate }: { navigate?: (path: string) => void }) 
   const [theme, setTheme] = useState<ThemeName>("editorial");
   const [images, setImages] = useState<File[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function submit() {
     setIsGenerating(true);
-    const response = await fetch("/api/generate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ markdown, theme }),
-    });
-    setIsGenerating(false);
-    if (!response.ok) throw new Error("generation failed");
-    const result = (await response.json()) as { slug: string };
-    (navigate ?? router.push)(`/preview/${result.slug}`);
+    setError(null);
+    try {
+      const response = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ markdown, theme }),
+      });
+      if (!response.ok) throw new Error("Generation failed — please try again.");
+      const result = (await response.json()) as { slug: string };
+      if (navigate) {
+        navigate(`/preview/${result.slug}`);
+      } else {
+        router.push(`/preview/${result.slug}`);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Generation failed — please try again.");
+    } finally {
+      setIsGenerating(false);
+    }
   }
 
   return (
@@ -55,6 +66,7 @@ export function UploadForm({ navigate }: { navigate?: (path: string) => void }) 
           <option value="minimal">minimal</option>
         </select>
       </label>
+      {error && <p role="alert">{error}</p>}
       <button type="button" onClick={submit} disabled={isGenerating || markdown.trim().length === 0}>
         {isGenerating ? "Generating" : "Generate proposal"}
       </button>
