@@ -1,10 +1,21 @@
 "use client";
+import Link from "next/link";
 import { useRef, useState } from "react";
+import { Images } from "lucide-react";
 
-export function PreviewEditor({ deckId, initialHtml }: { deckId: string; initialHtml: string }) {
+interface PreviewEditorProps {
+  deckId: string;
+  slug: string;
+  initialHtml: string;
+}
+
+export function PreviewEditor({ deckId, slug, initialHtml }: PreviewEditorProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [editMode, setEditMode] = useState(false);
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [showImages, setShowImages] = useState(false);
+  const [imageList, setImageList] = useState<{ src: string; index: number }[]>([]);
 
   function setEditable(next: boolean) {
     setEditMode(next);
@@ -13,7 +24,30 @@ export function PreviewEditor({ deckId, initialHtml }: { deckId: string; initial
       .forEach((node) => { node.contentEditable = String(next); });
   }
 
+  function collectImages() {
+    const imgs = iframeRef.current?.contentDocument?.querySelectorAll<HTMLImageElement>("img") ?? [];
+    setImageList(Array.from(imgs).map((img, i) => ({ src: img.src, index: i })));
+  }
+
+  function toggleImages() {
+    if (!showImages) collectImages();
+    setShowImages((v) => !v);
+  }
+
+  async function replaceImage(index: number, file: File) {
+    const formData = new FormData();
+    formData.append("file", file);
+    const response = await fetch(`/api/decks/${deckId}/assets`, { method: "POST", body: formData });
+    if (!response.ok) return;
+    const { storage_url } = (await response.json()) as { storage_url: string };
+    const imgs = iframeRef.current?.contentDocument?.querySelectorAll<HTMLImageElement>("img") ?? [];
+    const target = Array.from(imgs)[index];
+    if (target) target.src = storage_url;
+    collectImages();
+  }
+
   async function save() {
+    setSaveState("saving");
     setSaveError(null);
     const html = iframeRef.current?.contentDocument?.documentElement?.outerHTML ?? "";
     try {
@@ -23,8 +57,11 @@ export function PreviewEditor({ deckId, initialHtml }: { deckId: string; initial
         body: JSON.stringify({ html }),
       });
       if (!response.ok) throw new Error("Save failed — please try again.");
+      setSaveState("saved");
+      setTimeout(() => setSaveState("idle"), 2000);
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : "Save failed — please try again.");
+      setSaveState("idle");
     }
   }
 
@@ -33,49 +70,124 @@ export function PreviewEditor({ deckId, initialHtml }: { deckId: string; initial
     const url = URL.createObjectURL(new Blob([html], { type: "text/html" }));
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = "markdeck.html";
+    anchor.download = `${slug}.html`;
     anchor.click();
     URL.revokeObjectURL(url);
   }
 
-  async function onDrop(event: React.DragEvent<HTMLIFrameElement>) {
-    event.preventDefault();
-    const file = event.dataTransfer.files[0];
-    const doc = iframeRef.current?.contentDocument;
-    const image = doc?.querySelector<HTMLImageElement>("img:hover") ?? null;
-    if (!file || !image) return;
-    const formData = new FormData();
-    formData.append("file", file);
-    try {
-      const response = await fetch(`/api/decks/${deckId}/assets`, { method: "POST", body: formData });
-      if (!response.ok) throw new Error("Upload failed");
-      const result = (await response.json()) as { storage_url: string };
-      image.src = result.storage_url;
-    } catch {
-      setSaveError("Image upload failed — please try again.");
-    }
+  const shareUrl = `markdeck.pro/d/${slug}`;
+
+  async function copyLink() {
+    await navigator.clipboard.writeText(`https://${shareUrl}`);
   }
 
   return (
-    <section>
-      <div className="preview-toolbar">
-        <label>
-          Edit mode
-          <input role="switch" aria-label="Edit mode" type="checkbox" checked={editMode} onChange={(e) => setEditable(e.target.checked)} />
+    <div className="flex flex-col h-screen">
+      {/* Toolbar */}
+      <header className="h-12 flex items-center gap-3 px-4 bg-zinc-950 border-b border-zinc-800 flex-shrink-0">
+        <span className="font-display italic text-sm font-semibold text-gold">Markdeck</span>
+        <Link href="/dashboard" aria-label="My Decks" className="text-xs text-zinc-500 hover:text-zinc-300 transition">
+          ← My Decks
+        </Link>
+        <div className="w-px h-4 bg-zinc-800" />
+        <div className="flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 rounded-md px-2.5 py-1">
+          <span className="text-xs font-mono text-zinc-500">{shareUrl}</span>
+          <button onClick={copyLink} className="text-[10px] text-gold hover:text-gold/80 transition ml-1">
+            Copy
+          </button>
+        </div>
+        <div className="flex-1" />
+        <label className="flex items-center gap-2 cursor-pointer select-none">
+          <span className="text-xs text-zinc-400">Edit</span>
+          <button
+            role="checkbox"
+            aria-label="Edit mode"
+            aria-checked={editMode}
+            onClick={() => setEditable(!editMode)}
+            className={`relative w-8 rounded-full transition-colors ${editMode ? "bg-gold" : "bg-zinc-700"}`}
+            style={{ height: "18px" }}
+          >
+            <span className={`absolute top-0.5 w-3.5 h-3.5 rounded-full bg-white transition-all ${editMode ? "left-4" : "left-0.5"}`} />
+          </button>
         </label>
-        <button type="button" onClick={save}>Save</button>
-        <button type="button" onClick={exportHtml}>Export HTML</button>
+        <div className="w-px h-4 bg-zinc-800" />
+        <button
+          onClick={save}
+          disabled={saveState === "saving"}
+          aria-label={saveState === "saved" ? "Saved" : "Save"}
+          className="text-xs px-3 py-1.5 rounded-md border border-zinc-700 text-zinc-300 hover:text-white hover:border-zinc-500 transition disabled:opacity-50"
+        >
+          {saveState === "saved" ? "Saved ✓" : "Save"}
+        </button>
+        <button
+          onClick={exportHtml}
+          aria-label="Export"
+          className="text-xs px-3 py-1.5 rounded-md border border-zinc-700 text-zinc-300 hover:text-white hover:border-zinc-500 transition"
+        >
+          Export
+        </button>
+        <button
+          onClick={toggleImages}
+          aria-label="Images"
+          className={`text-xs px-3 py-1.5 rounded-md border transition flex items-center gap-1.5 ${
+            showImages ? "border-gold text-gold" : "border-zinc-700 text-zinc-300 hover:text-white hover:border-zinc-500"
+          }`}
+        >
+          <Images className="h-3.5 w-3.5" />
+          Images
+        </button>
+      </header>
+
+      {saveError && (
+        <p role="alert" className="text-xs text-red-400 bg-red-950/30 border-b border-red-900/50 px-4 py-2">
+          {saveError}
+        </p>
+      )}
+
+      {/* Body */}
+      <div className="flex flex-1 overflow-hidden">
+        <iframe
+          ref={iframeRef}
+          title="Deck preview"
+          srcDoc={initialHtml}
+          sandbox="allow-same-origin allow-popups"
+          className="flex-1 border-0"
+        />
+
+        {/* Images panel */}
+        {showImages && (
+          <aside
+            aria-label="images panel"
+            className="w-64 flex-shrink-0 bg-zinc-900 border-l border-zinc-800 flex flex-col"
+          >
+            <div className="px-4 py-3 border-b border-zinc-800 text-xs font-semibold text-zinc-300">
+              Images
+            </div>
+            <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-3">
+              {imageList.length === 0 && (
+                <p className="text-xs text-zinc-600 text-center mt-4">No images in this deck.</p>
+              )}
+              {imageList.map((img) => (
+                <div key={img.index} className="border border-zinc-800 rounded-lg overflow-hidden">
+                  <img src={img.src} alt={`Image ${img.index + 1}`} className="w-full h-20 object-cover" />
+                  <label className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs text-zinc-400 hover:text-gold cursor-pointer transition border-t border-zinc-800 bg-zinc-950">
+                    Replace
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) replaceImage(img.index, file);
+                      }}
+                    />
+                  </label>
+                </div>
+              ))}
+            </div>
+          </aside>
+        )}
       </div>
-      {saveError && <p role="alert">{saveError}</p>}
-      <iframe
-        ref={iframeRef}
-        title="Deck preview"
-        srcDoc={initialHtml}
-        sandbox="allow-same-origin allow-popups"
-        style={{ border: 0, display: "block", width: "100%", height: "calc(100vh - 48px)" }}
-        onDragOver={(e) => e.preventDefault()}
-        onDrop={onDrop}
-      />
-    </section>
+    </div>
   );
 }

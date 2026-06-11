@@ -1,26 +1,24 @@
 import { describe, expect, it, vi } from "vitest";
 import { POST } from "./route";
+import { devStore } from "@/lib/dev-store";
 
 vi.mock("@/lib/env", () => ({ env: { DEEPSEEK_API_KEY: "deepseek-key", NEXT_PUBLIC_SITE_URL: "https://markdeck.pro" } }));
 vi.mock("@/lib/markdeck/layout-selector", () => ({ selectLayouts: vi.fn(async () => [{ slideId: "slide-1", layout: "cover" }]) }));
-vi.mock("@/lib/supabase/server", () => ({
-  createSupabaseServerClient: async () => ({
-    auth: { getUser: async () => ({ data: { user: { id: "user-1", email: "user@example.com" } } }) },
-    from: () => ({ upsert: async () => ({ error: null }), insert: () => ({ select: () => ({ single: async () => ({ data: { id: "deck-1", slug: "proposal" }, error: null }) }) }) }),
-  }),
-}));
 
 describe("POST /api/generate", () => {
-  it("generates, stores, and returns a deck id and slug", async () => {
+  it("generates, stores in devStore, and returns a deck id and slug", async () => {
     const request = new Request("https://markdeck.pro/api/generate", {
       method: "POST",
       body: JSON.stringify({ markdown: "# Proposal", theme: "editorial" }),
     });
 
     const response = await POST(request);
-    const json = await response.json();
+    const json = await response.json() as { deck_id: string; slug: string; url: string };
 
     expect(response.status).toBe(200);
-    expect(json).toEqual({ deck_id: "deck-1", slug: "proposal", url: "https://markdeck.pro/d/proposal" });
+    expect(typeof json.deck_id).toBe("string");
+    expect(json.slug).toMatch(/^proposal-/);
+    expect(json.url).toBe(`https://markdeck.pro/d/${json.slug}`);
+    expect(devStore.has(json.slug)).toBe(true);
   });
 });

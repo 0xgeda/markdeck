@@ -9,7 +9,7 @@ describe("parseEnv", () => {
       SUPABASE_SERVICE_ROLE_KEY: "service-role-key",
       DEEPSEEK_API_KEY: "deepseek-key",
       NEXT_PUBLIC_SITE_URL: "https://markdeck.pro",
-    });
+    } as unknown as NodeJS.ProcessEnv);
 
     expect(result.NEXT_PUBLIC_SUPABASE_URL).toBe("https://example.supabase.co");
     expect(result.NEXT_PUBLIC_SUPABASE_ANON_KEY).toBe("anon-key");
@@ -24,19 +24,19 @@ describe("parseEnv", () => {
       NEXT_PUBLIC_SUPABASE_ANON_KEY: "anon-key",
       SUPABASE_SERVICE_ROLE_KEY: "service-role-key",
       DEEPSEEK_API_KEY: "deepseek-key",
-    });
+    } as unknown as NodeJS.ProcessEnv);
 
     expect(result.NEXT_PUBLIC_SITE_URL).toBe("https://markdeck.pro");
   });
 
-  it("throws ZodError when a required variable is missing", () => {
+  it("throws ZodError when DEEPSEEK_API_KEY is missing", () => {
     expect(() =>
       parseEnv({
         NEXT_PUBLIC_SUPABASE_URL: "https://example.supabase.co",
         NEXT_PUBLIC_SUPABASE_ANON_KEY: "anon-key",
-        // SUPABASE_SERVICE_ROLE_KEY missing
-        DEEPSEEK_API_KEY: "deepseek-key",
-      })
+        SUPABASE_SERVICE_ROLE_KEY: "service-role-key",
+        // DEEPSEEK_API_KEY missing
+      } as unknown as NodeJS.ProcessEnv)
     ).toThrow();
   });
 
@@ -47,7 +47,7 @@ describe("parseEnv", () => {
         NEXT_PUBLIC_SUPABASE_ANON_KEY: "anon-key",
         SUPABASE_SERVICE_ROLE_KEY: "service-role-key",
         DEEPSEEK_API_KEY: "deepseek-key",
-      })
+      } as unknown as NodeJS.ProcessEnv)
     ).toThrow();
   });
 });

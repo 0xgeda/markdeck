@@ -9,7 +9,7 @@ describe("DeckList", () => {
     render(<DeckList decks={[{ id: "deck-1", slug: "plan", title: "Plan", theme: "editorial", created_at: "2026-06-10T00:00:00Z" }]} />);
 
     expect(screen.getByText("Plan")).toBeInTheDocument();
-    expect(screen.getByText("editorial")).toBeInTheDocument();
+    expect(screen.queryByText("editorial")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Delete Plan" }));
     await waitFor(() => expect(fetchMock).toHaveBeenCalledWith("/api/decks/deck-1", { method: "DELETE" }));
   });

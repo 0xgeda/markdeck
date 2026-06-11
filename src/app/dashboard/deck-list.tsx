@@ -1,6 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { DeckCard } from "@/components/dashboard/deck-card";
+import { DecksEmptyState } from "@/components/dashboard/decks-empty-state";
 import type { ThemeName } from "@/lib/markdeck/types";
 
 export interface DashboardDeck {
@@ -15,34 +19,39 @@ export function DeckList({ decks }: { decks: DashboardDeck[] }) {
   const [items, setItems] = useState(decks);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  async function remove(deck: DashboardDeck) {
+  async function remove(id: string) {
     setDeleteError(null);
-    try {
-      const response = await fetch(`/api/decks/${deck.id}`, { method: "DELETE" });
-      if (response.ok) {
-        setItems((current) => current.filter((item) => item.id !== deck.id));
-      } else {
-        setDeleteError(`Failed to delete "${deck.title}" — please try again.`);
-      }
-    } catch {
-      setDeleteError(`Failed to delete "${deck.title}" — please try again.`);
+    const previous = items;
+    setItems((current) => current.filter((deck) => deck.id !== id));
+    const response = await fetch(`/api/decks/${id}`, { method: "DELETE" });
+    if (!response.ok) {
+      setItems(previous);
+      setDeleteError("Unable to delete deck. Please try again.");
     }
   }
 
   return (
-    <main>
-      <h1>Your decks</h1>
-      {deleteError && <p role="alert">{deleteError}</p>}
-      <ul>
-        {items.map((deck) => (
-          <li key={deck.id}>
-            <a href={`/preview/${deck.slug}`}>{deck.title}</a>
-            <span>{deck.theme}</span>
-            <time dateTime={deck.created_at}>{new Date(deck.created_at).toLocaleDateString("en-US")}</time>
-            <button type="button" aria-label={`Delete ${deck.title}`} onClick={() => remove(deck)}>Delete</button>
-          </li>
-        ))}
-      </ul>
-    </main>
+    <div className="p-8">
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-2xl font-bold text-white">Your decks</h1>
+        <Link href="/upload">
+          <Button size="sm" variant="secondary">New deck</Button>
+        </Link>
+      </div>
+      {deleteError && (
+        <p className="text-sm text-red-400 mb-6 bg-red-950/30 border border-red-900/50 rounded px-4 py-2" role="alert">
+          {deleteError}
+        </p>
+      )}
+      {items.length === 0 ? (
+        <DecksEmptyState />
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {items.map((deck) => (
+            <DeckCard key={deck.id} deck={deck} onDelete={remove} />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }

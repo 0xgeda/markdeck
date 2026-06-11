@@ -1,9 +1,9 @@
 import { z } from "zod";
 
 const EnvSchema = z.object({
-  NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
-  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
+  NEXT_PUBLIC_SUPABASE_URL: z.string().url().optional().default("https://placeholder.supabase.co"),
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().optional().default(""),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().optional().default(""),
   DEEPSEEK_API_KEY: z.string().min(1),
   NEXT_PUBLIC_SITE_URL: z.string().url().default("https://markdeck.pro"),
 });
@@ -20,4 +20,12 @@ export function parseEnv(raw: NodeJS.ProcessEnv = process.env): Env {
   });
 }
 
-export const env = parseEnv();
+let _env: Env | undefined;
+
+// Lazy proxy: parseEnv() is deferred until first property access (request time, not build time).
+export const env = new Proxy({} as Env, {
+  get(_target, key: string) {
+    if (!_env) _env = parseEnv();
+    return _env[key as keyof Env];
+  },
+});
