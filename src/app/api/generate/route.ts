@@ -1,7 +1,6 @@
 import { nanoid } from "nanoid";
 import { NextResponse } from "next/server";
 import { env } from "@/lib/env";
-import { devStore } from "@/lib/dev-store";
 import { selectLayouts } from "@/lib/markdeck/layout-selector";
 import { parseMarkdownToSlides } from "@/lib/markdeck/markdown-parser";
 import { renderDeckHtml } from "@/lib/markdeck/theme-renderer";
@@ -30,10 +29,7 @@ export async function POST(request: Request) {
   const slides = parseMarkdownToSlides(body.markdown);
   const layouts = await selectLayouts(slides, env.DEEPSEEK_API_KEY);
   const html = renderDeckHtml(slides, layouts, body.theme);
-  const id = nanoid();
-  const slug = `${title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}-${nanoid(6)}`;
+  const slug = `${title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "deck"}-${nanoid(6)}`;
 
-  devStore.set(slug, { id, html, title });
-
-  return NextResponse.json({ deck_id: id, slug, url: `${env.NEXT_PUBLIC_SITE_URL}/d/${slug}` });
+  return NextResponse.json({ slug, html, url: `${env.NEXT_PUBLIC_SITE_URL}/d/${slug}` });
 }

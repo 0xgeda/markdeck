@@ -1,17 +1,21 @@
 "use client";
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { Images } from "lucide-react";
 
 interface PreviewEditorProps {
-  deckId: string;
   slug: string;
-  initialHtml: string;
 }
 
-export function PreviewEditor({ deckId, slug, initialHtml }: PreviewEditorProps) {
+export function PreviewEditor({ slug }: PreviewEditorProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [html, setHtml] = useState("");
   const [editMode, setEditMode] = useState(false);
+
+  useEffect(() => {
+    const stored = sessionStorage.getItem(`deck:${slug}`);
+    if (stored) setHtml(stored);
+  }, [slug]);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
   const [saveError, setSaveError] = useState<string | null>(null);
   const [showImages, setShowImages] = useState(false);
@@ -35,32 +39,27 @@ export function PreviewEditor({ deckId, slug, initialHtml }: PreviewEditorProps)
   }
 
   async function replaceImage(index: number, file: File) {
-    const formData = new FormData();
-    formData.append("file", file);
-    const response = await fetch(`/api/decks/${deckId}/assets`, { method: "POST", body: formData });
-    if (!response.ok) return;
-    const { storage_url } = (await response.json()) as { storage_url: string };
-    const imgs = iframeRef.current?.contentDocument?.querySelectorAll<HTMLImageElement>("img") ?? [];
-    const target = Array.from(imgs)[index];
-    if (target) target.src = storage_url;
-    collectImages();
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const imgs = iframeRef.current?.contentDocument?.querySelectorAll<HTMLImageElement>("img") ?? [];
+      const target = Array.from(imgs)[index];
+      if (target && e.target?.result) target.src = e.target.result as string;
+      collectImages();
+    };
+    reader.readAsDataURL(file);
   }
 
   async function save() {
     setSaveState("saving");
     setSaveError(null);
-    const html = iframeRef.current?.contentDocument?.documentElement?.outerHTML ?? "";
     try {
-      const response = await fetch(`/api/decks/${deckId}/save`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ html }),
-      });
-      if (!response.ok) throw new Error("Save failed — please try again.");
+      const current = iframeRef.current?.contentDocument?.documentElement?.outerHTML ?? "";
+      sessionStorage.setItem(`deck:${slug}`, current);
+      setHtml(current);
       setSaveState("saved");
       setTimeout(() => setSaveState("idle"), 2000);
-    } catch (err) {
-      setSaveError(err instanceof Error ? err.message : "Save failed — please try again.");
+    } catch {
+      setSaveError("Save failed — please try again.");
       setSaveState("idle");
     }
   }
@@ -146,13 +145,19 @@ export function PreviewEditor({ deckId, slug, initialHtml }: PreviewEditorProps)
 
       {/* Body */}
       <div className="flex flex-1 overflow-hidden">
-        <iframe
-          ref={iframeRef}
-          title="Deck preview"
-          srcDoc={initialHtml}
-          sandbox="allow-same-origin allow-popups"
-          className="flex-1 border-0"
-        />
+        {html ? (
+          <iframe
+            ref={iframeRef}
+            title="Deck preview"
+            srcDoc={html}
+            sandbox="allow-same-origin allow-popups"
+            className="flex-1 border-0"
+          />
+        ) : (
+          <div className="flex-1 flex items-center justify-center text-zinc-600 text-sm">
+            Loading deck…
+          </div>
+        )}
 
         {/* Images panel */}
         {showImages && (

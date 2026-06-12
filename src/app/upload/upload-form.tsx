@@ -25,7 +25,8 @@ export function UploadForm({ navigate }: { navigate?: (path: string) => void }) 
         body: JSON.stringify({ markdown, theme }),
       });
       if (!response.ok) throw new Error("Generation failed — please try again.");
-      const result = (await response.json()) as { slug: string };
+      const result = (await response.json()) as { slug: string; html: string };
+      sessionStorage.setItem(`deck:${result.slug}`, result.html);
       if (navigate) {
         navigate(`/preview/${result.slug}`);
       } else {

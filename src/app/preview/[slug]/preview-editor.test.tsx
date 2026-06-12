@@ -1,16 +1,14 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, expect, it, beforeEach } from "vitest";
 import { PreviewEditor } from "./preview-editor";
 
+beforeEach(() => {
+  sessionStorage.setItem("deck:q3-sales", "<html><body><h1 data-editable='text'>Plan</h1></body></html>");
+});
+
 describe("PreviewEditor", () => {
-  it("renders toolbar with share URL, edit toggle, save, export, and share buttons", () => {
-    render(
-      <PreviewEditor
-        deckId="deck-1"
-        slug="q3-sales"
-        initialHtml="<html><body><h1 data-editable='text'>Plan</h1></body></html>"
-      />
-    );
+  it("renders toolbar with share URL, edit toggle, save, export, and images buttons", () => {
+    render(<PreviewEditor slug="q3-sales" />);
     expect(screen.getByRole("link", { name: /My Decks/i })).toBeInTheDocument();
     expect(screen.getByText(/q3-sales/)).toBeInTheDocument();
     expect(screen.getByRole("checkbox", { name: /edit mode/i })).toBeInTheDocument();
@@ -20,14 +18,13 @@ describe("PreviewEditor", () => {
   });
 
   it("shows saved confirmation after save, then reverts", async () => {
-    vi.stubGlobal("fetch", vi.fn(async () => ({ ok: true, json: async () => ({}) })));
-    render(<PreviewEditor deckId="deck-1" slug="q3-sales" initialHtml="<html><body></body></html>" />);
+    render(<PreviewEditor slug="q3-sales" />);
     fireEvent.click(screen.getByRole("button", { name: /^save$/i }));
-    await waitFor(() => expect(screen.getByText(/saved/i)).toBeInTheDocument());
+    expect(await screen.findByText(/saved/i)).toBeInTheDocument();
   });
 
   it("toggles images panel on Images button click", () => {
-    render(<PreviewEditor deckId="deck-1" slug="q3-sales" initialHtml="<html><body></body></html>" />);
+    render(<PreviewEditor slug="q3-sales" />);
     expect(screen.queryByRole("complementary", { name: /images panel/i })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /images/i }));
     expect(screen.getByRole("complementary", { name: /images panel/i })).toBeInTheDocument();
