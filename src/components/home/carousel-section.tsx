@@ -33,7 +33,7 @@ export function CarouselSection() {
           </p>
         </div>
 
-        <div className="flex gap-4 overflow-x-auto pb-2 -mx-6 px-6 scrollbar-hide">
+        <div className="flex justify-center gap-4 overflow-x-auto pb-2 -mx-6 px-6 scrollbar-hide">
           {THEMES.map((t, i) => (
             <div
               key={t.name}
