@@ -1,19 +1,24 @@
 # Markdeck Deployment
 
-Production domain: markdeck.pro
+Production domain: markdeck.pro  
+GitHub: github.com/0xgeda/markdeck (branch: main)
 
-Required Vercel environment variables:
+## Required Vercel Environment Variables
 
-- NEXT_PUBLIC_SUPABASE_URL
-- NEXT_PUBLIC_SUPABASE_ANON_KEY
-- SUPABASE_SERVICE_ROLE_KEY
-- DEEPSEEK_API_KEY
-- NEXT_PUBLIC_SITE_URL=https://markdeck.pro
+| Variable | Value |
+|---|---|
+| `DEEPSEEK_API_KEY` | DeepSeek API key |
+| `NEXT_PUBLIC_SITE_URL` | `https://markdeck.pro` |
 
-Build checks:
+No Supabase variables needed — MVP uses sessionStorage (no database).
 
-1. Run `npm test`.
-2. Run `npm run build`.
-3. Confirm Supabase migrations are applied.
-4. Confirm Supabase Storage bucket `deck-assets` exists and is public.
-5. Confirm markdeck.pro is assigned to the Vercel production deployment.
+## Build Checks
+
+1. `npm test` — all tests pass
+2. `npm run build` — build succeeds locally before pushing
+
+## Deploy Steps
+
+1. Push to `main` branch on GitHub → Vercel auto-deploys
+2. Confirm Production deployment shows **Ready** in Vercel dashboard
+3. Smoke test: open markdeck.pro, paste Markdown, click Generate, verify preview loads
