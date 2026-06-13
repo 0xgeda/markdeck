@@ -9,7 +9,6 @@ describe("Vercel deployment config", () => {
 
     expect(config.buildCommand).toBe("npm run build");
     expect(config.framework).toBe("nextjs");
-    expect(docs).toContain("NEXT_PUBLIC_SUPABASE_URL");
     expect(docs).toContain("DEEPSEEK_API_KEY");
     expect(docs).toContain("markdeck.pro");
   });

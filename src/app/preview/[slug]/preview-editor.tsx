@@ -74,12 +74,6 @@ export function PreviewEditor({ slug }: PreviewEditorProps) {
     URL.revokeObjectURL(url);
   }
 
-  const shareUrl = `markdeck.pro/d/${slug}`;
-
-  async function copyLink() {
-    await navigator.clipboard.writeText(`https://${shareUrl}`);
-  }
-
   return (
     <div className="flex flex-col h-screen">
       {/* Toolbar */}
@@ -88,13 +82,6 @@ export function PreviewEditor({ slug }: PreviewEditorProps) {
         <Link href="/dashboard" aria-label="My Decks" className="text-xs text-zinc-500 hover:text-zinc-300 transition">
           ← My Decks
         </Link>
-        <div className="w-px h-4 bg-zinc-800" />
-        <div className="flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 rounded-md px-2.5 py-1">
-          <span className="text-xs font-mono text-zinc-500">{shareUrl}</span>
-          <button onClick={copyLink} className="text-[10px] text-gold hover:text-gold/80 transition ml-1">
-            Copy
-          </button>
-        </div>
         <div className="flex-1" />
         <label className="flex items-center gap-2 cursor-pointer select-none">
           <span className="text-xs text-zinc-400">Edit</span>
