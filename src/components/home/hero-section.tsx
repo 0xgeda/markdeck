@@ -18,7 +18,7 @@ export function HeroSection() {
         </h1>
 
         <p className="text-lg text-zinc-400 max-w-sm mx-auto mb-10 leading-relaxed">
-          Paste your Markdown. AI picks the layout. Share a link.
+          Paste your Markdown. AI picks the layout. Export as HTML.
         </p>
 
         <div className="flex flex-wrap justify-center gap-4">
