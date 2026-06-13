@@ -86,15 +86,6 @@ export function OptionsPanel({
         </div>
       </fieldset>
 
-      {/* Images upload */}
-      <div className="flex flex-col gap-2">
-        <label className="text-xs text-zinc-500 uppercase tracking-widest">Images</label>
-        <label className="flex items-center justify-center gap-2 px-3 py-2 border border-dashed border-zinc-700 rounded-lg text-xs text-zinc-500 hover:border-zinc-500 hover:text-zinc-400 cursor-pointer transition">
-          + Add images
-          <input type="file" accept="image/*" multiple className="hidden" />
-        </label>
-      </div>
-
       {error && (
         <p className="text-xs text-red-400 bg-red-950/30 border border-red-900/50 rounded px-3 py-2">
           {error}
