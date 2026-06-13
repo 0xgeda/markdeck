@@ -18,11 +18,6 @@ export function SiteHeader() {
           Markdeck
         </Link>
 
-        <nav className="hidden md:flex items-center gap-8">
-          <Link href="#" className="text-sm text-zinc-400 hover:text-white transition-colors">Docs</Link>
-          <Link href="https://github.com/0xgeda/markdeck" target="_blank" className="text-sm text-zinc-400 hover:text-white transition-colors">GitHub</Link>
-        </nav>
-
         <div className="flex items-center gap-3">
           <Link
             href="/auth"
@@ -40,8 +35,6 @@ export function SiteHeader() {
                 <SheetTitle className="font-display italic text-white">Markdeck</SheetTitle>
               </SheetHeader>
               <nav className="mt-8 flex flex-col gap-5">
-                <Link href="#" className="text-sm text-zinc-400 hover:text-white transition-colors">Docs</Link>
-                <Link href="https://github.com/0xgeda/markdeck" target="_blank" className="text-sm text-zinc-400 hover:text-white transition-colors">GitHub</Link>
                 <Link href="/auth" className="text-sm text-gold">Get started →</Link>
               </nav>
             </SheetContent>

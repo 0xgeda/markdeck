@@ -1,5 +1,3 @@
-import Link from "next/link"
-
 export function SiteFooter() {
   return (
     <footer className="bg-zinc-950 border-t border-zinc-900 py-12">
@@ -10,21 +8,12 @@ export function SiteFooter() {
             <p className="text-sm text-zinc-500 mt-1">Turn Markdown into beautiful proposals.</p>
           </div>
 
-          <div className="flex gap-12">
-            <div>
-              <h2 className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-3">Links</h2>
-              <ul className="space-y-2">
-                <li><Link href="#" className="text-sm text-zinc-500 hover:text-white transition-colors">Docs</Link></li>
-                <li><Link href="https://github.com/0xgeda/markdeck" target="_blank" className="text-sm text-zinc-500 hover:text-white transition-colors">GitHub</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h2 className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-3">Built with</h2>
-              <ul className="space-y-2">
-                <li className="text-sm text-zinc-500">DeepSeek</li>
-                <li className="text-sm text-zinc-500">Supabase</li>
-              </ul>
-            </div>
+          <div>
+            <h2 className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-3">Built with</h2>
+            <ul className="space-y-2">
+              <li className="text-sm text-zinc-500">DeepSeek</li>
+              <li className="text-sm text-zinc-500">Supabase</li>
+            </ul>
           </div>
         </div>
 

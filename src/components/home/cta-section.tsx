@@ -20,13 +20,6 @@ export function CtaSection() {
           >
             Start for free →
           </Link>
-          <Link
-            href="https://github.com/0xgeda/markdeck"
-            target="_blank"
-            className="inline-flex items-center px-8 py-3.5 rounded-full border border-zinc-700 text-zinc-400 text-sm hover:border-zinc-500 hover:text-white transition-colors"
-          >
-            View on GitHub
-          </Link>
         </div>
       </div>
     </section>
