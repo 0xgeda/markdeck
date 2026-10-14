@@ -9,8 +9,11 @@ export function findMatches(doc,query){
     return false;
   });return matches;
 }
-export function openFind(editor){
-  const document=window.document;const existing=document.querySelector('.find-panel');if(existing){existing.querySelector('input').focus();return;}
+let activeFind;
+export function openFind(editor,initialQuery){
+  const document=window.document;
+  if(activeFind?.editor===editor){activeFind.focus(initialQuery);return activeFind.close;}
+  activeFind?.close();
   const view=editor.wwEditor.view;
   const readOnly=document.body.classList.contains('display-mode');
   const panel=document.createElement('section');panel.className='find-panel';panel.setAttribute('aria-label','查找替换');
@@ -23,7 +26,9 @@ export function openFind(editor){
   panel.querySelector('[data-prev]').onclick=()=>{const matches=refresh();index=matches.length?(index-1+matches.length)%matches.length:0;refresh(true);};
   function replace(all){if(readOnly)return;const matches=refresh();const chosen=all?matches:matches.slice(index,index+1);let tr=view.state.tr;for(const match of chosen.reverse())tr=tr.insertText(replacement.value,match.from,match.to);if(tr.docChanged)view.dispatch(tr);refresh(true);}
   panel.querySelector('[data-replace]').onclick=()=>replace(false);panel.querySelector('[data-all]').onclick=()=>replace(true);
-  function close(){panel.remove();document.removeEventListener('keydown',key);}
-  function key(event){if(event.key==='Escape'){event.preventDefault();close();}else if(event.key==='Enter'&&panel.contains(event.target)){event.preventDefault();index++;refresh(true);}}
-  panel.querySelector('[data-close]').onclick=close;document.addEventListener('keydown',key);query.focus();refresh();return close;
+  function close(){panel.remove();document.removeEventListener('keydown',key);observer.disconnect();if(activeFind?.close===close)activeFind=null;}
+  function key(event){if(event.isComposing)return;if(event.key==='Escape'){event.preventDefault();close();}else if(event.key==='Enter'&&panel.contains(event.target)){event.preventDefault();const matches=refresh();index=matches.length?(index+(event.shiftKey?-1:1)+matches.length)%matches.length:0;refresh(true);}}
+  panel.querySelector('[data-close]').onclick=close;document.addEventListener('keydown',key);const observer=new MutationObserver(()=>refresh());observer.observe(view.dom,{subtree:true,childList:true,characterData:true});
+  const focus=value=>{if(value!==undefined){query.value=value;index=0;refresh(true);}query.focus();};
+  activeFind={editor,close,focus};focus(initialQuery);refresh();return close;
 }

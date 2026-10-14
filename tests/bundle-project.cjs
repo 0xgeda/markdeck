@@ -10,5 +10,8 @@ const {Workspace}=require('../desktop/workspace.cjs');const {bundleDocument}=req
   const project=new Project();let result=await project.choose(dir);assert.equal(result.results.length,2);result=await project.search('竞争对手');assert.equal(result.results.length,1);assert.equal(result.results[0].line,3);assert.equal(result.results[0].path,'第二份.md');
   assert.equal((await project.search('报告')).results.length,1);await assert.rejects(project.resolve('../data/workspace.json'));assert.equal(await project.resolve('报告.md'),fs.realpathSync(file));
   fs.unlinkSync(file);fs.symlinkSync(path.join(root,'data','workspace.json'),file);await assert.rejects(project.resolve('报告.md'),/移出/);
-  console.log('ZIP preserves reference/HTML images and Markdown, missing assets block export; folder content/name search, line numbers and path protections passed.');
+  const other=path.join(root,'other');fs.mkdirSync(other);fs.writeFileSync(path.join(other,'另一项目.md'),'另一项目');
+const switched=await Promise.allSettled([project.choose(dir),project.choose(other)]);assert.equal(switched[0].status,'rejected');assert.equal(switched[1].status,'fulfilled');assert.equal((await project.search('')).results[0].path,'另一项目.md');
+await assert.rejects(project.choose(path.join(root,'nonexistent')));assert.equal((await project.search('')).results[0].path,'另一项目.md');
+console.log('ZIP preserves reference/HTML images and Markdown, missing assets block export; folder content/name search, line numbers and path protections passed.');
 }finally{fs.rmSync(root,{recursive:true,force:true});}})().catch(error=>{console.error(error);process.exitCode=1;});
