@@ -334,3 +334,14 @@ body.display-mode .topbar .top-actions{visibility:hidden;pointer-events:none}
 body.display-mode .topbar .breadcrumb button{visibility:hidden}
 @media(max-width:760px){.work-modes button{padding:7px 10px!important}.topbar{gap:6px}.topbar .top-actions .saved{display:none}.logic-board>header{padding:14px 12px;flex-wrap:wrap;gap:10px}.logic-board>header>.work-modes{margin:0}.topbar .breadcrumb #crumb{max-width:80px}}
 .show-plan-dialog>[data-rows],.chapter-show>.chapter-show-content{display:block;margin-top:0}
+.section-fold-hidden{display:none!important}
+.section-fold-heading::after{content:' · 已折叠';font-size:12px;font-weight:400;color:var(--secondary)}
+.outline-entry{display:flex;align-items:flex-start}.outline-entry>a{flex:1;min-width:0}.outline-entry>button{padding:7px 2px;color:var(--secondary);font-size:12px;flex-shrink:0}
+.reference-toggle{padding:7px 10px;border:1px solid var(--border);border-radius:6px;color:var(--secondary)}
+.reference-pane{position:fixed;right:0;top:72px;bottom:0;width:36vw;z-index:25;box-sizing:border-box;border-left:1px solid var(--border);background:var(--panel);color:var(--ink);display:flex;flex-direction:column;padding:18px;gap:12px}
+.reference-pane header{display:flex;justify-content:space-between;align-items:center}.reference-pane button{color:var(--ink);font-size:20px}.reference-pane select{padding:8px;background:var(--page);color:var(--ink);border:1px solid var(--border);border-radius:6px}
+.reference-pane article{overflow:auto;flex:1;font-size:15px;line-height:1.8;overflow-wrap:anywhere}.reference-pane img{max-width:100%;height:auto}.reference-pane table{border-collapse:collapse}.reference-pane td,.reference-pane th{border:1px solid var(--border);padding:8px}.reference-pane pre{overflow:auto}.reference-hint{font-size:12px;color:var(--secondary);margin:0}
+body.reference-open main{margin-right:36vw}body.reference-open .document-shell{padding-left:24px;padding-right:24px;gap:20px}body.reference-open .outline{display:none}
+body.display-mode .reference-pane{display:none}body.display-mode.reference-open main{margin-right:0}
+@media(max-width:900px){.reference-pane{width:45vw}body.reference-open main{margin-right:45vw}.reference-pane{top:58px}.reference-pane article{font-size:14px}}
+#outline .outline-entry:has(>a[hidden]),#outline.folded .outline-entry:has(>.depth-H3,.depth-H4,.depth-H5,.depth-H6){display:none}
