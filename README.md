@@ -1,5 +1,13 @@
 # Markdeck
 
+## 仓库与部署
+
+同一 GitHub 仓库分开维护两个产品：`main` 是 Next.js 网页版，`desktop-app` 是当前 Electron 桌面版。两者目前有独立历史，不要把桌面分支直接合并进网页分支。
+
+桌面分支的 `vercel.json` 禁止 `desktop-app` 触发自动部署。Vercel 项目的 Production Branch 应保持为 `main`；项目后台设置需另行确认。
+
+未来重写网页版时再迁移到同一主分支下的 `apps/web/` 与 `apps/desktop/`，同时把 Vercel Root Directory 改为 `apps/web`。这是后续迁移计划，当前目录尚未调整。
+
 Mac 桌面文档工具：直接点击排版后的正文编辑，打开本地 Markdown 后，修改自动写回原文件。没有编辑／预览模式切换。段首输入 `- `、`* `、`+ ` 自动创建无序列表，输入 `1. ` 等数字加点和空格自动创建有序列表；转换后按退格可以恢复原字符。
 
 ## 使用
