@@ -12,8 +12,8 @@ await w.eval('(async()=>{'+bundle.outputFiles[0].text+'})()');
 const click=action=>w.document.querySelector(`[data-action="${action}"]`).click();const beforeFold=fs.readFileSync(file,'utf8');
 w.document.querySelector('[data-fold-section="0"]').click();assert.ok(w.document.querySelector('.section-fold-hidden'));
 await new Promise(resolve=>setTimeout(resolve,300));assert.equal(fs.readFileSync(file,'utf8'),beforeFold);
-w.document.querySelector('[data-fold-section="0"]').click();assert.equal(w.document.querySelector('.section-fold-hidden'),null);
-click('reference');assert.ok(w.document.querySelector('.reference-pane'));w.document.querySelector('[aria-label="关闭参考文档"]').click();assert.equal(w.document.body.classList.contains('reference-open'),false);
+w.document.dispatchEvent(new w.KeyboardEvent('keydown',{key:'f',ctrlKey:true,bubbles:true,cancelable:true}));assert.equal(w.document.querySelector('.section-fold-hidden'),null);w.document.querySelector('.find-panel [data-close]').click();
+click('reference');await new Promise(resolve=>setTimeout(resolve,20));assert.ok(w.document.querySelector('.reference-pane'));w.document.querySelector('[aria-label="关闭参考文档"]').click();assert.equal(w.document.body.classList.contains('reference-open'),false);
 click('find');const panel=w.document.querySelector('.find-panel');const query=panel.querySelector('[data-query]');query.value='查找';query.dispatchEvent(new w.Event('input'));assert.match(panel.querySelector('[data-count]').textContent,/2/);
 for(const [shiftKey,count] of [[false,'2 / 2'],[false,'1 / 2'],[true,'2 / 2']]){query.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Enter',shiftKey,bubbles:true,cancelable:true}));assert.equal(panel.querySelector('[data-count]').textContent,count);}
 query.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Enter',isComposing:true,bubbles:true}));assert.equal(panel.querySelector('[data-count]').textContent,'2 / 2');
@@ -29,7 +29,7 @@ assert.equal(w.document.querySelector('[data-mode="write"]').getAttribute('aria-
 click('presentation');assert.equal(w.document.querySelector('[data-mode="display"]').getAttribute('aria-pressed'),'true');
 w.document.querySelector('[data-arrange]').click();await new Promise(resolve=>setTimeout(resolve,30));
 assert.equal(w.document.body.classList.contains('display-mode'),false);
-assert.ok(w.document.querySelector('.show-plan-dialog'));
+assert.ok(w.document.querySelector('.show-plan-dialog'));w.document.dispatchEvent(new w.KeyboardEvent('keydown',{key:'f',ctrlKey:true,bubbles:true,cancelable:true}));assert.equal(w.document.querySelector('.find-panel'),null);
 assert.ok(w.document.querySelector('.logic-dialog').classList.contains('mode-covered'));
 w.document.querySelector('.show-plan-dialog [data-close]').click();await new Promise(resolve=>setTimeout(resolve,10));
 assert.equal(w.document.querySelector('.logic-dialog').classList.contains('mode-covered'),false);

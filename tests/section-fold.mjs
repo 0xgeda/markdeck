@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {build} from 'esbuild';
+import {JSDOM} from 'jsdom';
+const result=await build({stdin:{contents:`import Editor from '@toast-ui/editor';import {sectionFold} from './src/section-fold.js';window.make=()=>{const editor=new Editor({el:document.querySelector('#editor'),initialEditType:'wysiwyg',initialValue:'# 开头\\n\\n引言\\n\\n## 折叠章节\\n\\n内部内容\\n\\n## 结尾\\n\\n结尾正文',usageStatistics:false});window.editor=editor;window.folds=sectionFold(editor);};`,resolveDir:process.cwd()},bundle:true,write:false,format:'iife'});
+const dom=new JSDOM('<div id="editor"></div>',{runScripts:'dangerously',pretendToBeVisual:true});const w=dom.window;w.Range.prototype.getBoundingClientRect=()=>({left:0,right:0,top:0,bottom:0});w.Range.prototype.getClientRects=()=>[];w.eval(result.outputFiles[0].text);w.make();
+const view=w.editor.wwEditor.view;const source=w.editor.getMarkdown();w.folds.toggle(1);assert.ok(w.folds.isFolded(1));assert.equal(w.editor.getMarkdown(),source);
+view.dispatch(view.state.tr.insertText('新增',1));assert.ok(w.folds.isFolded(1),'edit before chapter must preserve its collapsed state');
+let inside;view.state.doc.descendants((node,pos)=>{if(node.type.name==='paragraph'&&node.textContent==='内部内容')inside=pos+1;});view.dispatch(view.state.tr.insertText('修改',inside));assert.equal(w.folds.isFolded(1),false,'editing hidden content must reveal it');
+w.folds.toggle(1);let start,end;view.state.doc.forEach((node,pos)=>{if(node.type.name==='heading'&&node.textContent==='折叠章节')start=pos;if(node.type.name==='heading'&&node.textContent==='结尾')end=pos;});view.dispatch(view.state.tr.delete(start,end));assert.equal(w.folds.isFolded(1),false,'deleted chapter must not transfer collapse to its successor');
+assert.doesNotMatch(w.editor.getMarkdown(),/section-fold/);w.editor.destroy();w.close();console.log('Fold mapping preserves untouched chapters, reveals edited chapters, handles deletion and leaves Markdown unchanged.');
