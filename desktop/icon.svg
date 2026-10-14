@@ -1,7 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
-  <defs><linearGradient id="green" x2="0" y2="1"><stop stop-color="#3e9665"/><stop offset="1" stop-color="#246444"/></linearGradient></defs>
-  <rect x="80" y="80" width="864" height="864" rx="190" fill="url(#green)"/>
-  <path d="M352 232h240l124 124v388q0 48-48 48H352q-48 0-48-48V280q0-48 48-48Z" fill="#f3faf5"/>
-  <path d="M592 232v96q0 28 28 28h96" fill="#b7d9c2"/>
-  <path d="M390 426h244M390 512h244M512 596v112m-64-64 64 64 64-64" fill="none" stroke="#2b7d53" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024"><defs><linearGradient id="green" x2="0" y2="1"><stop stop-color="#3e9665"/><stop offset="1" stop-color="#246444"/></linearGradient></defs><rect x="80" y="80" width="864" height="864" rx="190" fill="url(#green)"/><path d="M280 744V280H370L512 498L654 280H744V744H652V446L512 650L372 446V744Z" fill="#f3faf5"/><path d="M370 280L512 498V650L372 446Z" fill="#b7d9c2"/><path d="M654 280L652 446L512 650V498Z" fill="#ddefe3"/></svg>
