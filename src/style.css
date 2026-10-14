@@ -375,3 +375,6 @@ body.display-mode.reference-open .topbar{width:100%}
   .display-exit{left:12px;right:12px;bottom:12px;max-width:none;padding:8px;gap:6px}.display-exit select{max-width:100%;min-width:0;flex:1}
   .logic-board>header>div p{max-width:70vw}.logic-board>header>.work-modes{order:3;width:100%;justify-content:center}
 }
+#editor .image-controls{bottom:auto;transform:none;max-height:140px;overflow-y:auto;justify-content:center;box-shadow:0 5px 22px #0002}
+.image-size-label{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);padding:5px 10px;border-radius:6px;background:var(--page);color:var(--accent);border:1px solid var(--border);white-space:nowrap;font:12px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;box-shadow:0 2px 8px #0001}
+.image-size-label[hidden]{display:none}

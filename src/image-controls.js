@@ -96,14 +96,27 @@ export default function imageControls(editor,root){
     view.dispatch(closeHistory(view.state.tr).replaceWith($pos.before(),$pos.after(),nodes));
   }
   const frame=document.createElement('div');frame.className='image-resize-frame';frame.hidden=true;document.body.append(frame);
+  const sizeLabel=document.createElement('output');sizeLabel.className='image-size-label';sizeLabel.hidden=true;frame.append(sizeLabel);
   let drag=null;
   function imageElement(){const node=position===null?null:view.nodeDOM(position);return node?.tagName==='IMG'?node:node?.querySelector('img[src]');}
   function refresh(){
     const grouped=!!selected()?.attrs.htmlAttrs?.['data-columns'];
     for(const button of bar.querySelectorAll('button')){const alignment=['左对齐','居中','右对齐','图左文右','图右文左'].includes(button.textContent);button.disabled=grouped&&alignment;button.title=grouped&&alignment?'恢复单列后可调整对齐和环绕':'';}
     const image=imageElement();
-    if(!image||view.dom.getAttribute('contenteditable')==='false'){frame.hidden=true;return;}
+    if(!image||view.dom.getAttribute('contenteditable')==='false'){frame.hidden=true;bar.hidden=true;return;}
     const rect=image.getBoundingClientRect();frame.hidden=rect.width===0;
+    const toolbarBottom=root.querySelector('.toastui-editor-toolbar')?.getBoundingClientRect().bottom||0;
+    const safeTop=Math.max(12,toolbarBottom+8);
+    const reference=document.querySelector('.reference-pane')?.getBoundingClientRect();
+    const right=reference?.width?Math.min(window.innerWidth-12,reference.left-12):window.innerWidth-12;
+    const visible=rect.width>0&&rect.bottom>safeTop&&rect.top<window.innerHeight-12&&rect.left<right;
+    // jsdom has no geometry; preserve command availability for DOM-only consumers.
+    if(rect.width>0){bar.hidden=!visible;frame.hidden=!visible;}
+    bar.style.maxWidth=Math.max(180,right-12)+'px';
+    const barWidth=bar.offsetWidth||560,barHeight=bar.offsetHeight||48;
+    bar.style.left=Math.max(12,Math.min(rect.left+(rect.width-barWidth)/2,right-barWidth))+'px';
+    const above=rect.top-barHeight-14;
+    bar.style.top=(above>=safeTop?above:Math.min(window.innerHeight-barHeight-12,Math.max(safeTop,rect.bottom+14)))+'px';
     Object.assign(frame.style,{left:`${rect.left}px`,top:`${rect.top}px`,width:`${rect.width}px`,height:`${rect.height}px`});
   }
   for(const corner of ['nw','ne','sw','se']){
@@ -113,6 +126,7 @@ export default function imageControls(editor,root){
       const image=imageElement(),rect=image?.getBoundingClientRect(),parent=image?.parentElement.getBoundingClientRect();
       if(!rect?.width||!parent?.width)return;
       event.preventDefault();event.stopPropagation();
+      sizeLabel.hidden=false;sizeLabel.textContent='拖动预览 · 松手应用';bar.hidden=true;
       drag={x:event.clientX,rect,parentWidth:parent.width,corner,node:selected(),size:null};
     });
     frame.append(handle);
@@ -123,16 +137,17 @@ export default function imageControls(editor,root){
     const columns=Number(drag.node.attrs.htmlAttrs?.['data-columns']);
     const max=columns?100-10*(columns-1):drag.node.attrs.htmlAttrs?.style?.includes('display:inline-block')?48:100;
     const size=Math.max(10,Math.min(max,Math.round((rect.width+(columns?12:0)+(event.clientX-drag.x)*(corner.includes('w')?-1:1))/parentWidth*100)));
+    sizeLabel.textContent=`${size}% · Esc 取消`;
     drag.size=size;const width=parentWidth*size/100-(columns?12:0),height=width*rect.height/rect.width;
     Object.assign(frame.style,{width:`${width}px`,height:`${height}px`,left:`${corner.includes('w')?rect.right-width:rect.left}px`,top:`${corner.includes('n')?rect.bottom-height:rect.top}px`});
   }
   function finish(event){
-    if(!drag)return;const previous=drag;drag=null;
+    if(!drag)return;const previous=drag;drag=null;sizeLabel.hidden=true;
     if(event.type==='pointerup'&&previous.size!==null&&selected()===previous.node)format(null,`${previous.size}%`);
     refresh();
   }
-  function escapeResize(event){if(event.key==='Escape'){drag=null;refresh();}}
-  function reposition(){if(drag)drag=null;refresh();}
+  function escapeResize(event){if(event.key==='Escape'){drag=null;sizeLabel.hidden=true;refresh();}}
+  function reposition(){if(drag)drag=null;sizeLabel.hidden=true;refresh();}
   document.addEventListener('pointermove',move);document.addEventListener('pointerup',finish);document.addEventListener('pointercancel',finish);document.addEventListener('keydown',escapeResize);
   document.addEventListener('scroll',reposition,true);document.addEventListener('load',reposition,true);window.addEventListener('resize',reposition);
   function click(event){
@@ -144,7 +159,7 @@ export default function imageControls(editor,root){
     refresh();
   }
   // Hide when the document changes elsewhere: stale positions must never edit another image.
-  function change(){bar.hidden=true;position=null;drag=null;frame.hidden=true;}
+  function change(){bar.hidden=true;position=null;drag=null;frame.hidden=true;sizeLabel.hidden=true;}
   document.addEventListener('click',click);editor.on('change',change);root.append(bar);
   return ()=>{document.removeEventListener('click',click);editor.off('change',change);bar.remove();frame.remove();document.removeEventListener('pointermove',move);document.removeEventListener('pointerup',finish);document.removeEventListener('pointercancel',finish);document.removeEventListener('keydown',escapeResize);document.removeEventListener('scroll',reposition,true);document.removeEventListener('load',reposition,true);window.removeEventListener('resize',reposition);};
 }
