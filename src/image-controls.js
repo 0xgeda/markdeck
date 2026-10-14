@@ -1,3 +1,4 @@
+import {closeHistory} from 'prosemirror-history';
 import {compressImage} from './compress-image.js';
 const escape=value=>String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 export const imageMarkdownRenderer={image:({node},context)=>{
@@ -79,8 +80,55 @@ export default function imageControls(editor,root){
   return ()=>{document.removeEventListener('click',click);editor.off('change',change);bar.remove();};
 }
 
+const imageCaches=new WeakMap();
+const hydrationRuns=new WeakMap();
 export async function hydrateImages(editor,id){
   if(!window.desktop?.readImage)return;
-  const view=editor.wwEditor.view,candidates=[];view.state.doc.descendants((node,pos)=>{if(node.type.name==='image'&&!/^(?:data:|https?:)/i.test(node.attrs.imageUrl))candidates.push({node,pos});});
-  for(const {node,pos} of candidates){const result=await window.desktop.readImage(id,node.attrs.imageUrl);if(!result.ok)continue;if(view.state.doc.nodeAt(pos)!==node)continue;const image=view.nodeDOM(pos);if(image?.tagName==='IMG')image.src=result.data;else image?.querySelector('img')?.setAttribute('src',result.data);}
+  const view=editor.wwEditor.view;
+  const run=(hydrationRuns.get(editor)||0)+1;hydrationRuns.set(editor,run);
+  if(view.isDestroyed)return;
+  let cache=imageCaches.get(editor);if(!cache){cache=new Map();imageCaches.set(editor,cache);}
+  const candidates=[];view.state.doc.descendants((node,pos)=>{if(node.type.name==='image'&&!/^(?:data:|https?:)/i.test(node.attrs.imageUrl))candidates.push({node,pos});});
+  const sources=new Set(candidates.map(({node})=>node.attrs.imageUrl));
+  for(const key of cache.keys())if(!sources.has(key))cache.delete(key);
+  const missing=[];
+  await Promise.all(candidates.map(async({node,pos})=>{
+    const src=node.attrs.imageUrl;
+    let entry=cache.get(src);
+    // Reuse in-flight reads too. Refresh failures quickly and successful images
+    // periodically so externally replaced attachments can become visible.
+    if(!entry||Date.now()-entry.time>(entry.failed?5000:30000)){
+      entry={time:Date.now()};cache.set(src,entry);
+      entry.promise=window.desktop.readImage(id,src).catch(error=>({ok:false,error:error.message})).then(result=>{entry.failed=!result.ok;return result;});
+    }
+    const result=await entry.promise;
+    if(view.isDestroyed||view.state.doc.nodeAt(pos)!==node)return;
+    const dom=view.nodeDOM(pos),image=dom?.tagName==='IMG'?dom:dom?.querySelector('img');
+    if(result.ok){if(image?.getAttribute('src')!==result.data)image?.setAttribute('src',result.data);image?.removeAttribute('data-image-missing');}
+    else {image?.setAttribute('data-image-missing','true');missing.push({node,src});}
+  }));
+  if(view.isDestroyed||hydrationRuns.get(editor)!==run)return;
+  const root=view.dom.closest('#editor');if(!root)return;
+  root.querySelector('.missing-images')?.remove();
+  if(!missing.length)return;
+  const panel=document.createElement('div');panel.className='missing-images';panel.setAttribute('role','status');
+  const heading=document.createElement('strong');heading.textContent='部分本地图片无法读取';panel.append(heading);
+  const help=document.createElement('p');help.textContent='请把配套图片文件夹放回文档旁，或重新选择图片。重新选择后可撤销。';panel.append(help);
+  for(const {node,src} of missing){
+    const row=document.createElement('div'),label=document.createElement('span'),button=document.createElement('button');
+    label.textContent=src;button.type='button';button.textContent='重新选择';
+    button.onclick=()=>{
+      const input=document.createElement('input');input.type='file';input.accept='image/png,image/jpeg,image/webp,image/gif';
+      input.onchange=()=>{const file=input.files[0];if(!file)return;
+        imageBlobHook(file,newSrc=>{
+          if(view.isDestroyed)return;
+          let position=null;view.state.doc.descendants((candidate,pos)=>{if(candidate===node)position=pos;});
+          if(position===null)return;
+          view.dispatch(closeHistory(view.state.tr).setNodeMarkup(position,null,{...node.attrs,imageUrl:newSrc}));
+          hydrateImages(editor,id).catch(()=>{});
+        },id);
+      };input.click();
+    };row.append(label,button);panel.append(row);
+  }
+  root.append(panel);
 }

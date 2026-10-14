@@ -249,3 +249,10 @@ button:disabled{cursor:default;opacity:.45}button:disabled:hover{background:none
 
 :root:is([data-theme="terminal"],[data-theme="graphite"],[data-theme="midnight"]) .logic-group{background:var(--page)}
 :root:is([data-theme="terminal"],[data-theme="graphite"],[data-theme="midnight"]) .logic-sticky{background:color-mix(in srgb,var(--page),#ab8c42 14%)}
+
+.missing-images{margin:16px 0;padding:16px;border:1px solid var(--border);border-radius:8px;background:var(--panel);color:var(--ink);font-size:14px}
+.missing-images p{color:var(--secondary);margin:8px 0}
+.missing-images>div{display:flex;align-items:center;gap:16px;margin-top:8px}
+.missing-images>div>span{flex:1;overflow-wrap:anywhere;min-width:0}
+.missing-images button{flex-shrink:0;background:var(--page);color:var(--accent);border:1px solid var(--border);border-radius:6px;padding:6px 12px;cursor:pointer}
+.ProseMirror img[data-image-missing]{outline:1px dashed var(--secondary);min-height:32px}

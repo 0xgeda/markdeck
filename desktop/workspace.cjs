@@ -107,7 +107,7 @@ class Workspace {
       const stat=fs.statSync(d.filePath);
       if(stat.size>MAX_FILE_SIZE)throw new Error('本地文件超过 10 MB，保留当前文档');
       const disk=fs.readFileSync(d.filePath);
-      if(hash(disk)===d.diskHash)return {changed:false};
+      if(hash(disk)===d.diskHash)return {changed:false,clean:!this.hasUnsavedChanges(id)&&!d.blocked};
       if(this.hasUnsavedChanges(id))return {changed:false,error:'文件与编辑器同时有修改，已保留草稿；请另存为或刷新'};
       this.history.record(d,'外部修改前',true);this.readInto(d,d.filePath);d.updated=Date.now();this.persist();
       return {changed:true,doc:this.snapshot().docs.find(x=>x.id===id)};
