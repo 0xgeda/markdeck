@@ -52,7 +52,7 @@ const queuedSave=createSaveQueue(async()=>{
     const result=await desktop.save(snapshot);if(!result.ok)throw new Error(result.error);
     fileErrors=result.errors;
     for(const stored of result.state.docs){const live=docs.find(d=>d.id===stored.id);if(live&&!fileErrors[live.id])live.revision=stored.revision;}
-    showSaveState();return {...result,fileErrors:Object.keys(fileErrors).length>0};
+    showSaveState();return {ok:true,fileErrors:Object.keys(fileErrors).length>0};
   }catch(error){const el=document.querySelector('#save-state');if(el){el.textContent='保存失败，请导出备份';el.title=error.message;}return {ok:false,error:error.message};}
 });
 function save(defer=false){
@@ -71,7 +71,7 @@ async function fileAction(action,relative){
     docs=result.state.docs;active=result.state.active;fileErrors={};document.body.classList.remove('sidebar-open');render();showSaveState();if(action==='reload'){window.scrollTo({top:scroll,behavior:'instant'});toast('已刷新为本地文件的最新内容');}return true;
   }catch(error){toast(error.message);}finally{document.querySelector('#app').inert=false;fileDialogBusy=false;}
 }
-function showPresentation(){disposeFind?.();exitDisplay=enterDisplay(editor);}
+function showPresentation(){if(document.body.classList.contains('display-mode'))return;disposeFind?.();exitDisplay=enterDisplay(editor);}
 function toast(message){const el=document.querySelector('#toast');el.textContent=message;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2500);}
 function render(){disposeQuickTools?.();disposeFind?.();exitDisplay?.();disposeTableControls?.();disposeImageControls?.();editor?.destroy();const d=current();document.querySelector('#app').innerHTML=`
 <aside class="sidebar"><div class="brand"><span class="brand-mark"><img src="${brandIcon}" alt=""></span><strong>Markdeck</strong><span class="brand-tag">Markdown</span><button class="icon-btn mobile-close" data-action="sidebar" aria-label="关闭导航">×</button></div><button class="search" data-action="search">${icon('search')}<span>搜索文档</span><kbd>⌘ K</kbd></button><button class="new-doc" data-action="new">${icon('plus')}新建文档</button><nav><button class="nav-item ${category==='all'?'selected':''}" data-category="all">${icon('folder')}我的文档<span>${docs.length}</span></button><button class="nav-item ${category==='star'?'selected':''}" data-category="star">${icon('star')}收藏文档<span>${docs.filter(x=>x.star).length}</span></button></nav><div class="list-label">文档列表 <button class="icon-btn" data-action="import" aria-label="${desktop?'打开本地 Markdown':'导入 Markdown'}">${icon('upload')}</button></div><input id="filter" class="filter" placeholder="输入文档名称…" value="${escape(filter)}" aria-label="搜索文档"><div id="doc-list"></div><div class="sidebar-bottom"><span class="avatar">我</span><div><strong>我的工作空间</strong><small>${desktop?'本地 Markdown · 自动保存':'浏览器存储 · 只属于你'}</small></div><span class="local-dot"></span></div></aside>

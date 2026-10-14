@@ -18,13 +18,7 @@
     "test:pptx": "node tests/pptx-draft.mjs"
   },
   "dependencies": {
-    "@toast-ui/editor": "^3.2.2",
-    "dompurify": "2.5.9",
     "markdown-it": "^15.0.2",
-    "pptxgenjs": "^4.0.1",
-    "prosemirror-inputrules": "1.5.1",
-    "vite": "6.4.3",
-    "prosemirror-history": "1.5.1",
     "jszip": "3.10.2"
   },
   "overrides": {
@@ -36,7 +30,13 @@
     "@electron/packager": "^20.3.0",
     "electron": "^44.7.0",
     "jsdom": "^25.0.1",
-    "playwright": "^1.64.0"
+    "playwright": "^1.64.0",
+    "@toast-ui/editor": "^3.2.2",
+    "dompurify": "2.5.9",
+    "pptxgenjs": "^4.0.1",
+    "prosemirror-inputrules": "1.5.1",
+    "prosemirror-history": "1.5.1",
+    "vite": "6.4.3"
   },
   "main": "desktop/main.cjs",
   "description": "直接编辑本地 Markdown，自动保存的桌面文档工具",

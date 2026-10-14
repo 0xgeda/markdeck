@@ -82,6 +82,9 @@ export default function imageControls(editor,root){
 
 const imageCaches=new WeakMap();
 const hydrationRuns=new WeakMap();
+const hydratedImages=new WeakMap();
+const IMAGE_CACHE_LIMIT=16*1024*1024; // Approximate UTF-16 bytes, excluding browser image surfaces.
+function trimImageCache(cache){let bytes=0;for(const entry of cache.values())bytes+=entry.bytes||0;for(const [key,entry] of cache){if(bytes<=IMAGE_CACHE_LIMIT)break;if(entry.bytes){bytes-=entry.bytes;cache.delete(key);}}}
 export async function hydrateImages(editor,id){
   if(!window.desktop?.readImage)return;
   const view=editor.wwEditor.view;
@@ -92,21 +95,27 @@ export async function hydrateImages(editor,id){
   const sources=new Set(candidates.map(({node})=>node.attrs.imageUrl));
   for(const key of cache.keys())if(!sources.has(key))cache.delete(key);
   const missing=[];
-  await Promise.all(candidates.map(async({node,pos})=>{
+  async function hydrate({node,pos}){
+    if(view.isDestroyed||hydrationRuns.get(editor)!==run)return;
+    const dom=view.nodeDOM(pos),image=dom?.tagName==='IMG'?dom:dom?.querySelector('img');
+    if(image){image.setAttribute('loading','lazy');image.setAttribute('decoding','async');}
+    const previous=image&&hydratedImages.get(image);
+    if(previous?.src===node.attrs.imageUrl&&Date.now()-previous.time<30000)return;
     const src=node.attrs.imageUrl;
     let entry=cache.get(src);
     // Reuse in-flight reads too. Refresh failures quickly and successful images
     // periodically so externally replaced attachments can become visible.
     if(!entry||Date.now()-entry.time>(entry.failed?5000:30000)){
       entry={time:Date.now()};cache.set(src,entry);
-      entry.promise=window.desktop.readImage(id,src).catch(error=>({ok:false,error:error.message})).then(result=>{entry.failed=!result.ok;return result;});
+      entry.promise=window.desktop.readImage(id,src).catch(error=>({ok:false,error:error.message})).then(result=>{entry.failed=!result.ok;entry.bytes=result.data?result.data.length*2:0;trimImageCache(cache);return result;});
     }
     const result=await entry.promise;
     if(view.isDestroyed||view.state.doc.nodeAt(pos)!==node)return;
-    const dom=view.nodeDOM(pos),image=dom?.tagName==='IMG'?dom:dom?.querySelector('img');
-    if(result.ok){if(image?.getAttribute('src')!==result.data)image?.setAttribute('src',result.data);image?.removeAttribute('data-image-missing');}
+    if(result.ok){if(image?.getAttribute('src')!==result.data)image?.setAttribute('src',result.data);image?.removeAttribute('data-image-missing');if(image)hydratedImages.set(image,{src,time:Date.now()});}
     else {image?.setAttribute('data-image-missing','true');missing.push({node,src});}
-  }));
+  }
+  let cursor=0;
+  await Promise.all(Array.from({length:Math.min(4,candidates.length)},async()=>{while(cursor<candidates.length){if(view.isDestroyed||hydrationRuns.get(editor)!==run)return;await hydrate(candidates[cursor++]);}}));
   if(view.isDestroyed||hydrationRuns.get(editor)!==run)return;
   const root=view.dom.closest('#editor');if(!root)return;
   root.querySelector('.missing-images')?.remove();

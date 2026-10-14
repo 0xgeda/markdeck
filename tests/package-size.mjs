@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {listPackage,extractFile} from '@electron/asar';
+const archive='release/Markdeck-darwin-arm64/Markdeck.app/Contents/Resources/app.asar';
+const files=listPackage(archive);
+for(const name of ['vite','esbuild','rollup','pptxgenjs','@toast-ui/editor','.vite'])assert.ok(!files.some(file=>file.startsWith('/node_modules/'+name+'/')),`Build-only dependency packaged: ${name}`);
+for(const name of ['jszip','markdown-it'])assert.ok(files.includes('/node_modules/'+name+'/package.json'));
+const metadata=JSON.parse(extractFile(archive,'package.json'));
+assert.deepEqual(Object.keys(metadata.dependencies).sort(),['jszip','markdown-it']);
+console.log(`Packaged application archive: ${(fs.statSync(archive).size/1048576).toFixed(2)} MiB; build-only dependencies excluded.`);

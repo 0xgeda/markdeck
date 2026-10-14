@@ -23,7 +23,8 @@ click('logic');await new Promise(resolve=>setTimeout(resolve,20));assert.equal(w
 const last=[...editable.querySelectorAll('p')].at(-1);last.textContent='关闭前最后一次输入';
 await new Promise(resolve=>setTimeout(resolve,0));await appAction('close');
 assert.equal(closeResult.ok,true);assert.match(fs.readFileSync(file,'utf8'),/关闭前最后一次输入/);
-assert.ok(workspace.versions(workspace.state.active).length);fs.writeFileSync(path.join(root,'folder-document.md'),'# 文件夹文档\n\n跨文件关键词');
+await appAction('presentation');await appAction('presentation');await appAction('new');assert.equal(w.document.querySelector('.display-exit'),null);assert.equal(w.document.body.classList.contains('display-mode'),false);
+assert.ok(workspace.versions(workspace.state.docs.find(d=>d.filePath===fs.realpathSync(file)).id).length);fs.writeFileSync(path.join(root,'folder-document.md'),'# 文件夹文档\n\n跨文件关键词');
 click('find');click('find');assert.equal(w.document.querySelectorAll('.find-panel').length,1);
 click('project');await new Promise(resolve=>setTimeout(resolve,10));const projectDialog=w.document.querySelector('.project-dialog');projectDialog.querySelector('[data-choose]').click();await new Promise(resolve=>setTimeout(resolve,20));
 const search=projectDialog.querySelector('[data-query]');search.value='跨文件关键词';search.dispatchEvent(new w.Event('input'));await new Promise(resolve=>setTimeout(resolve,250));assert.equal(projectDialog.querySelectorAll('.project-result').length,1);

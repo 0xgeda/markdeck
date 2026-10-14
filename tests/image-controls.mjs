@@ -51,5 +51,8 @@ assert.match(w.editor.getMarkdown(),/data:image\/png;base64/);assert.doesNotMatc
 w.editor.exec('undo');assert.match(w.editor.getMarkdown(),/missing.png/);
 w.HTMLInputElement.prototype.click=nativeClick;
 w.editor.setMarkdown('![ok](local.png)',false);await w.hydrate(w.editor,'doc');assert.equal(root.querySelector('.missing-images'),null);
+let inFlight=0,peak=0;
+w.desktop.readImage=async()=>{peak=Math.max(peak,++inFlight);await new Promise(resolve=>setTimeout(resolve,2));inFlight--;return {ok:true,data:'data:image/png;base64,cG5n'};};
+w.editor.setMarkdown(Array.from({length:40},(_,i)=>`![图${i}](stress-${i}.png)`).join('\n\n'),false);await w.hydrate(w.editor,'doc');assert.ok(peak<=4);assert.ok(peak>0);assert.equal(body.querySelector('.ProseMirror img[src]').getAttribute('loading'),'lazy');
 w.dispose();w.editor.destroy();dom.window.close();
 console.log('Image sizing, alignment, side-by-side and Markdown reload passed.');
