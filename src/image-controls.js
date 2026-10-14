@@ -1,10 +1,11 @@
 import {closeHistory} from 'prosemirror-history';
 import {compressImage} from './compress-image.js';
+const groupStyle=size=>`width:calc(${size}% - 12px);max-width:100%;height:auto;display:inline-block;vertical-align:top;margin:0 6px`;
 const escape=value=>String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 export const imageMarkdownRenderer={image:({node},context)=>{
   const attrs=node.attrs.htmlAttrs;
   if(!attrs?.['data-larkdown-image'])return context.origin();
-  return {rawHTML:`<img src="${escape(node.attrs.imageUrl)}" alt="${escape(node.attrs.altText||'')}" style="${escape(attrs.style)}" data-larkdown-image="true" data-align="${escape(attrs['data-align']||'center')}" data-size="${escape(attrs['data-size']||'100%')}">`};
+  return {rawHTML:`<img src="${escape(node.attrs.imageUrl)}" alt="${escape(node.attrs.altText||'')}" style="${escape(attrs.style)}" data-larkdown-image="true" data-columns="${escape(attrs['data-columns']||'')}" data-align="${escape(attrs['data-align']||'center')}" data-size="${escape(attrs['data-size']||'100%')}">`};
 }};
 export function imageBlobHook(blob,callback,docId){
   compressImage(blob).then(image=>new Promise((resolve,reject)=>{
@@ -26,14 +27,15 @@ export function restoreImageLayout(editor,markdown){
     const index=layouts.findIndex(image=>image.getAttribute('src')===node.attrs.imageUrl);
     if(index<0)return;
     const image=layouts.splice(index,1)[0];
+    const columns=['2','3'].includes(image.dataset.columns)?image.dataset.columns:null;
     const pair=image.getAttribute('style')?.includes('display:inline-block');
     const align=['left','center','right','text-left','text-right'].includes(image.dataset.align)?image.dataset.align:'center';
-    const storedSize=pair?image.getAttribute('style')?.match(/(?:^|;)\s*width:(\d+%)/)?.[1]:image.dataset.size;
-    const size=/^(?:[1-9]\d?|100)%$/.test(storedSize)?storedSize:'100%';
+    const storedSize=columns?image.dataset.size:pair?image.getAttribute('style')?.match(/(?:^|;)\s*width:(\d+%)/)?.[1]:image.dataset.size;
+    const size=/^(?:[1-9]\d?(?:\.\d{1,4})?|100)%$/.test(storedSize)?storedSize:'100%';
     const margin=align==='left'?'0 auto 0 0':align==='right'?'0 0 0 auto':'0 auto';
     const wrap=align.startsWith('text-');
-    const style=wrap?`width:${size};max-width:100%;height:auto;display:block;float:${align==='text-left'?'left':'right'};margin:0 4% 20px 0`:pair?`width:${image.dataset.size?size:'48%'};max-width:100%;height:auto;display:inline-block;vertical-align:middle;margin:0 1%`:`width:${size};max-width:100%;height:auto;display:block;margin:${margin}`;
-    tr=tr.setNodeMarkup(pos,null,{...node.attrs,htmlAttrs:{'data-larkdown-image':'true','data-align':align,'data-size':size,style}});
+    const style=columns?groupStyle(parseFloat(size)):wrap?`width:${size};max-width:100%;height:auto;display:block;float:${align==='text-left'?'left':'right'};margin:0 4% 20px 0`:pair?`width:${image.dataset.size?size:'48%'};max-width:100%;height:auto;display:inline-block;vertical-align:middle;margin:0 1%`:`width:${size};max-width:100%;height:auto;display:block;margin:${margin}`;
+    tr=tr.setNodeMarkup(pos,null,{...node.attrs,htmlAttrs:{'data-larkdown-image':'true','data-columns':columns||'','data-align':align,'data-size':size,style}});
   });
   if(tr.docChanged)view.dispatch(tr.setMeta('addToHistory',false));
 }
@@ -47,6 +49,8 @@ export default function imageControls(editor,root){
   function format(align,width){
     const node=selected();if(node?.type.name!=='image')return;
     const old=node.attrs.htmlAttrs||{};
+    if(old['data-columns']){if(width)resizeGroup(parseFloat(width));return;}
+
     const size=width||(align?.startsWith('text-')?'45%':old['data-size'])||'100%';
     const placement=align||old['data-align']||'center';
     const margin=placement==='left'?'0 auto 0 0':placement==='right'?'0 0 0 auto':'0 auto';
@@ -54,27 +58,49 @@ export default function imageControls(editor,root){
     const style=paired?`width:${size};max-width:100%;height:auto;display:inline-block;vertical-align:middle;margin:0 1%`:placement.startsWith('text-')?`width:${size};max-width:100%;height:auto;display:block;float:${placement==='text-left'?'left':'right'};margin:0 4% 20px 0`:`width:${size};max-width:100%;height:auto;display:block;margin:${margin}`;
     const target=position;view.dispatch(closeHistory(view.state.tr).setNodeMarkup(position,null,{...node.attrs,htmlAttrs:{...old,style,'data-larkdown-image':'true','data-align':placement,'data-size':size}}));position=target;bar.hidden=false;refresh();
   }
-  for(const [label,run] of [['左对齐',()=>format('left')],['居中',()=>format('center')],['右对齐',()=>format('right')],['小图',()=>format(null,'33%')],['中图',()=>format(null,'50%')],['大图',()=>format(null,'100%')],['图左文右',()=>format('text-left')],['图右文左',()=>format('text-right')],['与下一张并排',pair]]){
+  for(const [label,run] of [['左对齐',()=>format('left')],['居中',()=>format('center')],['右对齐',()=>format('right')],['小图',()=>format(null,'33%')],['中图',()=>format(null,'50%')],['大图',()=>format(null,'100%')],['图左文右',()=>format('text-left')],['图右文左',()=>format('text-right')],['两列图片',()=>group(2)],['三列图片',()=>group(3)],['恢复单列',ungroup]]){
     const button=document.createElement('button');button.type='button';button.textContent=label;
     button.addEventListener('mousedown',event=>event.preventDefault());button.addEventListener('click',run);bar.append(button);
   }
-  function pair(){
-    const node=selected();if(node?.type.name!=='image')return;
-    const $pos=view.state.doc.resolve(position);
-    const paragraph=$pos.parent;
-    if(paragraph.type.name!=='paragraph'||paragraph.childCount!==1){window.alert('请把两张图片分别放在相邻的独立段落中，再选择第一张并排。');return;}
-    let end=$pos.after();let next=view.state.doc.nodeAt(end);
-    while(next?.type.name==='paragraph'&&next.content.size===0){end+=next.nodeSize;next=view.state.doc.nodeAt(end);}
-    if(next?.type.name!=='paragraph'||next.childCount!==1||next.firstChild.type.name!=='image'){window.alert('下一段需要是一张图片，才能并排。');return;}
-    const resize=image=>image.type.create({...image.attrs,htmlAttrs:{...image.attrs.htmlAttrs,'data-larkdown-image':'true','data-size':'48%',style:'width:48%;max-width:100%;height:auto;display:inline-block;vertical-align:middle;margin:0 1%'}},null,image.marks);
-    const replacement=paragraph.type.create(paragraph.attrs,[resize(node),resize(next.firstChild)]);
-    view.dispatch(view.state.tr.replaceWith($pos.before(),end+next.nodeSize,replacement));
-    position=$pos.before()+1;bar.hidden=false;refresh();
+  function imageParagraph(node){return node?.type.name==='paragraph'&&node.childCount>0&&Array.from({length:node.childCount},(_,i)=>node.child(i)).every(child=>child.type.name==='image');}
+  function group(count){
+    if(selected()?.type.name!=='image')return;
+    const $pos=view.state.doc.resolve(position),paragraph=$pos.parent;
+    if(!imageParagraph(paragraph)){window.alert('请把图片放在独立段落中，再选择第一张组成图片组。');return;}
+    const images=[];paragraph.forEach(image=>images.push(image));let end=$pos.after();
+    while(images.length<count){
+      const next=view.state.doc.nodeAt(end);
+      if(next?.type.name==='paragraph'&&next.content.size===0){end+=next.nodeSize;continue;}
+      if(!imageParagraph(next))break;
+      next.forEach(image=>images.push(image));end+=next.nodeSize;
+    }
+    if(images.length!==count){window.alert(`请选择连续的 ${count} 张图片；图片之间不能夹有正文。已有图片组可先恢复单列。`);return;}
+    const size=(100/count).toFixed(4);
+    const nodes=images.map(image=>image.type.create({...image.attrs,htmlAttrs:{'data-larkdown-image':'true','data-columns':String(count),'data-align':'center','data-size':`${size}%`,style:groupStyle(size)}},null,image.marks));
+    const target=$pos.before()+1;
+    view.dispatch(closeHistory(view.state.tr).replaceWith($pos.before(),end,paragraph.type.create(paragraph.attrs,nodes)));
+    position=target;bar.hidden=false;refresh();
+  }
+  function resizeGroup(size){
+    const $pos=view.state.doc.resolve(position),paragraph=$pos.parent;
+    if(!imageParagraph(paragraph)||paragraph.childCount<2)return;
+    const count=paragraph.childCount;size=Math.max(10,Math.min(100-10*(count-1),size));
+    const other=(100-size)/(count-1);let tr=closeHistory(view.state.tr);
+    paragraph.forEach((image,offset)=>{const pos=$pos.start()+offset;const width=(pos===position?size:other).toFixed(4);tr=tr.setNodeMarkup(pos,null,{...image.attrs,htmlAttrs:{...image.attrs.htmlAttrs,'data-size':`${width}%`,style:groupStyle(width)}});});
+    const target=position;view.dispatch(tr);position=target;bar.hidden=false;refresh();
+  }
+  function ungroup(){
+    if(selected()?.type.name!=='image')return;
+    const $pos=view.state.doc.resolve(position),paragraph=$pos.parent;if(!imageParagraph(paragraph))return;
+    const nodes=[];paragraph.forEach(image=>nodes.push(paragraph.type.create(paragraph.attrs,image.type.create({...image.attrs,htmlAttrs:{'data-larkdown-image':'true','data-align':'center','data-size':'100%',style:'width:100%;max-width:100%;height:auto;display:block;margin:0 auto'}},null,image.marks))));
+    view.dispatch(closeHistory(view.state.tr).replaceWith($pos.before(),$pos.after(),nodes));
   }
   const frame=document.createElement('div');frame.className='image-resize-frame';frame.hidden=true;document.body.append(frame);
   let drag=null;
   function imageElement(){const node=position===null?null:view.nodeDOM(position);return node?.tagName==='IMG'?node:node?.querySelector('img[src]');}
   function refresh(){
+    const grouped=!!selected()?.attrs.htmlAttrs?.['data-columns'];
+    for(const button of bar.querySelectorAll('button')){const alignment=['左对齐','居中','右对齐','图左文右','图右文左'].includes(button.textContent);button.disabled=grouped&&alignment;button.title=grouped&&alignment?'恢复单列后可调整对齐和环绕':'';}
     const image=imageElement();
     if(!image||view.dom.getAttribute('contenteditable')==='false'){frame.hidden=true;return;}
     const rect=image.getBoundingClientRect();frame.hidden=rect.width===0;
@@ -94,9 +120,10 @@ export default function imageControls(editor,root){
   function move(event){
     if(!drag)return;event.preventDefault();
     const {rect,corner,parentWidth}=drag;
-    const max=drag.node.attrs.htmlAttrs?.style?.includes('display:inline-block')?48:100;
-    const size=Math.max(10,Math.min(max,Math.round((rect.width+(event.clientX-drag.x)*(corner.includes('w')?-1:1))/parentWidth*100)));
-    drag.size=size;const width=parentWidth*size/100,height=width*rect.height/rect.width;
+    const columns=Number(drag.node.attrs.htmlAttrs?.['data-columns']);
+    const max=columns?100-10*(columns-1):drag.node.attrs.htmlAttrs?.style?.includes('display:inline-block')?48:100;
+    const size=Math.max(10,Math.min(max,Math.round((rect.width+(columns?12:0)+(event.clientX-drag.x)*(corner.includes('w')?-1:1))/parentWidth*100)));
+    drag.size=size;const width=parentWidth*size/100-(columns?12:0),height=width*rect.height/rect.width;
     Object.assign(frame.style,{width:`${width}px`,height:`${height}px`,left:`${corner.includes('w')?rect.right-width:rect.left}px`,top:`${corner.includes('n')?rect.bottom-height:rect.top}px`});
   }
   function finish(event){
