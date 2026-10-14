@@ -279,3 +279,14 @@ button:disabled{cursor:default;opacity:.45}button:disabled:hover{background:none
 .logic-tree-row{display:flex;align-items:flex-start;gap:4px}
 .logic-tree-row>[data-heading]{flex:1;min-width:0;text-align:left;padding:7px 4px;font-size:13px;line-height:1.6;color:var(--ink);overflow-wrap:anywhere}
 .logic-tree-row>[data-node-toggle]{flex:none;padding:7px 4px;color:var(--secondary)}
+
+/* A quiet, consistent edge for document images; selection controls live outside the editor. */
+#editor .toastui-editor-contents img[src]{box-sizing:border-box;border:1px solid var(--border);border-radius:6px}
+.image-resize-frame{position:fixed;z-index:90;border:1px solid var(--accent);box-sizing:border-box;pointer-events:none}
+.image-resize-frame[hidden]{display:none}
+.image-resize-handle{position:absolute;width:14px;height:14px;padding:0;border:2px solid var(--accent);border-radius:4px;background:var(--panel);pointer-events:auto;touch-action:none}
+.image-resize-handle.nw{left:-7px;top:-7px;cursor:nwse-resize}
+.image-resize-handle.ne{right:-7px;top:-7px;cursor:nesw-resize}
+.image-resize-handle.sw{left:-7px;bottom:-7px;cursor:nesw-resize}
+.image-resize-handle.se{right:-7px;bottom:-7px;cursor:nwse-resize}
+body.display-mode .image-resize-frame{display:none}

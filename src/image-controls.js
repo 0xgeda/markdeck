@@ -28,10 +28,11 @@ export function restoreImageLayout(editor,markdown){
     const image=layouts.splice(index,1)[0];
     const pair=image.getAttribute('style')?.includes('display:inline-block');
     const align=['left','center','right','text-left','text-right'].includes(image.dataset.align)?image.dataset.align:'center';
-    const size=['33%','50%','100%'].includes(image.dataset.size)?image.dataset.size:'100%';
+    const storedSize=pair?image.getAttribute('style')?.match(/(?:^|;)\s*width:(\d+%)/)?.[1]:image.dataset.size;
+    const size=/^(?:[1-9]\d?|100)%$/.test(storedSize)?storedSize:'100%';
     const margin=align==='left'?'0 auto 0 0':align==='right'?'0 0 0 auto':'0 auto';
     const wrap=align.startsWith('text-');
-    const style=wrap?`width:45%;max-width:100%;height:auto;display:block;float:${align==='text-left'?'left':'right'};margin:0 4% 20px 0`:pair?'width:48%;max-width:100%;height:auto;display:inline-block;vertical-align:middle;margin:0 1%':`width:${size};max-width:100%;height:auto;display:block;margin:${margin}`;
+    const style=wrap?`width:${size};max-width:100%;height:auto;display:block;float:${align==='text-left'?'left':'right'};margin:0 4% 20px 0`:pair?`width:${image.dataset.size?size:'48%'};max-width:100%;height:auto;display:inline-block;vertical-align:middle;margin:0 1%`:`width:${size};max-width:100%;height:auto;display:block;margin:${margin}`;
     tr=tr.setNodeMarkup(pos,null,{...node.attrs,htmlAttrs:{'data-larkdown-image':'true','data-align':align,'data-size':size,style}});
   });
   if(tr.docChanged)view.dispatch(tr.setMeta('addToHistory',false));
@@ -46,11 +47,12 @@ export default function imageControls(editor,root){
   function format(align,width){
     const node=selected();if(node?.type.name!=='image')return;
     const old=node.attrs.htmlAttrs||{};
-    const size=width||old['data-size']||'100%';
+    const size=width||(align?.startsWith('text-')?'45%':old['data-size'])||'100%';
     const placement=align||old['data-align']||'center';
     const margin=placement==='left'?'0 auto 0 0':placement==='right'?'0 0 0 auto':'0 auto';
-    const style=placement.startsWith('text-')?`width:45%;max-width:100%;height:auto;display:block;float:${placement==='text-left'?'left':'right'};margin:0 4% 20px 0`:`width:${size};max-width:100%;height:auto;display:block;margin:${margin}`;
-    const target=position;view.dispatch(view.state.tr.setNodeMarkup(position,null,{...node.attrs,htmlAttrs:{...old,style,'data-larkdown-image':'true','data-align':placement,'data-size':size}}));position=target;bar.hidden=false;
+    const paired=!align&&old.style?.includes('display:inline-block');
+    const style=paired?`width:${size};max-width:100%;height:auto;display:inline-block;vertical-align:middle;margin:0 1%`:placement.startsWith('text-')?`width:${size};max-width:100%;height:auto;display:block;float:${placement==='text-left'?'left':'right'};margin:0 4% 20px 0`:`width:${size};max-width:100%;height:auto;display:block;margin:${margin}`;
+    const target=position;view.dispatch(closeHistory(view.state.tr).setNodeMarkup(position,null,{...node.attrs,htmlAttrs:{...old,style,'data-larkdown-image':'true','data-align':placement,'data-size':size}}));position=target;bar.hidden=false;refresh();
   }
   for(const [label,run] of [['左对齐',()=>format('left')],['居中',()=>format('center')],['右对齐',()=>format('right')],['小图',()=>format(null,'33%')],['中图',()=>format(null,'50%')],['大图',()=>format(null,'100%')],['图左文右',()=>format('text-left')],['图右文左',()=>format('text-right')],['与下一张并排',pair]]){
     const button=document.createElement('button');button.type='button';button.textContent=label;
@@ -64,20 +66,60 @@ export default function imageControls(editor,root){
     let end=$pos.after();let next=view.state.doc.nodeAt(end);
     while(next?.type.name==='paragraph'&&next.content.size===0){end+=next.nodeSize;next=view.state.doc.nodeAt(end);}
     if(next?.type.name!=='paragraph'||next.childCount!==1||next.firstChild.type.name!=='image'){window.alert('下一段需要是一张图片，才能并排。');return;}
-    const resize=image=>image.type.create({...image.attrs,htmlAttrs:{...image.attrs.htmlAttrs,'data-larkdown-image':'true',style:'width:48%;max-width:100%;height:auto;display:inline-block;vertical-align:middle;margin:0 1%'}},null,image.marks);
+    const resize=image=>image.type.create({...image.attrs,htmlAttrs:{...image.attrs.htmlAttrs,'data-larkdown-image':'true','data-size':'48%',style:'width:48%;max-width:100%;height:auto;display:inline-block;vertical-align:middle;margin:0 1%'}},null,image.marks);
     const replacement=paragraph.type.create(paragraph.attrs,[resize(node),resize(next.firstChild)]);
     view.dispatch(view.state.tr.replaceWith($pos.before(),end+next.nodeSize,replacement));
-    position=$pos.before()+1;bar.hidden=false;
+    position=$pos.before()+1;bar.hidden=false;refresh();
   }
+  const frame=document.createElement('div');frame.className='image-resize-frame';frame.hidden=true;document.body.append(frame);
+  let drag=null;
+  function imageElement(){const node=position===null?null:view.nodeDOM(position);return node?.tagName==='IMG'?node:node?.querySelector('img[src]');}
+  function refresh(){
+    const image=imageElement();
+    if(!image||view.dom.getAttribute('contenteditable')==='false'){frame.hidden=true;return;}
+    const rect=image.getBoundingClientRect();frame.hidden=rect.width===0;
+    Object.assign(frame.style,{left:`${rect.left}px`,top:`${rect.top}px`,width:`${rect.width}px`,height:`${rect.height}px`});
+  }
+  for(const corner of ['nw','ne','sw','se']){
+    const handle=document.createElement('button');handle.type='button';handle.className=`image-resize-handle ${corner}`;handle.setAttribute('aria-label','调整图片大小');
+    handle.addEventListener('pointerdown',event=>{
+      if(event.button!==0||view.dom.getAttribute('contenteditable')==='false')return;
+      const image=imageElement(),rect=image?.getBoundingClientRect(),parent=image?.parentElement.getBoundingClientRect();
+      if(!rect?.width||!parent?.width)return;
+      event.preventDefault();event.stopPropagation();
+      drag={x:event.clientX,rect,parentWidth:parent.width,corner,node:selected(),size:null};
+    });
+    frame.append(handle);
+  }
+  function move(event){
+    if(!drag)return;event.preventDefault();
+    const {rect,corner,parentWidth}=drag;
+    const max=drag.node.attrs.htmlAttrs?.style?.includes('display:inline-block')?48:100;
+    const size=Math.max(10,Math.min(max,Math.round((rect.width+(event.clientX-drag.x)*(corner.includes('w')?-1:1))/parentWidth*100)));
+    drag.size=size;const width=parentWidth*size/100,height=width*rect.height/rect.width;
+    Object.assign(frame.style,{width:`${width}px`,height:`${height}px`,left:`${corner.includes('w')?rect.right-width:rect.left}px`,top:`${corner.includes('n')?rect.bottom-height:rect.top}px`});
+  }
+  function finish(event){
+    if(!drag)return;const previous=drag;drag=null;
+    if(event.type==='pointerup'&&previous.size!==null&&selected()===previous.node)format(null,`${previous.size}%`);
+    refresh();
+  }
+  function escapeResize(event){if(event.key==='Escape'){drag=null;refresh();}}
+  function reposition(){if(drag)drag=null;refresh();}
+  document.addEventListener('pointermove',move);document.addEventListener('pointerup',finish);document.addEventListener('pointercancel',finish);document.addEventListener('keydown',escapeResize);
+  document.addEventListener('scroll',reposition,true);document.addEventListener('load',reposition,true);window.addEventListener('resize',reposition);
   function click(event){
+    if(frame.contains(event.target))return;
     const image=event.target.closest('.ProseMirror img[src]');
+    if(view.dom.getAttribute('contenteditable')==='false')return;
     if(image&&root.contains(image)){position=view.posAtDOM(image,0);bar.hidden=false;root.querySelector('.table-controls:not(.image-controls)')?.setAttribute('hidden','');}
     else if(!bar.contains(event.target)){bar.hidden=true;position=null;}
+    refresh();
   }
   // Hide when the document changes elsewhere: stale positions must never edit another image.
-  function change(){bar.hidden=true;position=null;}
+  function change(){bar.hidden=true;position=null;drag=null;frame.hidden=true;}
   document.addEventListener('click',click);editor.on('change',change);root.append(bar);
-  return ()=>{document.removeEventListener('click',click);editor.off('change',change);bar.remove();};
+  return ()=>{document.removeEventListener('click',click);editor.off('change',change);bar.remove();frame.remove();document.removeEventListener('pointermove',move);document.removeEventListener('pointerup',finish);document.removeEventListener('pointercancel',finish);document.removeEventListener('keydown',escapeResize);document.removeEventListener('scroll',reposition,true);document.removeEventListener('load',reposition,true);window.removeEventListener('resize',reposition);};
 }
 
 const imageCaches=new WeakMap();
