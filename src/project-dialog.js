@@ -1,0 +1,23 @@
+export async function openProject(onOpen){
+  if(document.querySelector('.project-dialog'))return;
+  const dialog=document.createElement('dialog');dialog.className='project-dialog';
+  dialog.innerHTML='<header><div><h3>文档文件夹</h3><p data-folder>选择一个文件夹，浏览和搜索其中的文档</p></div><button data-close aria-label="关闭文件夹">×</button></header><div class="project-tools"><button data-choose>选择文件夹</button><button data-refresh>刷新</button><input data-query aria-label="搜索文件夹" placeholder="搜索文件名或正文…"></div><p data-status role="status"></p><div data-results></div>';
+  document.body.append(dialog);dialog.showModal();
+  const status=dialog.querySelector('[data-status]'),list=dialog.querySelector('[data-results]'),query=dialog.querySelector('[data-query]');let revision=0,timer,closed=false,busy=false;
+  function render(result){
+    if(!result.ok)throw new Error(result.error);
+    dialog.querySelector('[data-folder]').textContent=result.folder||'尚未选择文件夹';
+    status.textContent=`${result.results.length} 份文档`+(result.truncated?' · 结果较多，请缩小搜索范围':'')+(result.skipped?` · ${result.skipped} 份文档过大或无法读取，未搜索正文`:'');list.replaceChildren();
+    for(const item of result.results){const button=document.createElement('button');button.className='project-result';const title=document.createElement('strong');title.textContent=item.path;button.append(title);
+      if(item.snippet){const detail=document.createElement('small');detail.textContent=`第 ${item.line} 行 · ${item.snippet}`;button.append(detail);}
+      button.onclick=async()=>{if(busy)return;busy=true;try{if(await onOpen(item.path))dialog.close();}catch(error){status.textContent=error.message;}finally{busy=false;}};list.append(button);
+    }
+  }
+  async function run(action){const request=++revision;status.textContent='正在读取…';try{const result=await action();if(closed||request!==revision)return;if(result.canceled){status.textContent='已取消选择';return;}render(result);}catch(error){if(!closed&&request===revision)status.textContent=error.message;}}
+  query.oninput=()=>{clearTimeout(timer);revision++;timer=setTimeout(()=>run(()=>window.desktop.searchProject(query.value)),200);};
+  dialog.querySelector('[data-choose]').onclick=()=>{query.value='';run(()=>window.desktop.chooseProject());};
+  dialog.querySelector('[data-refresh]').onclick=()=>{query.value='';run(()=>window.desktop.refreshProject());};
+  dialog.querySelector('[data-close]').onclick=()=>dialog.close();
+  dialog.addEventListener('close',()=>{closed=true;clearTimeout(timer);dialog.remove();},{once:true});
+  await run(()=>window.desktop.searchProject(''));
+}

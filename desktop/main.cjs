@@ -3,6 +3,9 @@ const path=require('node:path');
 const themePalettes=require('./themes.json');
 const fs=require('node:fs');
 const {pathToFileURL}=require('node:url');
+const {Project}=require('./project.cjs');
+const project=new Project();
+const {bundleDocument}=require('./document-bundle.cjs');
 const {Workspace,atomicWrite}=require('./workspace.cjs');
 app.setName('Markdeck');
 protocol.registerSchemesAsPrivileged([{scheme:'yun-jian',privileges:{standard:true,secure:true,supportFetchAPI:true}}]);
@@ -92,6 +95,19 @@ app.whenReady().then(()=>{
       const bytes=await printWindow.webContents.printToPDF({printBackground:true,pageSize:'A4',margins:{top:.5,bottom:.5,left:.5,right:.5}});atomicWrite(result.filePath,bytes);
     }finally{printWindow.destroy();}return {};
   });
+  register('document:bundle',async id=>{
+    const doc=workspace.attachments.doc(id);
+    const result=await dialog.showSaveDialog(window,{title:'打包 Markdown 与图片',defaultPath:(doc.title.replace(/[\\/:*?"<>|]/g,'_')||'文档')+'.zip',filters:[{name:'ZIP 压缩包',extensions:['zip']}]});
+    if(result.canceled)return {canceled:true};if(!/\.zip$/i.test(result.filePath))throw new Error('请选择 .zip 文件');
+    const bundle=await bundleDocument(workspace,id);atomicWrite(result.filePath,bundle.bytes);return {count:bundle.count,external:bundle.external};
+  });
+  register('project:choose',async()=>{
+    const result=await dialog.showOpenDialog(window,{title:'打开文档文件夹',properties:['openDirectory']});
+    if(result.canceled)return {canceled:true};return project.choose(result.filePaths[0]);
+  });
+  register('project:search',query=>project.search(query));
+  register('project:refresh',()=>project.refresh());
+  register('project:open',async relative=>({state:workspace.open(await project.resolve(relative))}));
   register('workspace:load',()=>({state:workspace.snapshot()}));
   register('workspace:sync',id=>workspace.sync(id));
   register('workspace:save',state=>workspace.save(state));

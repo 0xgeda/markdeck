@@ -1,5 +1,10 @@
 const {contextBridge,ipcRenderer}=require('electron');
 contextBridge.exposeInMainWorld('desktop', {
+  bundleDocument:id=>ipcRenderer.invoke('document:bundle',id),
+  chooseProject:()=>ipcRenderer.invoke('project:choose'),
+  searchProject:query=>ipcRenderer.invoke('project:search',query),
+  refreshProject:()=>ipcRenderer.invoke('project:refresh'),
+  openProjectFile:relative=>ipcRenderer.invoke('project:open',relative),
   storeImage:(id,data)=>ipcRenderer.invoke('image:store',id,data),
   readImage:(id,src)=>ipcRenderer.invoke('image:read',id,src),
   loadLogic:id=>ipcRenderer.invoke('logic:load',id),
