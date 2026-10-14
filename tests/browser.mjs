@@ -19,7 +19,7 @@ await page.locator('#show-toolbar').uncheck();assert.equal(await page.locator('.
 await page.getByRole('button',{name:'关闭设置'}).click();
 assert.equal(await page.locator('[data-action="edit"],.view-switch').count(),0);
 const sourceBeforeDisplay=await body.textContent();
-await page.getByRole('button',{name:'设置',exact:true}).click();await page.getByRole('button',{name:'进入展示模式'}).click();
+await page.locator('[data-action="presentation"]').click();
 await page.getByRole('button',{name:'退出展示',exact:true}).click();assert.equal(await body.textContent(),sourceBeforeDisplay);
 
 await page.locator('#file-input').setInputFiles({name:'输入快捷规则.md',mimeType:'text/plain',buffer:Buffer.from('')});
