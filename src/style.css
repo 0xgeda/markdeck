@@ -273,3 +273,9 @@ button:disabled{cursor:default;opacity:.45}button:disabled:hover{background:none
 .project-dialog [data-results]{max-height:55vh;overflow:auto}
 .project-dialog .project-result{display:block;width:100%;text-align:left;margin:6px 0;padding:14px;background:transparent}
 .project-result:hover{background:var(--hover)}.project-result strong,.project-result small{display:block;overflow-wrap:anywhere}.project-result small{margin-top:6px;color:var(--secondary)}
+.logic-tools label{display:flex;align-items:center;gap:8px;color:var(--secondary)}
+.logic-tools select{padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--page);color:var(--ink);font:inherit}
+.logic-context{display:block;margin-top:5px;color:var(--secondary);font-size:11px;line-height:1.5;overflow-wrap:anywhere}
+.logic-tree-row{display:flex;align-items:flex-start;gap:4px}
+.logic-tree-row>[data-heading]{flex:1;min-width:0;text-align:left;padding:7px 4px;font-size:13px;line-height:1.6;color:var(--ink);overflow-wrap:anywhere}
+.logic-tree-row>[data-node-toggle]{flex:none;padding:7px 4px;color:var(--secondary)}

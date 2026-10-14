@@ -14,7 +14,7 @@ await openLogicPanel(editor,'报告','fixture');let dialog=document.querySelecto
 assert.equal(dialog.querySelectorAll('.logic-group').length,2);
 assert.equal(dialog.querySelectorAll('.logic-subcard').length,0);
 dialog.querySelector('[data-toggle="0"]').click();
-assert.deepEqual([...dialog.querySelectorAll('.logic-subcard')].map(e=>e.textContent),['现状','判断']);
+assert.deepEqual([...dialog.querySelectorAll('.logic-subcard')].map(e=>e.querySelector('[data-heading]').textContent),['现状','判断']);
 assert.equal(dialog.querySelector('[data-search]'),null);
 function move(card,dx,dy){const viewport=dialog.querySelector('.logic-viewport'),grip=card.querySelector('button.logic-grip');viewport.onpointerdown({button:0,target:grip,clientX:100,clientY:100,pointerId:1,preventDefault(){}});viewport.onpointermove({clientX:100+dx,clientY:100+dy});viewport.onpointerup();}
 move(dialog.querySelector('.logic-group'),60,40);
@@ -43,4 +43,19 @@ window.localStorage.setItem('markdeck-logic-legacy',JSON.stringify({version:1,no
 await openLogicPanel(editor,'报告','legacy');dialog=document.querySelector('.logic-dialog');assert.equal(dialog.querySelector('[data-note]').value,'旧批注保留');
 dialog.querySelector('[data-close]').click();await tick();
 assert.equal(logicSections([{title:'没有H1的章节',level:2,index:0}],'文档')[0].level,1);
+// A document title followed by chapter headings defaults to H2 cards.
+article.innerHTML='<h1>报告标题</h1><h2>研究</h2><h3>证据</h3><h4>来源</h4><h2>建议</h2>';
+const original=article.innerHTML;
+await openLogicPanel(editor,'报告','levels');dialog=document.querySelector('.logic-dialog');
+assert.equal(dialog.querySelector('[data-card-level]').value,'2');assert.equal(dialog.querySelectorAll('.logic-group').length,2);
+assert.equal(dialog.querySelector('.logic-context').textContent,'报告标题');
+dialog.querySelector('[data-toggle="0"]').click();assert.equal(dialog.querySelector('[data-heading="2"]').textContent,'证据');
+dialog.querySelector('[data-node-toggle]').click();assert.equal(dialog.querySelector('[data-heading="3"]').textContent,'来源');
+dialog.querySelector('[data-add-note]').click();dialog.querySelector('[data-note]').value='切换后保留';dialog.querySelector('[data-note]').dispatchEvent(new window.Event('input',{bubbles:true}));
+const select=dialog.querySelector('[data-card-level]');select.value='3';select.dispatchEvent(new window.Event('change'));assert.equal(dialog.querySelectorAll('.logic-group:not(.logic-sticky)').length,1);assert.equal(dialog.querySelector('[data-note]').value,'切换后保留');
+assert.equal(dialog.querySelector('.logic-context').textContent,'报告标题 / 研究');
+dialog.querySelector('[data-close]').click();await tick();
+await openLogicPanel(editor,'报告','levels');dialog=document.querySelector('.logic-dialog');assert.equal(dialog.querySelector('[data-card-level]').value,'3');assert.equal(dialog.querySelector('[data-note]').value,'切换后保留');assert.equal(article.innerHTML,original);
+dialog.querySelector('[data-close]').click();await tick();
+const skipped=logicSections([{title:'根',level:1,index:0},{title:'跳级',level:3,index:1},{title:'细节',level:5,index:2}], '报告',3);assert.equal(skipped[0].children[0].level,5);
 dom.window.close();console.log('H1 drag, nested H2, independent sticky create/edit/drag/delete, persistence, legacy notes and source protection passed.');
