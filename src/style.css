@@ -320,3 +320,17 @@ body.display-mode .image-resize-frame{display:none}
 .chapter-show footer{justify-content:center;border-top:1px solid var(--border)}
 .chapter-takeaway{border-left:3px solid var(--accent);padding:16px 24px;margin-bottom:28px;background:var(--panel)}
 .chapter-takeaway small{color:var(--secondary)}.chapter-takeaway p{white-space:pre-wrap;margin:8px 0}
+
+/* The document's three tasks share one entry, while each workspace stays focused. */
+.work-modes{display:flex;align-items:center;gap:3px;padding:4px;border:1px solid var(--border);border-radius:9px;background:var(--panel);flex-shrink:0}
+.work-modes button{padding:7px 16px!important;border:0!important;border-radius:6px;background:transparent!important;color:var(--secondary)!important;font-size:13px;white-space:nowrap}
+.work-modes button[aria-pressed=true]{background:var(--page)!important;color:var(--accent)!important;box-shadow:0 1px 4px #0001;font-weight:600}
+.topbar .breadcrumb{min-width:0;flex:1}.topbar .breadcrumb #crumb{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.topbar{gap:16px}.topbar .top-actions{flex:1;justify-content:flex-end}
+.mode-covered{display:none!important}
+.logic-board{width:calc(100vw - 24px);max-width:none;height:calc(100dvh - 24px);border-radius:12px}
+.logic-board>header>div{min-width:0;flex:1}.logic-board>header>div p{max-width:45vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.logic-board>header>.work-modes{margin:0 20px}
+body.display-mode .topbar{display:flex!important;position:sticky;top:0;z-index:30}
+body.display-mode .topbar .top-actions{visibility:hidden;pointer-events:none}
+body.display-mode .topbar .breadcrumb button{visibility:hidden}
+@media(max-width:760px){.work-modes button{padding:7px 10px!important}.topbar{gap:6px}.topbar .top-actions .saved{display:none}.logic-board>header{padding:14px 12px;flex-wrap:wrap;gap:10px}.logic-board>header>.work-modes{margin:0}.topbar .breadcrumb #crumb{max-width:80px}}
+.show-plan-dialog>[data-rows],.chapter-show>.chapter-show-content{display:block;margin-top:0}

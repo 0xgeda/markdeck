@@ -1,7 +1,7 @@
 const escape=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 // Plan order is independent of document order. Missing/renamed chapters remain
 // visible in the editor so a stale plan cannot silently point at another chapter.
-export async function openShowPlan({editor,title,state,sections,level,save}){
+export async function openShowPlan({editor,title,state,sections,level,save,onClose=()=>{}}){
   const document=window.document;
   if(document.querySelector('.show-plan-dialog'))return;
   state.plans ||= [];
@@ -25,7 +25,7 @@ export async function openShowPlan({editor,title,state,sections,level,save}){
   async function persist(){const ok=await save();status.textContent=ok?'展示方案已保存':'保存失败，请重试后再关闭';return ok;}
   async function close(){if(await persist())dialog.close();}
   dialog.querySelector('[data-close]').onclick=close;
-  dialog.addEventListener('cancel',event=>{event.preventDefault();close();});dialog.addEventListener('close',()=>dialog.remove(),{once:true});
+  dialog.addEventListener('cancel',event=>{event.preventDefault();close();});dialog.addEventListener('close',()=>{dialog.remove();onClose();},{once:true});
   dialog.querySelector('[data-new]').onclick=()=>{create();persist();};
   dialog.querySelector('[data-plans]').onchange=event=>{active=state.plans.find(plan=>plan.id===event.target.value);paint();};
   dialog.querySelector('[data-name]').oninput=event=>{active.name=event.target.value;const option=dialog.querySelector('[data-plans]').selectedOptions[0];if(option)option.textContent=active.name;persist();};
@@ -39,12 +39,13 @@ export async function openShowPlan({editor,title,state,sections,level,save}){
     const selected=active.items.filter(item=>item.enabled&&map.has(item.key)).map(item=>map.get(item.key));
     if(!selected.length)return;
     if(active.items.some(item=>item.enabled&&!map.has(item.key))){status.textContent='有章节已删除或改名，请先移除缺失项。';return;}
-    showChapters(editor,active.name||title,selected,state.summaries||{});
+    dialog.classList.add('mode-covered');
+    showChapters(editor,active.name||title,selected,state.summaries||{},()=>{dialog.classList.remove('mode-covered');dialog.querySelector('[data-start]').focus();});
   };
   if(!active){create();await persist();}else paint();
 }
 
-export function showChapters(editor,title,sections,summaries){
+export function showChapters(editor,title,sections,summaries,onClose=()=>{}){
   const document=window.document,root=editor.getEditorElements().wwEditor;
   const headings=[...root.querySelectorAll('h1,h2,h3,h4,h5,h6')];
   const viewer=document.createElement('dialog');viewer.className='chapter-show';viewer.setAttribute('aria-label',title);
@@ -65,5 +66,5 @@ export function showChapters(editor,title,sections,summaries){
   viewer.querySelector('[data-next]').onclick=()=>{if(index<sections.length-1){index++;paint();}};
   viewer.querySelector('[data-exit]').onclick=()=>viewer.close();
   viewer.addEventListener('keydown',event=>{if(event.key==='ArrowRight'||event.key==='ArrowLeft'){event.preventDefault();viewer.querySelector(event.key==='ArrowRight'?'[data-next]':'[data-prev]').click();}});
-  viewer.addEventListener('close',()=>viewer.remove(),{once:true});paint();
+  viewer.addEventListener('close',()=>{viewer.remove();onClose();},{once:true});paint();
 }

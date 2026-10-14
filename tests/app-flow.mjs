@@ -19,6 +19,18 @@ const filter=w.document.querySelector('#outline-filter');filter.value='子章节
 click('presentation');assert.equal(editable.getAttribute('contenteditable'),'false');w.document.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Escape'}));assert.equal(editable.getAttribute('contenteditable'),'true');
 for(const theme of ['paper','mist','rose','graphite','midnight','sage-orange','sage','light','terminal']){w.document.querySelector(`[data-theme-choice="${theme}"]`).click();assert.equal(w.document.documentElement.dataset.theme,theme);assert.equal(w.document.querySelector(`[data-theme-choice="${theme}"]`).getAttribute('aria-pressed'),'true');}
 click('logic');await new Promise(resolve=>setTimeout(resolve,20));assert.equal(w.document.querySelectorAll('.logic-group').length,1);w.document.querySelector('.logic-dialog [data-close]').click();await new Promise(resolve=>setTimeout(resolve,0));assert.equal(w.document.querySelector('.logic-dialog'),null);
+// Three-mode navigation and secondary planning never leave stacked visible surfaces.
+assert.equal(w.document.querySelector('[data-mode="write"]').getAttribute('aria-pressed'),'true');
+click('presentation');assert.equal(w.document.querySelector('[data-mode="display"]').getAttribute('aria-pressed'),'true');
+w.document.querySelector('[data-arrange]').click();await new Promise(resolve=>setTimeout(resolve,30));
+assert.equal(w.document.body.classList.contains('display-mode'),false);
+assert.ok(w.document.querySelector('.show-plan-dialog'));
+assert.ok(w.document.querySelector('.logic-dialog').classList.contains('mode-covered'));
+w.document.querySelector('.show-plan-dialog [data-close]').click();await new Promise(resolve=>setTimeout(resolve,10));
+assert.equal(w.document.querySelector('.logic-dialog').classList.contains('mode-covered'),false);
+w.document.querySelector('[data-start-display]').click();await new Promise(resolve=>setTimeout(resolve,10));
+assert.equal(w.document.querySelector('.logic-dialog'),null);assert.equal(w.document.body.classList.contains('display-mode'),true);
+click('write');assert.equal(editable.getAttribute('contenteditable'),'true');assert.equal(w.document.querySelector('[data-mode="write"]').getAttribute('aria-pressed'),'true');
 // Close during the typing buffer must persist the newest edit before acknowledging.
 const last=[...editable.querySelectorAll('p')].at(-1);last.textContent='关闭前最后一次输入';
 await new Promise(resolve=>setTimeout(resolve,0));await appAction('close');

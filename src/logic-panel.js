@@ -22,7 +22,7 @@ export function logicSections(headings,title='文档',level=1){
   collect(roots);return cards;
 
 }
-export async function openLogicPanel(editor,title,docId='document'){
+export async function openLogicPanel(editor,title,docId='document',options={}){
   const document=window.document;if(document.querySelector('.logic-dialog[open]'))return;
   const headings=[...editor.getEditorElements().wwEditor.querySelectorAll('h1,h2,h3,h4,h5,h6')];
   const entries=headings.map((node,index)=>({title:node.textContent,level:Number(node.tagName.slice(1)),index}));
@@ -31,7 +31,7 @@ export async function openLogicPanel(editor,title,docId='document'){
   let groups=logicSections(entries,title,defaultLevel);
   const storageKey='markdeck-logic-'+docId;let state={version:1,notes:{},summaries:{},plans:[],positions:{},collapsed:{},zoom:1,left:0,top:0,cardLevel:defaultLevel},pending=Promise.resolve(),timer,drag=null;
   const dialog=document.createElement('dialog');dialog.className='logic-dialog logic-board';dialog.setAttribute('aria-labelledby','logic-title');
-  dialog.innerHTML=`<header><div><h2 id="logic-title">文档逻辑</h2><p>${escape(title)}</p></div><button data-close aria-label="关闭文档逻辑">×</button></header><nav class="logic-tools"><label>卡片层级 <select data-card-level aria-label="卡片层级">${(levels.length?levels:[1]).map(level=>`<option value="${level}">按 ${level} 级标题</option>`).join('')}</select></label><button data-add-note>＋ 新增便笺</button><button data-show-plan>展示方案</button><span></span><button data-zoom-out aria-label="缩小画布">−</button><output>100%</output><button data-zoom-in aria-label="放大画布">＋</button><button data-fit>查看全部</button></nav><div class="logic-viewport"><div class="logic-space"><div class="logic-canvas"></div></div></div><footer><span data-status role="status">拖动卡片移动 · 空白处拖动画布 · 点击标题查看正文</span><span>自动保存，不改变正文</span></footer>`;
+  dialog.innerHTML=`<header><div><h2 id="logic-title">梳理文档</h2><p>${escape(title)}</p></div><nav class="work-modes" aria-label="文档模式"><button data-return-write>写作</button><button aria-pressed="true">梳理</button><button data-start-display>展示</button></nav><button data-close aria-label="关闭文档逻辑">返回写作</button></header><nav class="logic-tools"><label>卡片层级 <select data-card-level aria-label="卡片层级">${(levels.length?levels:[1]).map(level=>`<option value="${level}">按 ${level} 级标题</option>`).join('')}</select></label><button data-add-note>＋ 新增便笺</button><button data-show-plan>展示方案</button><span></span><button data-zoom-out aria-label="缩小画布">−</button><output>100%</output><button data-zoom-in aria-label="放大画布">＋</button><button data-fit>查看全部</button></nav><div class="logic-viewport"><div class="logic-space"><div class="logic-canvas"></div></div></div><footer><span data-status role="status">拖动卡片移动 · 空白处拖动画布 · 点击标题查看正文</span><span>自动保存，不改变正文</span></footer>`;
   document.querySelector('#settings-dialog')?.close();document.body.append(dialog);dialog.showModal();
   const viewport=dialog.querySelector('.logic-viewport'),space=dialog.querySelector('.logic-space'),canvas=dialog.querySelector('.logic-canvas'),status=dialog.querySelector('[data-status]');let ready=false,width=1200,height=800;
   function persist(){if(!ready)return;state.left=viewport.scrollLeft;state.top=viewport.scrollTop;const snapshot=JSON.stringify(state);pending=pending.catch(()=>{}).then(async()=>{if(window.desktop?.saveLogic){const result=await window.desktop.saveLogic(docId,snapshot);if(!result.ok)throw new Error(result.error);}else window.localStorage.setItem(storageKey,snapshot);status.textContent='布局、摘要与展示方案已保存';}).catch(error=>{status.textContent='保存失败：'+error.message;throw error;});pending.catch(()=>{});}
@@ -62,11 +62,14 @@ export async function openLogicPanel(editor,title,docId='document'){
   viewport.onscroll=()=>{if(!ready||drag)return;clearTimeout(timer);timer=setTimeout(persist,250);};
   viewport.onwheel=event=>{if(event.ctrlKey||event.metaKey){event.preventDefault();state.zoom+=event.deltaY>0?-.05:.05;scale();persist();}else if(event.shiftKey&&event.deltaX===0){event.preventDefault();viewport.scrollLeft+=event.deltaY;} };
   async function saveNow(){clearTimeout(timer);persist();try{await pending;return true;}catch{return false;}}
-  dialog.querySelector('[data-show-plan]').onclick=async()=>{if(!await saveNow())return;await openShowPlan({editor,title,state,sections:level=>logicSections(entries,title,level),level:state.cardLevel,save:saveNow});};
+  dialog.querySelector('[data-show-plan]').onclick=async()=>{if(!await saveNow())return;dialog.classList.add('mode-covered');await openShowPlan({editor,title,state,sections:level=>logicSections(entries,title,level),level:state.cardLevel,save:saveNow,onClose:()=>{dialog.classList.remove('mode-covered');dialog.querySelector('[data-show-plan]').focus();}});};
   flushCurrent=saveNow;
   async function close(){if(!await saveNow())return false;dialog.close();return true;}
+  dialog.querySelector('[data-return-write]').onclick=close;
+  dialog.querySelector('[data-start-display]').onclick=async()=>{if(await close())window.dispatchEvent(new window.CustomEvent('markdeck-mode',{detail:'display'}));};
   dialog.querySelector('[data-close]').onclick=close;dialog.addEventListener('cancel',event=>{event.preventDefault();close();});dialog.addEventListener('close',()=>{observer?.disconnect();dialog.remove();},{once:true});
-  dialog.addEventListener('close',()=>{flushCurrent=async()=>true;},{once:true});
+  dialog.addEventListener('close',()=>{flushCurrent=async()=>true;options.onClose?.();},{once:true});
   const observer=window.ResizeObserver?new window.ResizeObserver(measure):null;observer?.observe(viewport);
   try{const response=window.desktop?.loadLogic?await window.desktop.loadLogic(docId):{ok:true,state:window.localStorage.getItem(storageKey)};if(!response.ok)throw new Error(response.error);if(response.state){const saved=JSON.parse(response.state);if(saved.version!==1||!saved.notes||!saved.positions||!saved.collapsed||!Number.isFinite(saved.zoom))throw new Error('布局数据无效');state={...state,...saved};}if(!levels.includes(state.cardLevel))state.cardLevel=defaultLevel;groups=logicSections(entries,title,state.cardLevel);dialog.querySelector('[data-card-level]').value=String(state.cardLevel);for(const key of Object.keys(state.notes)){if(!state.notes[key]&&!key.startsWith('note-'))continue;groups.push({key:'sticky:'+key,noteKey:key,title:'便笺',sticky:true,children:[]});}ready=true;paint();if(response.state){viewport.scrollLeft=state.left;viewport.scrollTop=state.top;}else{groups.forEach(group=>state.collapsed[group.key]=true);paint();fit();}}catch(error){status.textContent=error.message;paint();}
+  if(options.arrange&&ready)dialog.querySelector('[data-show-plan]').click();
 }
