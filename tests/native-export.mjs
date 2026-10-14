@@ -7,6 +7,9 @@ const electron={app:{setName(){},setPath:(key,value)=>paths.set(key,value),getPa
 try{const filename=path.resolve('desktop/main.cjs');vm.runInNewContext(fs.readFileSync(filename,'utf8'),{require:name=>name==='electron'?electron:name==='./workspace.cjs'?require('../desktop/workspace.cjs'):createRequire(path.resolve('desktop/main.cjs'))(name),__dirname:path.dirname(filename),process:{platform:'darwin',env:{LARKDOWN_DATA_DIR:path.join(root,'data')}},Buffer,Response,console});await new Promise(resolve=>setImmediate(resolve));
 const event={sender:main.webContents,senderFrame:main.webContents.mainFrame},call=(...args)=>handlers.get('document:export')(event,...args),html='<html><head></head><body>完整正文</body></html>';
 assert.equal((await call('测试',html,'html')).ok,true);assert.match(fs.readFileSync(path.join(root,'output.html'),'utf8'),/完整正文/);assert.match(fs.readFileSync(path.join(root,'output.html'),'utf8'),/default-src 'none'/);
+const saveWorkspace=handlers.get('workspace:save');await saveWorkspace(event,{active:'logic-fixture',docs:[{id:'logic-fixture',title:'报告',body:'# 第一章',updated:Date.now()}]});
+const logicState=JSON.stringify({version:1,notes:{'第一章::0':'补充依据'},positions:{'第一章::0':{x:120,y:80}},collapsed:{},zoom:.8,left:20,top:0});
+assert.equal((await handlers.get('logic:save')(event,'logic-fixture',logicState)).ok,true);assert.equal((await handlers.get('logic:load')(event,'logic-fixture')).state,logicState);assert.equal((await handlers.get('logic:save')(event,'../bad',logicState)).ok,false);
 format='pdf';assert.equal((await call('测试',html,'pdf')).ok,true);assert.equal(printed.pageSize,'A4');assert.equal(closed,1);assert.match(fs.readFileSync(path.join(root,'output.pdf'),'utf8'),/^%PDF/);
 canceled=true;assert.equal((await call('测试',html,'pdf')).canceled,true);assert.equal(closed,1);
 await assert.rejects(()=>handlers.get('document:export')({sender:{},senderFrame:{}},'bad',html,'pdf'),/来源/);

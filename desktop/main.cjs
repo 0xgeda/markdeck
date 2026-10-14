@@ -69,6 +69,9 @@ app.whenReady().then(()=>{
     if(result.canceled)return {canceled:true};if(!/\.pptx$/i.test(result.filePath))throw new Error('请选择 .pptx 文件');
     atomicWrite(result.filePath,bytes);return {};
   });
+  function logicPath(id){if(typeof id!=='string'||!/^[a-zA-Z0-9-]{1,100}$/.test(id)||!workspace.state.docs.some(doc=>doc.id===id))throw new Error('文档不存在');const folder=path.join(app.getPath('userData'),'logic');fs.mkdirSync(folder,{recursive:true});return path.join(folder,id+'.json');}
+  register('logic:load',id=>{const file=logicPath(id);return {state:fs.existsSync(file)?fs.readFileSync(file,'utf8'):null};});
+  register('logic:save',(id,text)=>{if(typeof text!=='string'||Buffer.byteLength(text)>5*1024*1024)throw new Error('布局或批注过大');const state=JSON.parse(text);if(state.version!==1||!state.notes||!state.positions||!state.collapsed||!Number.isFinite(state.zoom)||state.zoom<.25||state.zoom>1.6)throw new Error('布局格式无效');for(const value of Object.values(state.notes))if(typeof value!=='string')throw new Error('批注格式无效');for(const point of Object.values(state.positions))if(!point||!Number.isFinite(point.x)||!Number.isFinite(point.y)||point.x<0||point.y<0||point.x>100000||point.y>100000)throw new Error('节点坐标无效');atomicWrite(logicPath(id),text);return {};});
   register('image:store',(id,data)=>workspace.attachments.store(id,data));
   register('image:read',(id,src)=>workspace.attachments.read(id,src));
   register('workspace:versions',id=>({versions:workspace.versions(id)}));

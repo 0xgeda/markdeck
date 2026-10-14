@@ -2,6 +2,8 @@ const {contextBridge,ipcRenderer}=require('electron');
 contextBridge.exposeInMainWorld('desktop', {
   storeImage:(id,data)=>ipcRenderer.invoke('image:store',id,data),
   readImage:(id,src)=>ipcRenderer.invoke('image:read',id,src),
+  loadLogic:id=>ipcRenderer.invoke('logic:load',id),
+  saveLogic:(id,state)=>ipcRenderer.invoke('logic:save',id,state),
   versions:id=>ipcRenderer.invoke('workspace:versions',id),
   restore:(id,version)=>ipcRenderer.invoke('workspace:restore',id,version),
   exportDocument:(title,html,format)=>ipcRenderer.invoke('document:export',title,html,format),
