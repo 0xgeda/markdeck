@@ -1,0 +1,23 @@
+import assert from 'node:assert/strict';
+import {JSDOM} from 'jsdom';
+import JSZip from 'jszip';
+import {paginateDraft,arrangePage,pageBlocks,createDraft} from '../src/presentation/draft.js';
+import {exportPptx} from '../src/presentation/pptx.js';
+const dom=new JSDOM();const document=dom.window.document;
+const rows=Array.from({length:40},(_,i)=>`| SKU-${i+1} | ${'较长的产品说明'.repeat(3)} |`);
+const page={title:'长表格',body:'表格前说明\n\n| SKU | 说明 |\n| --- | --- |\n'+rows.join('\n')+'\n\n表格后备注必须保留'};
+const draft=paginateDraft({version:1,title:'测试',theme:'minimal',pages:[page]},document);
+assert.ok(draft.pages.length>1);assert.ok(draft.pages.every(p=>!arrangePage(p,document).overflow));
+const tables=draft.pages.flatMap(p=>pageBlocks(p.body,document).filter(b=>b.type==='table'));
+assert.deepEqual(tables.flatMap(t=>t.rows.slice(1).map(r=>r[0])),rows.map((_,i)=>`SKU-${i+1}`));
+assert.ok(tables.every(t=>t.rows[0][0]==='SKU'));
+assert.match(draft.pages.at(-1).body,/表格后备注必须保留/);
+const zip=await JSZip.loadAsync(Buffer.from(await exportPptx(draft,document),'base64'));
+for(let i=1;i<=draft.pages.length;i++){const xml=await zip.file(`ppt/slides/slide${i}.xml`).async('string');assert.ok(xml.includes('长表格'));}
+const text='长段落内容0123456789'.repeat(600);
+const paragraphs=paginateDraft({pages:[{title:'段落',body:text}]},document);
+assert.ok(paragraphs.pages.every(p=>!arrangePage(p,document).overflow));assert.equal(paragraphs.pages.map(p=>p.body).join(''),text);
+const cell='超长单元格内容'.repeat(180);
+const cellPages=paginateDraft({pages:[{title:'超长单行',body:'| 名称 | 内容 |\n| --- | --- |\n| 标识 | '+cell+' |'}]},document);
+assert.ok(cellPages.pages.length>1);assert.ok(cellPages.pages.every(p=>!arrangePage(p,document).overflow));assert.equal(cellPages.pages.flatMap(p=>pageBlocks(p.body,document).filter(b=>b.type==='table').flatMap(t=>t.rows.slice(1).map(row=>row[1]))).join(''),cell);
+dom.window.close();console.log('Long tables repeat headers, all rows stay ordered, notes survive, long paragraphs preserve every character, PPTX export passed.');

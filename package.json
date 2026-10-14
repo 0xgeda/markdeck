@@ -1,0 +1,42 @@
+{
+  "name": "markdeck",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "test": "node tests/browser.mjs",
+    "start": "npm run build && electron .",
+    "package:mac": "npm run build && node desktop/package.mjs",
+    "test:files": "node --test tests/files.cjs",
+    "test:desktop": "npm run build && node tests/desktop.mjs",
+    "test:shortcuts": "node --test tests/shortcuts.mjs",
+    "test:presentation": "node --test tests/presentation.mjs",
+    "test:presentation-flow": "node --test tests/presentation-flow.mjs",
+    "test:pptx": "node tests/pptx-draft.mjs"
+  },
+  "dependencies": {
+    "@toast-ui/editor": "^3.2.2",
+    "dompurify": "2.5.9",
+    "markdown-it": "^15.0.2",
+    "pptxgenjs": "^4.0.1",
+    "prosemirror-inputrules": "1.5.1",
+    "vite": "6.4.3"
+  },
+  "overrides": {
+    "nanoid": "3.3.19",
+    "rollup": "4.63.1",
+    "postcss": "8.5.26"
+  },
+  "devDependencies": {
+    "@electron/packager": "^20.3.0",
+    "electron": "^44.7.0",
+    "jsdom": "^25.0.1",
+    "playwright": "^1.64.0"
+  },
+  "main": "desktop/main.cjs",
+  "description": "直接编辑本地 Markdown，自动保存的桌面文档工具",
+  "productName": "Markdeck"
+}

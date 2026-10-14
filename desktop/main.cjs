@@ -1,0 +1,133 @@
+const {app,BrowserWindow,Menu,dialog,ipcMain,protocol,net,session,nativeTheme}=require('electron');
+const path=require('node:path');
+const themePalettes=require('./themes.json');
+const fs=require('node:fs');
+const {pathToFileURL}=require('node:url');
+const {Workspace,atomicWrite}=require('./workspace.cjs');
+app.setName('Markdeck');
+protocol.registerSchemesAsPrivileged([{scheme:'yun-jian',privileges:{standard:true,secure:true,supportFetchAPI:true}}]);
+// Keep the previous data directory and renderer origin so renaming preserves drafts and preferences.
+const dataDirectory=process.env.LARKDOWN_DATA_DIR||process.env.YUNJIAN_DATA_DIR||path.join(app.getPath('appData'),'云笺');
+app.setPath('userData',path.resolve(dataDirectory));
+const primary=app.requestSingleInstanceLock();
+if(!primary)app.quit();
+app.on('second-instance',()=>{window?.show();window?.focus();});
+let window,workspace,allowClose=false,quitAfterClose=false;
+const startURL='yun-jian://app/index.html';
+const filters=[{name:'Markdown 文档',extensions:['md','markdown','txt']}];
+function action(name){window?.webContents.send('app:action',name);}
+function createWindow(){
+  allowClose=false;
+  window=new BrowserWindow({width:1440,height:1000,minWidth:820,minHeight:600,show:false,title:'Markdeck',backgroundColor:'#ffffff',webPreferences:{preload:path.join(__dirname,'preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true}});
+  window.once('ready-to-show',()=>{window.maximize();window.show();});
+  window.webContents.setWindowOpenHandler(()=>({action:'deny'}));
+  window.webContents.on('will-navigate',event=>event.preventDefault());
+  window.on('close',event=>{if(!allowClose){event.preventDefault();action('close');}});
+  window.on('closed',()=>{window=null;});
+  window.loadURL(startURL);
+}
+function register(name,handler){ipcMain.handle(name,async(event,...args)=>{
+  if(!window || event.sender!==window.webContents || event.senderFrame!==window.webContents.mainFrame || event.senderFrame.url!==startURL) throw new Error('请求来源无效');
+  try{return {ok:true,...await handler(...args)};}catch(error){return {ok:false,error:error.message};}
+});}
+app.whenReady().then(()=>{
+  if(!primary)return;
+  try{workspace=new Workspace(app.getPath('userData'));}catch(error){dialog.showErrorBox('无法读取文档空间',`已有数据未被覆盖。\n${error.message}`);app.quit();return;}
+  const root=path.resolve(__dirname,'../dist');
+  protocol.handle('yun-jian',request=>{
+    const url=new URL(request.url);
+    const filename=path.resolve(root,'.'+decodeURIComponent(url.pathname));
+    if(url.hostname!=='app' || !filename.startsWith(root+path.sep)) return new Response('Forbidden',{status:403});
+    return net.fetch(pathToFileURL(filename).href);
+  });
+  session.defaultSession.setPermissionRequestHandler((contents,permission,callback)=>callback(permission==='fullscreen'&&contents===window?.webContents&&contents.getURL()===startURL));
+  register('app:theme',theme=>{if(!Object.hasOwn(themePalettes,theme))throw new Error('皮肤无效');const palette=themePalettes[theme];nativeTheme.themeSource=palette.mode;window.setBackgroundColor(palette.page);return {};});
+  register('presentation:export',async(title,html)=>{
+    if(typeof title!=='string'||title.length>1000||typeof html!=='string'||Buffer.byteLength(html)>20*1024*1024)throw new Error('演示内容无效或超过 20 MB');
+    const filename=(title.replace(/[\\/:*?"<>|]/g,'_')||'演示文稿')+'.html';
+    const result=await dialog.showSaveDialog(window,{title:'导出演示文稿',defaultPath:path.join(app.getPath('documents'),filename),filters:[{name:'HTML 演示文稿',extensions:['html']}]});
+    if(result.canceled)return {canceled:true};
+    if(!/\.html?$/i.test(result.filePath))throw new Error('请选择 .html 文件');
+    atomicWrite(result.filePath,html);return {};
+  });
+  function deckPath(id){
+    if(typeof id!=='string'||!/^[a-zA-Z0-9-]{1,100}$/.test(id)||!workspace.state.docs.some(doc=>doc.id===id))throw new Error('文档不存在');
+    const directory=path.join(app.getPath('userData'),'decks');fs.mkdirSync(directory,{recursive:true});return path.join(directory,id+'.json');
+  }
+  register('deck:load',id=>{const filename=deckPath(id);return {draft:fs.existsSync(filename)?fs.readFileSync(filename,'utf8'):null};});
+  register('deck:save',(id,text)=>{
+    if(typeof text!=='string'||Buffer.byteLength(text)>30*1024*1024)throw new Error('确认稿无效或超过 30 MB');
+    const draft=JSON.parse(text);
+    if(draft.version!==1||!Array.isArray(draft.pages)||draft.pages.length<1||draft.pages.length>1000||draft.pages.some(page=>typeof page.title!=='string'||typeof page.body!=='string'))throw new Error('确认稿内容无效');
+    atomicWrite(deckPath(id),text);return {};
+  });
+  register('deck:export-pptx',async(title,data)=>{
+    if(typeof title!=='string'||title.length>1000||typeof data!=='string'||data.length>80*1024*1024||!/^[A-Za-z0-9+/]+={0,2}$/.test(data))throw new Error('PPTX 数据无效或过大');
+    const bytes=Buffer.from(data,'base64');if(bytes.subarray(0,4).toString('hex')!=='504b0304')throw new Error('PPTX 文件格式无效');
+    const filename=(title.replace(/[\\/:*?"<>|]/g,'_')||'确认稿')+'.pptx';
+    const result=await dialog.showSaveDialog(window,{title:'导出 PPTX 确认稿',defaultPath:path.join(app.getPath('documents'),filename),filters:[{name:'PowerPoint 演示文稿',extensions:['pptx']}]});
+    if(result.canceled)return {canceled:true};if(!/\.pptx$/i.test(result.filePath))throw new Error('请选择 .pptx 文件');
+    atomicWrite(result.filePath,bytes);return {};
+  });
+  register('image:store',(id,data)=>workspace.attachments.store(id,data));
+  register('image:read',(id,src)=>workspace.attachments.read(id,src));
+  register('workspace:versions',id=>({versions:workspace.versions(id)}));
+  register('workspace:restore',(id,version)=>workspace.restore(id,version));
+  register('document:export',async(title,html,format)=>{
+    if(typeof title!=='string'||title.length>1000||typeof html!=='string'||Buffer.byteLength(html)>30*1024*1024||!['html','pdf'].includes(format))throw new Error('导出内容无效');
+    const name=(title.replace(/[\\/:*?"<>|]/g,'_')||'文档')+'.'+format;
+    const result=await dialog.showSaveDialog(window,{title:'导出 '+format.toUpperCase(),defaultPath:path.join(app.getPath('documents'),name),filters:[{name:format.toUpperCase(),extensions:[format]}]});
+    if(result.canceled)return {canceled:true};if(!result.filePath.toLowerCase().endsWith('.'+format))throw new Error('文件扩展名无效');
+    if(!/<head(?:\s[^>]*)?>/i.test(html))throw new Error('导出页面缺少头部');
+    html=html.replace(/<head(?:\s[^>]*)?>/i,`<head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; font-src data:">`);
+    if(format==='html'){atomicWrite(result.filePath,html);return {};}
+    const printWindow=new BrowserWindow({show:false,webPreferences:{sandbox:true,contextIsolation:true,nodeIntegration:false,javascript:true}});
+    printWindow.webContents.setWindowOpenHandler(()=>({action:'deny'}));printWindow.webContents.on('will-navigate',event=>event.preventDefault());
+    try{
+      await printWindow.loadURL('data:text/html;charset=utf-8,'+encodeURIComponent(html));
+      await printWindow.webContents.executeJavaScript("Promise.all([document.fonts.ready,...Array.from(document.images,image=>image.complete?Promise.resolve():new Promise(resolve=>{image.onload=image.onerror=resolve}))])");
+      const bytes=await printWindow.webContents.printToPDF({printBackground:true,pageSize:'A4',margins:{top:.5,bottom:.5,left:.5,right:.5}});atomicWrite(result.filePath,bytes);
+    }finally{printWindow.destroy();}return {};
+  });
+  register('workspace:load',()=>({state:workspace.snapshot()}));
+  register('workspace:sync',id=>workspace.sync(id));
+  register('workspace:save',state=>workspace.save(state));
+  register('workspace:open',async()=>{
+    const result=await dialog.showOpenDialog(window,{title:'打开 Markdown 文档',filters,properties:['openFile']});
+    if(result.canceled) return {canceled:true};
+    return {state:workspace.open(result.filePaths[0])};
+  });
+  register('workspace:save-as',async id=>{
+    const d=workspace.state.docs.find(d=>d.id===id);
+    if(!d)throw new Error('文档不存在');
+    const filename=(d.title.replace(/[\\/:*?"<>|]/g,'_')||'无标题文档')+'.md';
+    const result=await dialog.showSaveDialog(window,{title:'保存 Markdown 文件',defaultPath:d.filePath||path.join(app.getPath('documents'),filename),filters});
+    if(result.canceled)return {canceled:true};
+    return {state:workspace.saveAs(id,result.filePath)};
+  });
+  register('workspace:reload',async id=>{
+    if(workspace.hasUnsavedChanges(id)){
+      const result=await dialog.showMessageBox(window,{type:'question',message:'刷新将替换尚未写回的修改',detail:'选择取消可先另存为，保留编辑器中的版本；继续刷新会读取本地文件的最新内容。',buttons:['取消','继续刷新'],defaultId:0,cancelId:0});
+      if(result.response!==1)return {canceled:true};
+    }
+    return {state:workspace.reload(id)};
+  });
+  register('app:finish-close',async result=>{
+    if(!result?.ok || result.fileErrors){
+      const answer=await dialog.showMessageBox(window,{type:'warning',message:result?.ok?'有修改尚未写回原文件':'保存未完成',detail:result?.ok?'修改已保留在应用草稿中。下次打开可另存为。':'关闭可能丢失最新修改，请返回文档检查保存状态。',buttons:['返回文档','仍然关闭'],defaultId:0,cancelId:0});
+      if(answer.response!==1)return {};
+    }
+    allowClose=true;window.close();if(quitAfterClose)app.quit();return {};
+  });
+  Menu.setApplicationMenu(Menu.buildFromTemplate([
+    {label:'Markdeck',submenu:[{role:'about'},{type:'separator'},{role:'hide'},{role:'hideOthers'},{role:'unhide'},{type:'separator'},{label:'退出Markdeck',accelerator:'CmdOrCtrl+Q',click:()=>{quitAfterClose=true;window?window.close():app.quit();}}]},
+    {label:'文件',submenu:[{label:'新建文档',accelerator:'CmdOrCtrl+N',click:()=>action('new')},{label:'打开…',accelerator:'CmdOrCtrl+O',click:()=>action('open')},{label:'保存',accelerator:'CmdOrCtrl+S',click:()=>action('save')},{label:'进入展示模式',click:()=>action('presentation')},{label:'刷新本地文件',accelerator:'CmdOrCtrl+R',click:()=>action('refresh')},{label:'另存为…',accelerator:'CmdOrCtrl+Shift+S',click:()=>action('save-as')},{type:'separator'},{role:'close'}]},
+    {label:'编辑',submenu:[{role:'undo'},{role:'redo'},{type:'separator'},{role:'cut'},{role:'copy'},{role:'paste'},{role:'selectAll'}]},
+    {label:'视图',submenu:[{role:'resetZoom'},{role:'zoomIn'},{role:'zoomOut'},{type:'separator'},{role:'togglefullscreen'}]},
+    {role:'windowMenu'}
+  ]));
+  createWindow();
+});
+app.on('window-all-closed',()=>{if(process.platform!=='darwin')app.quit();});
+app.on('activate',()=>{if(!window && workspace)createWindow();});
+app.on('before-quit',event=>{if(window && !allowClose){quitAfterClose=true;event.preventDefault();window.close();}});

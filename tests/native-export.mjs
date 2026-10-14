@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';import fs from 'node:fs';import os from 'node:os';import path from 'node:path';import vm from 'node:vm';import {createRequire} from 'node:module';
+const require=createRequire(import.meta.url),root=fs.mkdtempSync(path.join(os.tmpdir(),'markdeck-export-'));let main,printed,closed=0,canceled=false,format='html';const handlers=new Map(),paths=new Map();
+const electron={app:{setName(){},setPath:(key,value)=>paths.set(key,value),getPath:key=>paths.get(key)||root,requestSingleInstanceLock:()=>true,on(){},quit(){},whenReady:()=>Promise.resolve()},Menu:{buildFromTemplate:x=>x,setApplicationMenu(){}},nativeTheme:{},dialog:{showSaveDialog:async()=>({canceled,filePath:path.join(root,'output.'+format)}),showErrorBox:()=>assert.fail('workspace load error')},ipcMain:{handle:(name,fn)=>handlers.set(name,fn)},protocol:{registerSchemesAsPrivileged(){},handle(){}},net:{},session:{defaultSession:{setPermissionRequestHandler(){}}},BrowserWindow:class{
+ constructor(options){this.options=options;this.webContents={mainFrame:{url:''},setWindowOpenHandler(){},on(){},executeJavaScript:async()=>{},printToPDF:async options=>{printed=options;return Buffer.from('%PDF-1.4\nmock printer output');}};if(options.title)main=this;}
+ once(){}on(){}maximize(){}show(){}setBackgroundColor(){}destroy(){closed++;}async loadURL(url){this.webContents.mainFrame.url=url;}
+}};
+try{const filename=path.resolve('desktop/main.cjs');vm.runInNewContext(fs.readFileSync(filename,'utf8'),{require:name=>name==='electron'?electron:name==='./workspace.cjs'?require('../desktop/workspace.cjs'):createRequire(path.resolve('desktop/main.cjs'))(name),__dirname:path.dirname(filename),process:{platform:'darwin',env:{LARKDOWN_DATA_DIR:path.join(root,'data')}},Buffer,Response,console});await new Promise(resolve=>setImmediate(resolve));
+const event={sender:main.webContents,senderFrame:main.webContents.mainFrame},call=(...args)=>handlers.get('document:export')(event,...args),html='<html><head></head><body>完整正文</body></html>';
+assert.equal((await call('测试',html,'html')).ok,true);assert.match(fs.readFileSync(path.join(root,'output.html'),'utf8'),/完整正文/);assert.match(fs.readFileSync(path.join(root,'output.html'),'utf8'),/default-src 'none'/);
+format='pdf';assert.equal((await call('测试',html,'pdf')).ok,true);assert.equal(printed.pageSize,'A4');assert.equal(closed,1);assert.match(fs.readFileSync(path.join(root,'output.pdf'),'utf8'),/^%PDF/);
+canceled=true;assert.equal((await call('测试',html,'pdf')).canceled,true);assert.equal(closed,1);
+await assert.rejects(()=>handlers.get('document:export')({sender:{},senderFrame:{}},'bad',html,'pdf'),/来源/);
+console.log('Native export handlers: actual file writes, HTML security policy, PDF printer dispatch, cleanup, cancel and origin checks passed (printer mocked).');
+}finally{fs.rmSync(root,{recursive:true,force:true});}
