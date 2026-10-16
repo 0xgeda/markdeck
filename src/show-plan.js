@@ -7,7 +7,7 @@ export async function openShowPlan({editor,title,state,sections,level,save,onClo
   state.plans ||= [];
   const dialog=document.createElement('dialog');dialog.className='show-plan-dialog';
   dialog.setAttribute('aria-label','展示方案');
-  dialog.innerHTML='<header><h2>展示方案</h2><button data-close aria-label="关闭展示方案">×</button></header><nav><select aria-label="选择展示方案" data-plans></select><button data-new>新建方案</button><button data-delete>删除方案</button></nav><label>方案名称<input data-name maxlength="100"></label><p data-help></p><div data-rows></div><footer><span role="status" data-status></span><button data-add>加入新增章节</button><button data-start>开始展示</button></footer>';
+  dialog.innerHTML='<header><h2>展示方案</h2><button data-close aria-label="关闭展示方案">×</button></header><nav><select aria-label="选择展示方案" data-plans></select><button data-new>新建方案</button><button data-delete>删除方案</button></nav><label>方案名称<input data-name maxlength="100"><span data-plan-level></span></label><div data-rows></div><footer><span role="status" data-status></span><button data-add>加入新增章节</button><button data-start>开始展示</button></footer>';
   document.body.append(dialog);dialog.showModal();
   let active=state.plans[0]||null;
   const status=dialog.querySelector('[data-status]');
@@ -16,20 +16,20 @@ export async function openShowPlan({editor,title,state,sections,level,save,onClo
   function paint(){
     const select=dialog.querySelector('[data-plans]');select.innerHTML=state.plans.map(plan=>`<option value="${escape(plan.id)}">${escape(plan.name)}</option>`).join('');select.value=active?.id||'';
     dialog.querySelector('[data-name]').value=active?.name||'';dialog.querySelector('[data-name]').disabled=!active;
-    dialog.querySelector('[data-help]').textContent=active?`按 ${active.level} 级标题编排。取消勾选可暂时隐藏章节；顺序和摘要独立保存，不修改原文。`:'新建方案，为不同听众选择章节。';
+    dialog.querySelector('[data-plan-level]').textContent=active?`${active.level} 级标题`:'';
     const available=new Map(currentSections().map(s=>[s.key,s]));
-    dialog.querySelector('[data-rows]').innerHTML=active?.items.map((item,index)=>`<div class="show-plan-row"><label><input type="checkbox" data-enabled="${index}" ${item.enabled?'checked':''} ${available.has(item.key)?'':'disabled'}><span>${escape(item.title)}${available.has(item.key)?'':'（章节已删除或改名，请移除并重新加入）'}</span></label><button data-up="${index}" ${index===0?'disabled':''} aria-label="上移 ${escape(item.title)}">↑</button><button data-down="${index}" ${index===active.items.length-1?'disabled':''} aria-label="下移 ${escape(item.title)}">↓</button><button data-remove="${index}" aria-label="移除 ${escape(item.title)}">移除</button></div>`).join('')||'<p>暂无章节，请先在正文中添加标题。</p>';
+    dialog.querySelector('[data-rows]').innerHTML=active?.items.map((item,index)=>`<div class="show-plan-row"><label><input type="checkbox" data-enabled="${index}" ${item.enabled?'checked':''} ${available.has(item.key)?'':'disabled'}><span ${available.has(item.key)?'':'title="原文章节已删除或改名，请移除后重新加入"'}>${escape(item.title)}${available.has(item.key)?'':'（章节已失效）'}</span></label><button data-up="${index}" ${index===0?'disabled':''} aria-label="上移 ${escape(item.title)}">↑</button><button data-down="${index}" ${index===active.items.length-1?'disabled':''} aria-label="下移 ${escape(item.title)}">↓</button><button data-remove="${index}" aria-label="移除 ${escape(item.title)}">移除</button></div>`).join('')||(active?'<p>方案中暂无章节</p>':'<p>暂无展示方案</p>');
     dialog.querySelector('[data-start]').disabled=!active?.items.some(item=>item.enabled&&available.has(item.key));
     dialog.querySelector('[data-delete]').disabled=!active;dialog.querySelector('[data-add]').disabled=!active;
   }
-  async function persist(){const ok=await save();status.textContent=ok?'展示方案已保存':'保存失败，请重试后再关闭';return ok;}
+  async function persist(){const ok=await save();status.textContent=ok?'已保存':'保存失败，请重试后再关闭';return ok;}
   async function close(){if(await persist())dialog.close();}
   dialog.querySelector('[data-close]').onclick=close;
   dialog.addEventListener('cancel',event=>{event.preventDefault();close();});dialog.addEventListener('close',()=>{dialog.remove();onClose();},{once:true});
   dialog.querySelector('[data-new]').onclick=()=>{create();persist();};
   dialog.querySelector('[data-plans]').onchange=event=>{active=state.plans.find(plan=>plan.id===event.target.value);paint();};
   dialog.querySelector('[data-name]').oninput=event=>{active.name=event.target.value;const option=dialog.querySelector('[data-plans]').selectedOptions[0];if(option)option.textContent=active.name;persist();};
-  dialog.querySelector('[data-delete]').onclick=()=>{if(!active||!window.confirm('删除这个展示方案？原文和章节摘要会保留。'))return;state.plans=state.plans.filter(plan=>plan!==active);active=state.plans[0]||null;paint();persist();};
+  dialog.querySelector('[data-delete]').onclick=()=>{if(!active||!window.confirm('删除这个展示方案？原文会保留。'))return;state.plans=state.plans.filter(plan=>plan!==active);active=state.plans[0]||null;paint();persist();};
   dialog.querySelector('[data-add]').onclick=()=>{for(const section of currentSections()){if(!active.items.some(item=>item.key===section.key))active.items.push({key:section.key,title:section.title,enabled:true});}paint();persist();};
   dialog.querySelector('[data-rows]').onchange=event=>{if(event.target.dataset.enabled===undefined)return;active.items[Number(event.target.dataset.enabled)].enabled=event.target.checked;paint();persist();};
   dialog.querySelector('[data-rows]').onclick=event=>{const button=event.target.closest('button');if(!button)return;for(const [action,delta] of [['up',-1],['down',1],['remove',0]]){if(button.dataset[action]===undefined)continue;const index=Number(button.dataset[action]);if(action==='remove')active.items.splice(index,1);else{const other=index+delta;if(other<0||other>=active.items.length)return;[active.items[index],active.items[other]]=[active.items[other],active.items[index]];}paint();persist();}};

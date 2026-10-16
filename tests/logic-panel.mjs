@@ -58,4 +58,23 @@ dialog.querySelector('[data-close]').click();await tick();
 await openLogicPanel(editor,'报告','levels');dialog=document.querySelector('.logic-dialog');assert.equal(dialog.querySelector('[data-card-level]').value,'3');assert.equal(dialog.querySelector('[data-note]').value,'切换后保留');assert.equal(article.innerHTML,original);
 dialog.querySelector('[data-close]').click();await tick();
 const skipped=logicSections([{title:'根',level:1,index:0},{title:'跳级',level:3,index:1},{title:'细节',level:5,index:2}], '报告',3);assert.equal(skipped[0].children[0].level,5);
+// Diagram relationships survive drag, reopen and level changes; duplicate edges are ignored.
+article.innerHTML='<h1>输入甲</h1><h1>输入乙</h1><h1>判断</h1>';
+await openLogicPanel(editor,'关系图','diagram');dialog=document.querySelector('.logic-dialog');
+assert.equal(dialog.querySelector('[data-summary]'),null);
+function portKey(index,side){dialog.querySelectorAll('.logic-group')[index].querySelector(`[data-port="${side}"]`).dispatchEvent(new window.KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true}));}
+function connect(from,to){portKey(from,'out');portKey(to,'in');}
+connect(0,2);connect(1,2);connect(0,2);assert.equal(dialog.querySelectorAll('.logic-wires .edge-line').length,2);
+const wire=dialog.querySelector('.logic-wires .edge-line').getAttribute('d');move(dialog.querySelector('.logic-group'),50,80);assert.notEqual(dialog.querySelector('.logic-wires .edge-line').getAttribute('d'),wire);
+portKey(0,'out');dialog.dispatchEvent(new window.Event('cancel',{cancelable:true}));assert.ok(dialog.open);assert.equal(dialog.querySelector('.edge-preview'),null);
+dialog.querySelector('[data-add-frame]').click();let frame=dialog.querySelector('.logic-frame');const title=frame.querySelector('input');title.value='客观输入 <script>';title.dispatchEvent(new window.Event('input',{bubbles:true}));frame.style.width='1200px';frame.style.height='800px';dialog.querySelector('.logic-canvas').onpointerup();
+const first=dialog.querySelector('.logic-group').style.left;move(frame,40,30);assert.notEqual(dialog.querySelector('.logic-group').style.left,first);
+dialog.querySelector('[data-close]').click();await tick();
+await openLogicPanel(editor,'关系图','diagram');dialog=document.querySelector('.logic-dialog');assert.equal(dialog.querySelectorAll('.logic-wires .edge-line').length,2);assert.equal(dialog.querySelector('[data-frame-title]').value,'客观输入 <script>');assert.equal(dialog.querySelector('.logic-frame').style.width,'1200px');assert.equal(dialog.querySelector('script'),null);
+dialog.querySelector('[data-remove-edge="0"]').click();assert.equal(dialog.querySelectorAll('.logic-wires .edge-line').length,1);
+dialog.querySelector('.logic-frame [data-delete]').click();assert.equal(dialog.querySelector('.logic-frame'),null);assert.equal(dialog.querySelectorAll('.logic-group').length,3);
+dialog.querySelector('[data-close]').click();await tick();
+window.localStorage.setItem('markdeck-logic-summary-migration',JSON.stringify({version:1,notes:{},summaries:{old:{conclusion:'旧结论',points:'旧要点'}},positions:{},collapsed:{},zoom:1}));
+await openLogicPanel(editor,'关系图','summary-migration');dialog=document.querySelector('.logic-dialog');assert.equal(dialog.querySelector('[data-note]').value,'旧结论\n\n旧要点');assert.equal(dialog.querySelector('[data-summary]'),null);dialog.querySelector('[data-close]').click();await tick();
+await openLogicPanel(editor,'关系图','summary-migration');dialog=document.querySelector('.logic-dialog');assert.equal(dialog.querySelectorAll('[data-note]').length,1);dialog.querySelector('[data-close]').click();await tick();
 dom.window.close();console.log('H1 drag, nested H2, independent sticky create/edit/drag/delete, persistence, legacy notes and source protection passed.');

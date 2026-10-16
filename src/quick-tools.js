@@ -34,7 +34,7 @@ export function quickTools(editor,root,id){
     if(!empty||$from.parent.type.name!=='paragraph'||$from.parent.content.size)return;
     event.preventDefault();view.dispatch(view.state.tr.insertText('/'));slash=from;menu.hidden=false;bar.hidden=true;locate(menu);
   }
-  function selection(){if(!editable()||!view.hasFocus()||view.state.selection.empty||!menu.hidden){bar.hidden=true;return;}bar.hidden=false;locate(bar);}
+  function selection(){const {$from,node}=view.state.selection;let inTable=node?.type.name==='table';for(let d=$from.depth;d>0;d--)inTable||=$from.node(d).type.name==='table';if(inTable||!editable()||!view.hasFocus()||view.state.selection.empty||!menu.hidden){bar.hidden=true;return;}bar.hidden=false;locate(bar);}
   function outside(event){if(!menu.contains(event.target))dismiss();if(!bar.contains(event.target)&&!view.dom.contains(event.target))bar.hidden=true;}
   function scroll(event){if(menu.contains(event.target))return;dismiss();bar.hidden=true;}
   doc.addEventListener('keydown',key,true);doc.addEventListener('mouseup',selection);doc.addEventListener('keyup',selection);doc.addEventListener('mousedown',outside);window.addEventListener('scroll',scroll,true);

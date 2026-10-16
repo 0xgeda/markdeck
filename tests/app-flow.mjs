@@ -10,10 +10,23 @@ const ok=fn=>async(...args)=>({ok:true,...fn(...args)});w.desktop={searchProject
 try{
 await w.eval('(async()=>{'+bundle.outputFiles[0].text+'})()');
 const click=action=>w.document.querySelector(`[data-action="${action}"]`).click();const beforeFold=fs.readFileSync(file,'utf8');
-w.document.querySelector('[data-fold-section="0"]').click();assert.ok(w.document.querySelector('.section-fold-hidden'));
+// Frequent actions are reachable without settings and stay in sync after rerender.
+const outlineToggle=()=>w.document.querySelector('.topbar [data-action="outline"]');
+assert.equal(w.document.querySelector('#settings-dialog #show-outline'),null);
+assert.equal(outlineToggle().getAttribute('aria-pressed'),'true');
+w.document.querySelector('.outline-close').click();assert.equal(outlineToggle().getAttribute('aria-label'),'显示目录');assert.ok(w.document.body.classList.contains('outline-hidden'));
+outlineToggle().click();assert.equal(w.document.body.classList.contains('outline-hidden'),false);
+const imported=w.document.querySelector('.sidebar [data-action="import"]');assert.equal(imported.previousElementSibling.dataset.action,'new');
+let opened=0;w.desktop.open=async()=>{opened++;return {ok:true,canceled:true};};
+imported.click();await new Promise(resolve=>setTimeout(resolve,20));assert.equal(opened,1);assert.equal(fs.readFileSync(file,'utf8'),beforeFold);
+click('sidebar');assert.ok(w.document.body.classList.contains('sidebar-open'));w.document.querySelector('.mobile-close').click();assert.equal(w.document.body.classList.contains('sidebar-open'),false);
+w.document.querySelector('[data-fold-outline-node="0"]').click();assert.equal(w.document.querySelector('.section-fold-hidden'),null);assert.ok(w.document.querySelector('#outline .outline-entry[hidden]'));assert.equal(w.document.querySelectorAll('[data-fold-outline-node]').length,1);
 await new Promise(resolve=>setTimeout(resolve,300));assert.equal(fs.readFileSync(file,'utf8'),beforeFold);
 w.document.dispatchEvent(new w.KeyboardEvent('keydown',{key:'f',ctrlKey:true,bubbles:true,cancelable:true}));assert.equal(w.document.querySelector('.section-fold-hidden'),null);w.document.querySelector('.find-panel [data-close]').click();
 click('reference');await new Promise(resolve=>setTimeout(resolve,20));assert.ok(w.document.querySelector('.reference-pane'));w.document.querySelector('[aria-label="关闭参考文档"]').click();assert.equal(w.document.body.classList.contains('reference-open'),false);
+assert.equal(outlineToggle().getAttribute('aria-pressed'),'true');
+click('reference');await new Promise(resolve=>setTimeout(resolve,20));assert.equal(outlineToggle().getAttribute('aria-pressed'),'false');
+outlineToggle().click();assert.equal(w.document.querySelector('.reference-pane'),null);assert.equal(w.document.body.classList.contains('outline-hidden'),false);
 click('find');const panel=w.document.querySelector('.find-panel');const query=panel.querySelector('[data-query]');query.value='查找';query.dispatchEvent(new w.Event('input'));assert.match(panel.querySelector('[data-count]').textContent,/2/);
 for(const [shiftKey,count] of [[false,'2 / 2'],[false,'1 / 2'],[true,'2 / 2']]){query.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Enter',shiftKey,bubbles:true,cancelable:true}));assert.equal(panel.querySelector('[data-count]').textContent,count);}
 query.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Enter',isComposing:true,bubbles:true}));assert.equal(panel.querySelector('[data-count]').textContent,'2 / 2');

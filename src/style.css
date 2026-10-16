@@ -165,7 +165,7 @@ button:disabled{cursor:default;opacity:.45}button:disabled:hover{background:none
 .presentation-dialog button{background:transparent;color:var(--ink)}
 .presentation-dialog .new-doc{background:var(--accent);color:var(--on-accent)}
 /* Contextual table actions stay reachable while editing a long document. */
-#editor .table-controls{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:30;display:flex;gap:2px;flex-wrap:wrap;max-width:calc(100vw - 32px);padding:6px;background:var(--page);color:var(--ink);border:1px solid var(--border);border-radius:10px;box-shadow:0 4px 20px #0002}
+#editor .table-controls{position:fixed;z-index:90;display:flex;flex-direction:column;gap:4px;max-width:calc(100vw - 24px);padding:5px;background:var(--page);color:var(--ink);border:1px solid var(--border);border-radius:9px;box-shadow:var(--ui-shadow)}
 #editor .table-controls[hidden]{display:none}
 #editor .table-controls button{padding:8px 10px;border-radius:6px;font-size:12px;white-space:nowrap}
 #editor .table-controls button:hover{background:var(--hover)}
@@ -243,7 +243,14 @@ button:disabled{cursor:default;opacity:.45}button:disabled:hover{background:none
 .logic-group{position:absolute;width:350px;background:color-mix(in srgb,var(--page),white 72%);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:10px;box-shadow:0 3px 12px #0000000a;overflow:hidden;color:var(--ink);cursor:default}
 .logic-dialog .logic-group>header{padding:16px 12px;gap:10px;align-items:flex-start;border:0;cursor:grab;touch-action:none}.logic-group header .logic-title-link{padding:0;flex:1;text-align:left;min-width:0}.logic-group b{display:block;font-size:14px;line-height:1.6;overflow-wrap:anywhere}.logic-group .logic-grip{padding:0 3px;cursor:grab;color:var(--secondary);font-size:20px;touch-action:none}.logic-group [data-toggle]{padding:0 7px;font-size:20px;color:var(--secondary)}
 .logic-group-body{padding:0 16px 16px}.logic-group:not(.logic-sticky) .logic-group-body{padding:0 18px 18px 34px}.logic-subcard{position:relative;padding-left:19px}.logic-subcard::before{content:"";position:absolute;left:0;top:0;bottom:0;border-left:1px solid var(--border)}.logic-subcard:last-child::before{bottom:auto;height:18px}.logic-subcard::after{content:"";position:absolute;left:0;top:18px;width:12px;border-top:1px solid var(--border)}.logic-subcard>button{display:block;width:100%;padding:7px 4px;text-align:left;font-size:13px;line-height:1.6;color:var(--ink)}
-.logic-sticky{border-left-width:1px;background:color-mix(in srgb,var(--page),#fff3bf 70%)}.logic-dialog .logic-sticky>header{padding-bottom:8px}.logic-sticky header>b{flex:1;color:var(--secondary);font-size:12px;font-weight:500}.logic-sticky [data-delete]{padding:0 6px;color:var(--secondary);font-size:18px}.logic-sticky textarea{display:block;width:100%;min-height:130px;max-height:300px;resize:vertical;border:0;border-radius:4px;padding:8px;color:var(--ink);background:transparent;font-family:inherit;font-size:14px;line-height:1.7;touch-action:auto}.logic-sticky textarea:focus{outline:1px solid var(--border)}
+.logic-sticky{width:228px;border-left-width:1px;border-radius:8px;background:color-mix(in srgb,var(--page),#fff3bf 70%)}
+.logic-dialog .logic-sticky>header{padding:9px 10px 3px;gap:6px;align-items:center}
+.logic-sticky header>b{flex:1;color:var(--secondary);font-size:11px;font-weight:500}
+.logic-sticky [data-delete]{padding:0 5px;color:var(--secondary);font-size:16px}
+.logic-sticky .logic-group-body{padding:3px 12px 6px}
+.logic-sticky textarea{display:block;box-sizing:border-box;width:100%;height:58px;min-height:58px;max-height:220px;resize:none;overflow-y:auto;border:0;border-radius:0;padding:3px 0;color:var(--ink);background:transparent;font-family:inherit;font-size:13px;line-height:1.65;touch-action:auto}
+:root[data-theme] .logic-sticky textarea:focus-visible{outline:none;box-shadow:none}
+:root[data-theme] .logic-group.logic-sticky:focus-within{box-shadow:0 0 0 1px var(--accent),0 3px 10px #0001}
 .logic-dialog footer{display:flex;justify-content:space-between;gap:15px;padding:12px 24px;font-size:11px;color:var(--secondary);border-top:1px solid var(--border)}.logic-empty{padding:60px;color:var(--secondary)}
 :root[data-theme] .brand-mark{background:transparent;width:40px;height:40px;border-radius:0}.brand-mark img{display:block;width:40px;height:40px}
 
@@ -291,11 +298,6 @@ button:disabled{cursor:default;opacity:.45}button:disabled:hover{background:none
 .image-resize-handle.se{right:-7px;bottom:-7px;cursor:nwse-resize}
 body.display-mode .image-resize-frame{display:none}
 
-.logic-summary{padding:0 20px 18px;font-size:12px;color:var(--secondary)}
-.logic-summary summary{cursor:pointer;padding:8px 0;color:var(--accent)}
-.logic-summary label{display:block;margin-top:10px}
-.logic-summary input,.logic-summary textarea{display:block;box-sizing:border-box;width:100%;margin-top:6px;padding:9px;border:1px solid var(--border);border-radius:6px;background:var(--page);color:var(--ink);font:inherit}
-.logic-summary textarea{min-height:90px;resize:vertical}
 .show-plan-dialog,.chapter-show{background:var(--page);color:var(--ink);border:1px solid var(--border);border-radius:14px;padding:0;width:min(900px,92vw);max-height:90vh}
 .show-plan-dialog::backdrop,.chapter-show::backdrop{background:#0006}
 .show-plan-dialog header,.show-plan-dialog nav,.show-plan-dialog footer,.chapter-show header,.chapter-show footer{display:flex;align-items:center;gap:12px;padding:16px 24px;border-bottom:1px solid var(--border)}
@@ -318,13 +320,12 @@ body.display-mode .image-resize-frame{display:none}
 .chapter-show-content h1,.chapter-show-content h2,.chapter-show-content h3{color:var(--accent)}
 .chapter-show-content table{border-collapse:collapse;width:100%}.chapter-show-content td,.chapter-show-content th{border:1px solid var(--border);padding:10px}
 .chapter-show footer{justify-content:center;border-top:1px solid var(--border)}
-.chapter-takeaway{border-left:3px solid var(--accent);padding:16px 24px;margin-bottom:28px;background:var(--panel)}
-.chapter-takeaway small{color:var(--secondary)}.chapter-takeaway p{white-space:pre-wrap;margin:8px 0}
 
 /* The document's three tasks share one entry, while each workspace stays focused. */
-.work-modes{display:flex;align-items:center;gap:3px;padding:4px;border:1px solid var(--border);border-radius:9px;background:var(--panel);flex-shrink:0}
-.work-modes button{padding:7px 16px!important;border:0!important;border-radius:6px;background:transparent!important;color:var(--secondary)!important;font-size:13px;white-space:nowrap}
-.work-modes button[aria-pressed=true]{background:var(--page)!important;color:var(--accent)!important;box-shadow:0 1px 4px #0001;font-weight:600}
+.work-modes{display:flex;align-items:center;gap:6px;padding:0;border:0;background:transparent;flex-shrink:0}
+.work-modes button{position:relative;min-width:64px;min-height:40px;padding:9px 16px!important;border:0!important;border-radius:7px;background:transparent!important;color:var(--secondary)!important;font-size:13px;font-weight:600;white-space:nowrap}
+.work-modes button::after{content:"";position:absolute;bottom:2px;left:calc(50% - 10px);width:20px;height:2px;border-radius:2px;background:var(--accent);transform:scaleX(0)}
+.work-modes button[aria-pressed=true]::after{transform:scaleX(1)}
 .topbar .breadcrumb{min-width:0;flex:1}.topbar .breadcrumb #crumb{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.topbar{gap:16px}.topbar .top-actions{flex:1;justify-content:flex-end}
 .mode-covered{display:none!important}
 .logic-board{width:calc(100vw - 24px);max-width:none;height:calc(100dvh - 24px);border-radius:12px}
@@ -378,3 +379,220 @@ body.display-mode.reference-open .topbar{width:100%}
 #editor .image-controls{bottom:auto;transform:none;max-height:140px;overflow-y:auto;justify-content:center;box-shadow:0 5px 22px #0002}
 .image-size-label{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);padding:5px 10px;border-radius:6px;background:var(--page);color:var(--accent);border:1px solid var(--border);white-space:nowrap;font:12px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;box-shadow:0 2px 8px #0001}
 .image-size-label[hidden]{display:none}
+
+:root{--ui-surface:color-mix(in srgb,var(--page) 82%,var(--panel));--ui-edge:color-mix(in srgb,var(--border) 70%,var(--page));--ui-shadow:0 12px 36px #00000014,0 2px 6px #00000008}
+:root[data-theme] :is(.settings-dialog,.project-dialog,.history-dialog,.show-plan-dialog,.chapter-show,.logic-dialog){border-color:var(--ui-edge);box-shadow:0 24px 80px #0003,0 2px 8px #0001}
+dialog::backdrop{background:#10191466}
+:root[data-theme] :is(.logic-board>header,.logic-tools,.show-plan-dialog header,.show-plan-dialog nav,.chapter-show header){background:var(--ui-surface)}
+:root[data-theme] :is(.logic-board>footer,.show-plan-dialog footer,.chapter-show footer){background:var(--ui-surface);border-color:var(--ui-edge)}
+:root[data-theme] :is(.topbar,.settings-dialog,.logic-tools,.show-plan-dialog,.chapter-show,.project-dialog,.history-dialog,.reference-pane) button{transition:background-color .14s ease,border-color .14s ease,box-shadow .14s ease,color .14s ease}
+:root[data-theme] :is(.logic-tools,.show-plan-dialog,.chapter-show,.project-dialog,.history-dialog) button{min-height:36px;border-radius:7px;border:1px solid transparent;background:transparent}
+:root[data-theme] :is(.logic-tools,.show-plan-dialog,.chapter-show,.project-dialog,.history-dialog) button:enabled:hover{background:var(--hover);border-color:transparent;color:var(--ink)}
+:root[data-theme] :is(.topbar,.settings-dialog,.logic-tools,.show-plan-dialog,.chapter-show,.project-dialog,.history-dialog,.reference-pane) button:enabled:active{box-shadow:none}
+:root[data-theme] :is(button,a,input,select,textarea,summary):focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+:root[data-theme] button:disabled{opacity:.38;cursor:default;box-shadow:none}
+:root[data-theme] :is(.icon-btn,.reference-toggle){border-radius:8px}
+:root[data-theme] .work-modes{background:transparent;border:0;box-shadow:none}
+:root[data-theme] .work-modes button:enabled:hover{background:var(--hover)!important;color:var(--ink)!important}
+:root[data-theme] .work-modes button[aria-pressed=true]{background:transparent!important;color:var(--accent)!important;box-shadow:none}
+:root[data-theme] .show-plan-dialog [data-start]{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
+:root[data-theme] .show-plan-dialog [data-start]:enabled:hover{background:color-mix(in srgb,var(--accent) 90%,var(--ink));color:var(--on-accent)}
+:root[data-theme] .logic-tools [data-add-note]{background:var(--hover);border-color:transparent;color:var(--accent)}
+:root[data-theme] :is(.logic-tools select,.reference-pane select,.project-tools input,.show-plan-dialog input:not([type=checkbox]),.show-plan-dialog select){min-height:34px;border-radius:8px;background:var(--page)}
+.settings-dialog>header{padding-bottom:16px;border-bottom:1px solid var(--ui-edge)}
+.setting-row{border-color:var(--ui-edge)}
+.settings-actions{gap:3px}
+:root[data-theme] .settings-actions button{border-radius:8px;padding:11px 12px;color:var(--ink)}
+.settings-actions svg{color:var(--secondary);width:18px;height:18px}
+:root[data-theme] .settings-dialog .theme-gallery button{border-radius:10px}
+:root[data-theme] .settings-dialog .theme-gallery button[aria-pressed=true]{box-shadow:none}
+:root[data-theme] .logic-group:not(.logic-sticky){background:var(--page);border-color:var(--ui-edge);border-left-color:var(--accent);border-radius:12px;box-shadow:0 3px 12px #0000000a}
+:root[data-theme] .logic-group:focus-within{box-shadow:0 0 0 2px var(--accent),var(--ui-shadow)}
+.logic-group .logic-title-link:hover{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px}
+.logic-group .logic-grip{opacity:.55}
+.logic-group:hover .logic-grip,.logic-group:focus-within .logic-grip{opacity:1}
+:root[data-theme] .logic-board>.logic-viewport{background-color:var(--panel);background-image:radial-gradient(color-mix(in srgb,var(--border) 65%,transparent) 1px,transparent 1px)}
+:root[data-theme] .show-plan-row:hover{background:var(--ui-surface)}
+:root[data-theme] .reference-pane{box-shadow:-4px 0 18px #00000008}
+.reference-pane>header{padding-bottom:12px;border-bottom:1px solid var(--ui-edge)}
+:root[data-theme] :is(.insert-menu,.selection-tools){background:var(--page);border-color:var(--ui-edge);box-shadow:var(--ui-shadow)}
+#editor .image-controls{border-radius:10px;box-shadow:var(--ui-shadow)}
+@media(prefers-reduced-motion:reduce){:root[data-theme] button{transition:none!important}}
+#outline{border-left:0;padding-right:3px}
+.outline-title{margin-bottom:14px;font-weight:600}
+.outline-filter{margin:0 0 8px;width:100%;padding:8px 10px;border-radius:7px;font-size:12px}
+.outline-fold{margin:0 0 10px;padding:3px 4px;align-self:flex-start;font-size:11px;border-radius:4px}
+#outline .outline-entry{margin-left:calc(var(--outline-depth,0)*10px);padding-left:3px;gap:2px;align-items:flex-start;border-radius:7px}
+#outline .outline-entry[data-level="1"]:not(:first-child){margin-top:8px}
+#outline .outline-entry[hidden]{display:none!important}
+#outline .outline-entry>a{padding:7px 6px 7px 2px!important;margin:0;font-size:13px;line-height:1.5;border-radius:5px;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere}
+#outline .outline-entry>a[hidden]{display:none}
+:root[data-theme] #outline .outline-entry:hover{background:color-mix(in srgb,var(--accent) 5%,transparent)}
+:root[data-theme] #outline .outline-entry:has(>a.active){background:color-mix(in srgb,var(--accent) 9%,transparent)}
+:root[data-theme] #outline .outline-entry>a:hover{background:transparent}
+:root[data-theme] #outline .outline-entry>a.active{border-left:0;margin-left:0;background:transparent;color:var(--accent);font-weight:600}
+#outline .outline-entry>button,#outline .outline-spacer{width:26px;min-width:26px;height:32px;margin-top:1px;display:inline-flex;align-items:center;justify-content:center;border-radius:6px}
+#outline .outline-entry>button{padding:0;opacity:1;color:var(--secondary);background:transparent}
+#outline .outline-entry>button .outline-chevron{width:18px;height:18px}
+#outline .outline-entry>button[aria-expanded=true] .outline-chevron{transform:rotate(90deg)}
+:root[data-theme] #outline .outline-entry:has(>a.active)>button{color:var(--accent)}
+:root[data-theme] #outline .outline-entry>button:hover{background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--accent)}
+#outline .outline-entry>button:focus-visible{outline-offset:-2px}
+.logic-canvas{isolation:isolate}
+.logic-group{z-index:2}
+
+.logic-group{overflow:visible}
+.logic-wires{position:absolute;inset:0;overflow:visible;pointer-events:none;z-index:1}
+.logic-wires marker path{fill:var(--accent)}
+.logic-wires .edge-line,.logic-wires .edge-preview{fill:none;stroke:var(--accent);stroke-width:2;pointer-events:none}
+.logic-wires .edge-hit{fill:none;stroke:transparent;stroke-width:16;pointer-events:stroke;cursor:pointer}
+.logic-wires .edge-preview{stroke-dasharray:6 5;opacity:.8}
+.logic-edge:hover .edge-line,.logic-edge.selected .edge-line,.logic-edge:focus .edge-line{stroke-width:3}
+.logic-edge foreignObject{overflow:visible;visibility:hidden;pointer-events:none}
+.logic-edge:hover foreignObject,.logic-edge.selected foreignObject,.logic-edge:focus-within foreignObject{visibility:visible;pointer-events:auto}
+.logic-dialog .logic-edge button{display:block;width:28px;height:28px;padding:0;border:1px solid var(--border);border-radius:50%;background:var(--page);color:var(--ink);cursor:pointer;font-size:18px}
+.logic-dialog .logic-port{position:absolute;top:50%;margin-top:-12px;width:24px;height:24px;padding:0;border:0;background:transparent;border-radius:50%;touch-action:none;cursor:crosshair}
+.logic-port::after{content:'';position:absolute;inset:6px;border:2px solid var(--secondary);background:var(--page);border-radius:50%}
+.logic-port.port-in{left:-12px}.logic-port.port-out{right:-12px}
+.logic-port.port-in::after{border-radius:3px}
+.logic-dialog .logic-port:hover{background:transparent}
+.logic-port:hover::after,.logic-port.port-source::after,.logic-port.port-target::after{border-color:var(--accent);background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 15%,transparent)}
+.logic-port.port-available::after{border-color:var(--accent)}
+.logic-canvas.connecting{cursor:crosshair}
+:root[data-theme] .logic-group.logic-frame{z-index:0;resize:both;overflow:auto;min-width:400px;min-height:240px;max-width:10000px;max-height:10000px;background:color-mix(in srgb,var(--accent) 5%,transparent);border:1px dashed var(--accent);box-shadow:none;border-radius:14px}
+.logic-frame>header{background:var(--panel)}
+.logic-frame input{min-width:0;width:100%;border:0;background:transparent;color:var(--ink);font:inherit;padding:4px}
+.logic-tools [hidden]{display:none!important}
+.logic-canvas>.logic-wires{width:100%;height:100%}
+
+/* Contextual table controls stay next to the active table. */
+.table-control-row{display:flex;align-items:center;gap:2px;flex-wrap:wrap}
+.table-action-menu{position:absolute;top:calc(100% + 5px);left:0;display:flex;flex-direction:column;min-width:170px;padding:4px;border:1px solid var(--border);border-radius:8px;background:var(--page);box-shadow:var(--ui-shadow)}
+.table-controls.menu-above .table-action-menu{top:auto;bottom:calc(100% + 5px)}
+.table-action-menu[hidden]{display:none}
+#editor .table-action-menu button{text-align:left}
+#editor .table-controls .table-delete{border-left:1px solid var(--border);border-radius:0 5px 5px 0;color:var(--ink)}
+#editor .table-controls .table-delete:hover{background:color-mix(in srgb,#c64747 12%,var(--page));color:color-mix(in srgb,#c64747 80%,var(--ink))}
+#editor .table-controls button[aria-pressed=true]{background:var(--hover);color:var(--accent)}
+#editor .ProseMirror table.ProseMirror-selectednode{outline:2px solid var(--accent);outline-offset:3px}
+
+/* Frequent navigation actions remain visible, with comfortable hit targets. */
+.sidebar .brand{gap:10px;margin:0 0 24px;min-width:0}
+.sidebar .brand strong{flex:1;min-width:0;font-size:22px;letter-spacing:0}
+.sidebar .brand-mark{flex-shrink:0}
+.sidebar .mobile-close,.outline-title .outline-close{flex:0 0 36px;width:36px;height:36px;padding:7px;border:0;border-radius:7px;background:transparent;color:var(--secondary)}
+.sidebar .mobile-close svg,.outline-title .outline-close svg{width:20px;height:20px;stroke-width:1.9}
+.sidebar .mobile-close:hover,.outline-title .outline-close:hover{background:var(--hover);color:var(--ink)}
+.sidebar .new-doc{min-height:42px;margin:14px 0 8px;font-weight:600;border-radius:8px;flex-shrink:0}
+.sidebar .import-doc{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;min-height:42px;margin:0 0 24px;padding:10px;border:1px solid transparent;border-radius:8px;background:var(--page);color:var(--ink);flex-shrink:0}
+.sidebar .import-doc:hover{background:var(--hover);border-color:transparent}
+.sidebar .import-doc svg{color:var(--secondary)}
+.topbar .breadcrumb>.icon-btn{flex-shrink:0}
+.topbar :is(.outline-toggle,.reference-toggle){display:inline-flex;align-items:center;justify-content:center;gap:7px;flex-shrink:0;min-height:36px;padding:7px 10px;border:0;border-radius:7px;background:transparent;color:var(--secondary);font-size:13px;white-space:nowrap}
+.topbar :is(.outline-toggle,.reference-toggle) svg{width:18px;height:18px}
+.topbar :is(.outline-toggle,.reference-toggle)[aria-pressed=true]{background:var(--hover);color:var(--accent)}
+.topbar :is(.outline-toggle,.reference-toggle):hover{background:var(--hover);color:var(--ink)}
+#outline .outline-entry>button .outline-chevron{width:14px;height:14px}
+#outline .outline-entry>button .outline-chevron path{stroke-width:1.7}
+#outline .outline-entry[data-level="2"]>button .outline-chevron{width:16px;height:16px}
+#outline .outline-entry[data-level="2"]>button .outline-chevron path{stroke-width:1.9}
+#outline .outline-entry[data-level="1"]>button .outline-chevron{width:20px;height:20px}
+#outline .outline-entry[data-level="1"]>button .outline-chevron path{stroke-width:2.1}
+@media(max-width:760px){.topbar .outline-toggle{gap:4px;padding:6px}.topbar .breadcrumb{gap:6px}.topbar .top-actions>.icon-btn[data-action="open"]{display:none}}
+
+/* Keep document and panel chrome limited to useful metadata and state. */
+.show-plan-dialog [data-plan-level]{margin-left:12px;white-space:nowrap;font-size:12px;color:var(--secondary)}
+.history-dialog[open]{gap:16px}
+.history-dialog .history-compare{margin-top:0}
+.history-dialog h4{margin-top:0}
+.reference-pane select[hidden]{display:none}
+
+
+/* Quiet navigation: hierarchy comes from spacing and state, not nested boxes. */
+:root{--ui-control-height:36px;--ui-radius:7px;--ui-shadow:0 8px 28px #00000012,0 1px 4px #00000008}
+:root[data-theme] .topbar{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:16px;border-bottom-color:var(--ui-edge)}
+.topbar .breadcrumb #crumb{max-width:100%;font-size:13px}
+.topbar .top-actions{gap:6px}
+.topbar .icon-btn{width:36px;height:36px;border:0;background:transparent;flex-shrink:0}
+:root[data-theme] .topbar .icon-btn:enabled:hover{background:var(--hover);color:var(--ink)}
+.topbar .saved{margin:0 8px;font-size:11px;min-width:0;white-space:nowrap}
+.topbar .export{min-height:36px;white-space:nowrap;border-color:var(--ui-edge);border-radius:7px}
+:root[data-theme] .sidebar .search{min-height:40px;padding:10px 12px;border-color:transparent;border-radius:8px}
+.sidebar .filter{min-height:36px;border-color:var(--ui-edge);border-radius:7px}
+:root[data-theme] .sidebar .search:hover{background:var(--hover);color:var(--ink)}
+.sidebar .nav-item{min-height:40px;border-radius:7px}
+.sidebar .list-label{margin-top:24px;font-size:11px}
+:root[data-theme] .outline-filter{min-height:36px;border-color:transparent;background:color-mix(in srgb,var(--ink) 4%,transparent)}
+:root[data-theme] .outline-filter:focus{background:var(--page);border-color:var(--ui-edge)}
+.outline-fold{min-height:28px;padding:4px 6px}
+:root[data-theme] .reference-pane{border-left-color:var(--ui-edge);box-shadow:none}
+:root[data-theme] :is(.reference-pane select,.logic-tools select,.show-plan-dialog select,.show-plan-dialog input:not([type=checkbox]),.project-tools input,.history-dialog select,.theme-select){min-height:36px;border:1px solid var(--ui-edge);border-radius:7px;background:var(--page);font:inherit;font-size:13px}
+:root[data-theme] :is(.reference-pane,.settings-dialog,.history-dialog,.project-dialog,.show-plan-dialog)>header button{display:inline-flex;align-items:center;justify-content:center;flex:0 0 36px;min-width:36px;min-height:36px;padding:0;border:0;border-radius:7px;background:transparent;color:var(--secondary);font-size:22px}
+:root[data-theme] :is(.reference-pane,.settings-dialog,.history-dialog,.project-dialog,.show-plan-dialog)>header button:hover{background:var(--hover);color:var(--ink)}
+:root[data-theme] :is(.logic-board>header,.logic-tools,.show-plan-dialog header,.show-plan-dialog nav,.chapter-show header,.logic-board>footer,.show-plan-dialog footer,.chapter-show footer){background:var(--page);border-color:var(--ui-edge)}
+.logic-board>header{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:24px;padding:20px 24px}
+.logic-board>header>.work-modes{margin:0}
+.logic-board>header>div p{max-width:100%}
+.logic-board>header>[data-close]{justify-self:end;display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;padding:0;font-size:24px;color:var(--secondary)}
+.logic-tools{gap:12px;padding:12px 24px}
+.logic-tool-group{display:flex;align-items:center;gap:4px;min-width:0;flex-wrap:wrap}
+.logic-tool-group:first-child{margin-right:8px}
+.logic-tools label{font-size:12px;gap:10px}
+.logic-tools select{max-width:160px}
+.logic-zoom{flex-wrap:nowrap;gap:2px}
+.logic-zoom [data-zoom-out],.logic-zoom [data-zoom-in]{width:36px;padding:0;font-size:18px}
+.logic-zoom output{min-width:44px;font-variant-numeric:tabular-nums;color:var(--secondary)}
+.logic-zoom [data-fit]{margin-left:8px}
+.logic-board>footer{min-height:34px;padding:8px 24px;font-size:11px}
+:root[data-theme] .settings-dialog .theme-gallery button{border:1px solid transparent;padding:6px;background:transparent}
+:root[data-theme] .settings-dialog .theme-gallery button[aria-pressed=true]{border-color:var(--accent);background:var(--hover)}
+:root[data-theme] .show-plan-row:hover{background:color-mix(in srgb,var(--accent) 4%,transparent)}
+.show-plan-row{gap:6px;padding:10px 0;border-bottom-color:var(--ui-edge)}
+.show-plan-row button{flex-shrink:0}
+.show-plan-dialog [data-up],.show-plan-dialog [data-down]{width:36px;padding:0;font-size:16px}
+:root[data-theme] .project-dialog [data-choose],:root[data-theme] .history-dialog [data-restore]{background:var(--accent);color:var(--on-accent);font-weight:600}
+:root[data-theme] .project-dialog [data-choose]:enabled:hover,:root[data-theme] .history-dialog [data-restore]:enabled:hover{background:color-mix(in srgb,var(--accent) 90%,var(--ink));color:var(--on-accent)}
+:root[data-theme] :is(.find-panel,.display-exit,.selection-tools,.insert-menu){border-color:var(--ui-edge);box-shadow:var(--ui-shadow);background:var(--page)}
+.find-panel button,.display-exit button,.selection-tools button,.insert-menu button{min-height:36px;border:0;border-radius:7px}
+.find-panel input{min-height:36px;border-color:var(--ui-edge);border-radius:7px}
+.find-panel [data-close],.find-panel [data-prev],.find-panel [data-next]{min-width:32px}
+:root[data-theme] .display-exit:hover{background:var(--page);color:var(--secondary)}
+:root[data-theme] .display-exit button{border:0;background:transparent}
+:root[data-theme] .display-exit button:enabled:hover{background:var(--hover);color:var(--ink)}
+:root[data-theme] .display-exit [data-exit]{background:var(--hover);color:var(--accent)}
+#editor :is(.table-controls,.image-controls){border-color:var(--ui-edge);border-radius:10px;box-shadow:var(--ui-shadow)}
+#editor :is(.table-controls,.image-controls) button{min-height:34px;border:0;border-radius:6px;box-shadow:none}
+#editor .toastui-editor-defaultUI-toolbar{border-bottom-color:var(--ui-edge)}
+#editor .toastui-editor-toolbar-icons{border-radius:6px}
+@media(min-width:761px) and (max-width:1100px){
+  .topbar .top-actions>.icon-btn[data-action="open"]{display:none}
+  .desktop-app .topbar .saved{max-width:90px;margin:0 4px}
+  .topbar .top-actions{gap:3px}
+  .topbar .breadcrumb{gap:8px}
+}
+@media(max-width:1100px){
+  :root[data-theme] .topbar{height:100px;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:42px 42px;padding:8px 20px;gap:0 8px}
+  .topbar .breadcrumb{grid-row:1;grid-column:1}
+  .topbar .top-actions{grid-row:1;grid-column:2}
+  .topbar .work-modes{grid-row:2;grid-column:1 / -1;justify-self:center}
+  .topbar .breadcrumb #crumb{max-width:100%}
+  #editor .toastui-editor-toolbar{top:100px}
+  .outline{top:100px;height:calc(100dvh - 100px);max-height:calc(100dvh - 100px)}
+  .reference-pane{top:100px}
+  .find-panel{top:108px}
+  #editor .toastui-editor-contents :is(h1,h2,h3,h4,h5,h6){scroll-margin-top:164px}
+}
+@media(max-width:760px){
+  :root[data-theme] .topbar{grid-template-columns:minmax(0,1fr) auto;gap:0 8px;padding:8px 12px}
+  .topbar .work-modes{gap:12px}
+  .topbar .breadcrumb #crumb{font-size:12px}
+  .topbar :is(.outline-toggle,.reference-toggle){padding:6px;gap:5px}
+  .logic-board>header{grid-template-columns:minmax(0,1fr) 36px;gap:8px;padding:12px}
+  .logic-board>header>div{grid-column:1;grid-row:1}
+  .logic-board>header>[data-close]{grid-column:2;grid-row:1}
+  .logic-board>header>.work-modes{grid-column:1 / -1;grid-row:2;justify-self:center;width:auto}
+  .logic-tools{padding:10px 12px;gap:8px}
+  .logic-tools>span{display:none}
+  .logic-zoom{margin-left:auto}
+  .reference-pane{box-shadow:-4px 0 18px #00000014}
+}
