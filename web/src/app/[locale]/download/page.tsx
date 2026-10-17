@@ -1,9 +1,11 @@
 import type { Metadata } from 'next';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
+import Image from 'next/image';
 import { Link } from '@/i18n/navigation';
 import { WebsiteShell } from '@/components/website/site-shell';
 import { Arrow } from '@/components/website/brand';
 import { macDownloadUrl, site } from '@/lib/site';
+import { pageMetadata } from '@/lib/metadata';
 import '../../website.css';
 
 export async function generateMetadata({
@@ -13,8 +15,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'metadata.download' });
-  const canonical = locale === 'en' ? '/download' : `/${locale}/download`;
-  return { title: t('title'), description: t('description'), alternates: { canonical } };
+  return pageMetadata({ locale, path: '/download', title: t('title'), description: t('description') });
 }
 
 export default async function DownloadPage({
@@ -25,9 +26,19 @@ export default async function DownloadPage({
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations('download');
+  const base = locale === 'en' ? site.url : `${site.url}/${locale}`;
+  const breadcrumb = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: t('breadcrumb'), item: base },
+      { '@type': 'ListItem', position: 2, name: t('platformTitle'), item: `${base}/download` },
+    ],
+  };
 
   return (
     <WebsiteShell>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
       <main id="main-content" className="website-subpage website-container">
         <Link className="website-breadcrumb" href="/">
           ← <span>{t('breadcrumb')}</span>
@@ -46,7 +57,7 @@ export default async function DownloadPage({
               {t('intro2')}
             </p>
             <div className="download-visual">
-              <img src="/markdeck.svg" width="83" height="83" alt={t('iconAlt')} />
+              <Image src="/markdeck.svg" width={83} height={83} alt={t('iconAlt')} priority />
               <div>
                 <strong>{t('appName')}</strong>
                 <small>{t('appSub')}</small>

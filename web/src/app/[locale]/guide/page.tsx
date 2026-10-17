@@ -3,6 +3,8 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { WebsiteShell } from '@/components/website/site-shell';
 import { Arrow } from '@/components/website/brand';
+import { site } from '@/lib/site';
+import { pageMetadata } from '@/lib/metadata';
 import '../../website.css';
 
 export async function generateMetadata({
@@ -12,8 +14,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'metadata.guide' });
-  const canonical = locale === 'en' ? '/guide' : `/${locale}/guide`;
-  return { title: t('title'), description: t('description'), alternates: { canonical } };
+  return pageMetadata({ locale, path: '/guide', title: t('title'), description: t('description') });
 }
 
 const chapterIds = ['start', 'files', 'organize', 'present', 'share'] as const;
@@ -30,9 +31,28 @@ export default async function GuidePage({
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations('guide');
+  const base = locale === 'en' ? site.url : `${site.url}/${locale}`;
+  const breadcrumb = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: t('breadcrumb'), item: base },
+      { '@type': 'ListItem', position: 2, name: t('title'), item: `${base}/guide` },
+    ],
+  };
+  const faqArticle = {
+    '@context': 'https://schema.org',
+    '@type': 'TechArticle',
+    headline: t('title'),
+    description: t('intro'),
+    inLanguage: locale === 'zh' ? 'zh-CN' : 'en',
+    url: `${base}/guide`,
+  };
 
   return (
     <WebsiteShell>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqArticle) }} />
       <main id="main-content" className="website-subpage website-container website-guide">
         <Link className="website-breadcrumb" href="/">
           ← <span>{t('breadcrumb')}</span>

@@ -13,6 +13,7 @@
   -webkit-font-smoothing: antialiased;
 }
 .website *, .website *::before, .website *::after { box-sizing: border-box; }
+.website img { max-width: 100%; height: auto; }
 .website h1, .website h2, .website h3, .website h4, .website p { margin: 0; }
 .website a { color: inherit; text-decoration: none; }
 .website button, .website textarea { font: inherit; color: inherit; }
@@ -232,7 +233,7 @@
 .website-final .website-container > div { display: flex; align-items: center; gap: 25px; margin-top: 26px; position: relative; z-index: 1; }
 .website-final p { font-size: 13px; color: #506945; margin-right: auto; }
 .website-final small { font-size: 10px; color: #506945; }
-.final-watermark { position: absolute; right: 90px; bottom: -130px; font-family: "Baskerville", Georgia, serif; font-size: 400px; line-height: 1; color: #122a2009; pointer-events: none; }
+.final-watermark { position: absolute; right: clamp(16px, 6vw, 90px); bottom: clamp(-200px, -12vw, -130px); font-family: "Baskerville", Georgia, serif; font-size: clamp(160px, 32vw, 400px); line-height: 1; color: #122a2009; pointer-events: none; }
 .website-footer { padding-block: 51px 24px; }
 .website-footer-top { display: flex; align-items: center; gap: 40px; padding-bottom: 35px; border-bottom: 1px solid var(--line); }
 .website-footer-top .website-brand { font-size: 22px; }

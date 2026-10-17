@@ -1,11 +1,18 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { DM_Serif_Display } from 'next/font/google';
 import { routing } from '@/i18n/routing';
 import { site } from '@/lib/site';
+import { pageMetadata } from '@/lib/metadata';
 import '../globals.css';
+
+export const viewport: Viewport = {
+  themeColor: '#122a20',
+  width: 'device-width',
+  initialScale: 1,
+};
 
 const brandSerif = DM_Serif_Display({
   subsets: ['latin'],
@@ -26,30 +33,19 @@ export async function generateMetadata({
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'metadata.home' });
   const tSite = await getTranslations({ locale, namespace: 'site' });
-  const ogLocale = locale === 'zh' ? 'zh_CN' : 'en_US';
+  const meta = pageMetadata({
+    locale,
+    path: '',
+    title: t('title'),
+    description: tSite('description'),
+    ogTitle: t('ogTitle'),
+    ogImageAlt: t('ogAlt'),
+  });
   return {
     metadataBase: new URL(site.url),
+    ...meta,
     title: { default: t('title'), template: '%s · Markdeck' },
-    description: tSite('description'),
-    alternates: {
-      canonical: locale === 'en' ? '/' : `/${locale}`,
-      languages: { en: '/', zh: '/zh' },
-    },
-    openGraph: {
-      type: 'website',
-      locale: ogLocale,
-      siteName: site.name,
-      title: t('ogTitle'),
-      description: tSite('description'),
-      url: locale === 'en' ? site.url : `${site.url}/${locale}`,
-      images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: t('ogAlt') }],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: t('ogTitle'),
-      description: tSite('description'),
-      images: ['/opengraph-image'],
-    },
+    robots: { index: true, follow: true },
   };
 }
 

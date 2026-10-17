@@ -258,6 +258,22 @@ export default async function HomePage({
               description: tSite('description'),
               applicationCategory: 'ProductivityApplication',
               operatingSystem: 'macOS (Apple Silicon)',
+              offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+              inLanguage: [locale === 'zh' ? 'zh-CN' : 'en'],
+            }),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'FAQPage',
+              mainEntity: faqItems.map((item) => ({
+                '@type': 'Question',
+                name: item.q,
+                acceptedAnswer: { '@type': 'Answer', text: item.a },
+              })),
             }),
           }}
         />
