@@ -1,0 +1,120 @@
+# Markdeck 优化报告与实施计划
+
+生成日期：2026-10-17。本文件分两部分：**上半**是从普通用户视角汇总的 16 项问题（报告），**下半**是把这 16 项排进四个阶段的实施计划（含可行性、风险、所需外部资源）。所有产品行为与边界仍以 [README.md](README.md) 为准，本文件只记录"要改什么、按什么顺序改"。
+
+---
+
+## 第一部分 · 用户视角问题清单
+
+### A. 日常使用立刻会被感知
+
+| # | 问题 | 用户故事 |
+|---|---|---|
+| 1 | 只有 Apple Silicon 包，且仅 ad-hoc 签名 | Intel Mac / Windows / Linux 用户没得用；拿到 .app 的人首次打开被 Gatekeeper 拦截，会以为"文件损坏" |
+| 2 | 没有自动更新机制 | 每次升级要重新下载 ~293 MiB 包，用户容易留在旧版本 |
+| 3 | 浏览器预览与桌面不同步（localStorage） | README 第 17 行写明；用户以为自己保存了，其实没写回文件 |
+| 4 | 收到他人 Markdown 时的图片兼容性 | 不读绝对路径与目录外图片，一张张"重新选择"很累 |
+| 5 | 文件/历史硬上限 | 10 MB 单文件、30 版本、20 MB 历史、1 MB 磁盘搜索正文；真实长文档会被卡 |
+
+### B. 信任与完成度
+
+| # | 问题 | 用户故事 |
+|---|---|---|
+| 6 | 真实视觉/PDF/输入法/拖动均未验收 | UX_REVIEW.md 坦承；DOM 测试再绿也不等于点进去不崩 |
+| 7 | PDF 导出由 Electron 直接打印 A4 浅色 | 分页、代码块折行、字体不可控 |
+| 8 | 安装体积 293 MiB 偏重 | "本地 Markdown 工具"的赛道里偏重，是不选它的直接理由 |
+| 9 | Vite 主 chunk > 500 kB 警告未解决 | 首屏白屏时间会被用户感知 |
+
+### C. 功能发现性与协作
+
+| # | 问题 | 用户故事 |
+|---|---|---|
+| 10 | 没有命令面板 | 三模式 + 大量快捷键，⌘K 只能搜文档名；新用户上手门槛高 |
+| 11 | 无云同步/多设备 | 换 Mac 或多端写作就断了 |
+| 12 | 梳理卡片 ↔ 标题关联脆弱 | 标题改一次名，花 10 分钟排的卡片脱钩（README 第 41 行承认） |
+| 13 | 外部变更 1.5 s 轮询 | 费电、延迟；`fs.watch` / chokidar 事件驱动更合适 |
+
+### D. 工程债 / 长期
+
+| # | 问题 | 用户故事 |
+|---|---|---|
+| 14 | 停用代码未清理 | `src/presentation/`（含 49 KB `theme-renderer.ts`）、旧 PPT 入口；`markdeck-source.bundle`、`markdeck-website-*.bundle` 混在根目录 |
+| 15 | 纯中文界面，无 i18n 骨架 | 产品若想外推国际用户，当前连框架都没有 |
+| 16 | 工作区目录单一，无一键导出/迁移 | 换 Mac/重装会头疼 |
+
+---
+
+## 第二部分 · 分阶段实施计划
+
+每一项标注：**风险** / **是否需要外部依赖（账号、硬件、网络、用户授权）** / **验证方式**。
+
+### 阶段 0 · 基础清场（1–2 天，低风险、本地可做）
+
+> 目标：先把物理分层、构建警告、停用代码处理干净，为后续改造腾空间。改动都可本地回滚。
+
+- **0.1** ✅ **已完成（2026-10-17）**：现有 `.gitignore` 已覆盖 `.DS_Store`、`*.bundle`、`dist/`、`release/`、`node_modules/`、`/web/`。本轮删除根目录物理残留 `.DS_Store`。两个 `*.bundle` 保留（UX_REVIEW 声明为历史恢复点）。
+- **0.2** ✅ **已完成（2026-10-17）**：`src/presentation/` + 4 个关联测试全部软下线到 `archive/`，详见 `archive/README.md`。同步：
+  - `desktop/preload.cjs` 注释 4 条暴露面：`loadDeck` / `saveDeck` / `exportPptx` / `exportPresentation`。
+  - `desktop/main.cjs` 删除 4 个 handler（`presentation:export` / `deck:load` / `deck:save` / `deck:export-pptx`）与 `deckPath` 辅助函数。
+  - `package.json` 删除 3 个 npm script（`test:presentation` / `test:presentation-flow` / `test:pptx`）和 `pptxgenjs` 依赖；保留 `prosemirror-inputrules` / `prosemirror-history`（TOAST UI 间接依赖，vite build 产物里出现在 editor chunk）。
+  - 回归：`npm run build` + `app-flow` / `show-plan` / `logic-panel` / `display-mode` / `test:files` 全绿。
+  - 彻底 `rm -rf archive/` 的时机：下一次发布运行平稳、未收到恢复需求后。
+- **0.3** ✅ **已完成（2026-10-17）**：`vite.config.js` 加 `manualChunks`，拆出 `editor`（toast-ui + prosemirror + dompurify）、`markdown`（markdown-it）、`bundle`（jszip）vendor chunk。实测主 chunk 从 500+ kB 降到 **62 kB**。回归 `app-flow` / `show-plan` / `logic-panel` / `test:files`（10 个 node:test）全绿。
+- **0.4** 根目录按 `apps/web`、`apps/desktop` 拆分（README 第 101 行里承诺却未做）。此项**风险偏高**：涉及打包脚本、Vercel 配置、两套 Git 历史的衔接，建议和 0.1–0.3 分开成单独 PR，网络恢复后再做。
+
+### 阶段 1 · 发布可信度（1 周，外部依赖多）
+
+> 目标：解决问题 1、2、8，让"下载后能双击打开 + 能自动更新"。
+
+- **1.1** 申请 Apple Developer ID + App-Specific Password，补 `codesign --deep --options runtime` 和 `xcrun notarytool` 到 `desktop/package.mjs`。
+  - **需要用户提供**：Developer ID 证书（$99/年）、Apple ID、App-Specific Password、Team ID。
+  - 风险：**中**；验证：`spctl --assess --type execute Markdeck.app` 通过。
+- **1.2** 出 universal 包（arm64 + x64），用 `@electron/packager --arch=universal` 或 `@electron/universal`。
+  - 风险：**低**；验证：`file Markdeck.app/Contents/MacOS/Markdeck` 显示 universal。
+- **1.3** 接入 `electron-updater` + GitHub Releases（或自建 S3）。
+  - **需要用户选择**：更新源（GitHub Releases / 自建）。
+  - 风险：**中**（涉及自签 TLS/更新链）；验证：旧版本启动能检测到新版本并下载。
+- **1.4** 瘦身：删除 Electron 自带的多余 locales；评估是否把 `pptxgenjs`、`dompurify`（当前在 devDependencies 却也被运行时引用？）彻底移到按需加载。
+  - 风险：**低**；验证：`du -sk release/.../Markdeck.app` 下降。
+- **1.5** Windows / Linux 包暂缓；在 README 先说明"路线上已排期，当前只提供 macOS 包"，避免误导。
+
+### 阶段 2 · 关键体验（1–2 周，本地可做为主）
+
+> 目标：解决问题 4、12、13、7、9（已在阶段 0 做了一半）。
+
+- **2.1 梳理卡片 ↔ 标题稳定 ID**：把目前"精确标题字符串匹配"改成"标题 slug + 顺序 hash + 兄弟序号"的组合键，并写一次性迁移脚本把旧 `logic/*.json` 升级。
+  - 风险：**高**（数据迁移，用户已有画布）；**必须先备份** `~/Library/Application Support/云笺/logic/`。
+  - 验证：新建单元测试 `tests/logic-rebind.mjs`，覆盖"改标题后卡片不脱钩"的三种常见修改。
+- **2.2 外部变更改事件驱动**：用 `fs.watch`（原生，不新增依赖）；轮询作为兜底 fallback，`fs.watch` 在 macOS 偶尔漏事件。
+  - 风险：**低**；验证：外部编辑器修改文件后，App 2 秒内弹冲突提示。
+- **2.3 图片引用修复向导**：收到他人 Markdown 后，一键扫描所有 `![](...)`，对缺失/绝对路径/目录外图片批量弹"重新选择 / 复制到 .assets/ / 跳过"。
+  - 风险：**低**；验证：手工构造 10 张混合路径图片的 .md 做验证。
+- **2.4 PDF 导出改用 Chromium `page.pdf()` + 自定义 CSS**：A4 可选，页眉页脚、代码块折行、分页点可控。
+  - 风险：**中**（Electron 版本差异）；验证：导出 50 页技术文档，人工看分页。
+- **2.5 文件/历史上限改为设置项**：10 MB → 可配置 1–50 MB；历史版本上限 30 → 10–200；磁盘正文搜索 1 MB → 可配。
+  - 风险：**低**；验证：设置页改值后生效。
+
+### 阶段 3 · 发现性与长期（2 周+，部分需要产品决策）
+
+> 目标：解决问题 10、11、15、16、6。
+
+- **3.1 命令面板**（⌘⇧P）：列全部命令 + 最近文档 + 快捷键提示；按当前模式过滤。
+  - 风险：**中**；验证：新 DOM 测试 + 真机点一遍。
+- **3.2 云同步最小方案**：先不做多人协作，只做"识别 iCloud Drive / Dropbox / OneDrive 内的工作目录并把草稿写进去"。
+  - 风险：**中**（文件锁、同步冲突）；验证：两台 Mac 共享同一 iCloud 目录 72 小时。
+- **3.3 i18n 骨架**：抽字符串到 `locales/zh-CN.json` + `locales/en-US.json`，不要求立刻翻译，但建立框架；界面语言跟随系统。
+  - 风险：**低**；验证：切换系统语言后 UI 对应变化。
+- **3.4 一键导出整个工作区 + 导入**：把 `~/Library/Application Support/云笺/` 的 `workspace.json` / `history/` / `logic/` 打成一个 `.markdeck-archive` ZIP，另一台机器一键恢复。
+  - 风险：**中**；验证：Mac A 导出 → Mac B 导入 → 画布、历史、便笺齐全。
+- **3.5 真实视觉验收 CI**：把 `tests/visual-review.mjs` 跑在 GitHub Actions 的 macos-latest，Playwright 截图差分；Electron 启动截图差分走 `@electron/forge` 或手搓。
+  - 风险：**低**（但要调通沙箱 Chromium 权限问题）；验证：PR 自动贴截图。
+
+---
+
+## 本轮建议从这里开始
+
+1. **先做阶段 0 的 0.1 / 0.2 / 0.3**：纯本地、可回滚、立竿见影。
+2. **阶段 1 需要你确认**：是否已有 Apple Developer 账号？是否接受把更新源放 GitHub Releases？没有账号我可以把 `desktop/package.mjs` 的签名/公证挂钩写好，但走空实现，等账号到位再填环境变量。
+3. **阶段 2.1（梳理稳定 ID）** 风险最高——必须先在你的真实数据上备份一次 `~/Library/Application Support/云笺/logic/` 再动手。
+
+请回复：**同意阶段 0 开始**（或指定先做哪几项），我就动代码；阶段 1/2/3 的开关单独确认。

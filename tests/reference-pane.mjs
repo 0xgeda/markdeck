@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {build} from 'esbuild';
+import {JSDOM} from 'jsdom';
+const bundle=await build({stdin:{contents:"import {openReference} from './src/reference-pane.js';window.openReference=openReference;",resolveDir:process.cwd()},bundle:true,write:false,format:'iife'});
+const dom=new JSDOM('<main>当前正文</main>',{runScripts:'dangerously',url:'https://reference.test'});const w=dom.window;w.eval(bundle.outputFiles[0].text);
+const docs=[{id:'current',title:'当前',body:'当前正文'},{id:'reference',title:'资料',body:'# 参考资料\n\n![示例](local.png)\n\n<script>alert(1)</script>\n\n**结论**'}];
+w.desktop={readImage:async(id,src)=>{assert.equal(id,'reference');assert.equal(src,'local.png');return {ok:true,data:'data:image/png;base64,cG5n'};}};
+const before=JSON.stringify(docs);const close=w.openReference(docs,'current');const select=w.document.querySelector('.reference-pane select');assert.equal(select.options.length,2);assert.equal(select.value,'reference');select.value='reference';await select.onchange();
+assert.match(w.document.querySelector('.reference-pane article').textContent,/参考资料/);assert.equal(w.document.querySelector('script'),null);assert.match(w.document.querySelector('img').src,/^data:/);assert.equal(w.document.querySelector('main').textContent,'当前正文');assert.equal(JSON.stringify(docs),before);w.document.querySelector('.reference-pane article').scrollTop=240;select.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));assert.equal(w.document.querySelector('.reference-pane'),null);close();
+const again=w.openReference(docs,'current');assert.equal(w.document.querySelector('.reference-pane select').value,'reference');assert.equal(w.document.querySelector('.reference-pane article').scrollTop,240);again();dom.window.close();console.log('Read-only reference rendering, local image resolution, sanitization and source preservation passed.');

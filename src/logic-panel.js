@@ -1,0 +1,105 @@
+import {connectionPorts,logicConnections} from './logic-connections.js';
+import {layoutLogicCards,CARD_WIDTH} from './logic-layout.js';
+let flushCurrent=async()=>true,closeCurrent=async()=>true;
+export const flushLogic=()=>flushCurrent();
+export const closeLogic=()=>closeCurrent();
+const escape=text=>String(text).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+export function logicSections(headings,title='文档',level=1){
+  const groups=[];let group;const counts=new Map();
+  const key=text=>{const count=counts.get(text)||0;counts.set(text,count+1);return text+'::'+count;};
+  for(const heading of headings){
+    if(heading.level===1){group={...heading,key:key(heading.title),children:[]};groups.push(group);}
+    else{if(!group){group={title:headings.some(h=>h.level===1)?'未归类章节':title,level:1,index:-1,key:'document-root',children:[]};groups.push(group);}group.children.push({...heading,key:key(group.key+'/'+heading.title)});}
+  }
+  const flat=groups.flatMap(group=>[group,...group.children]);
+  const roots=[],stack=[];
+  for(const entry of flat){
+    while(stack.length&&stack.at(-1).level>=entry.level)stack.pop();
+    const node={...entry,parentKey:stack.at(-1)?.key,parentTitle:stack.at(-1)?.title,context:stack.filter(n=>n.index>=0).map(n=>n.title).join(' / '),children:[]};
+    if(stack.length)stack.at(-1).children.push(node);else roots.push(node);
+    stack.push(node);
+  }
+  const cards=[];
+  function collect(nodes){for(const node of nodes){if(node.level===level)cards.push(node);else collect(node.children);}}
+  collect(roots);return cards;
+
+}
+export async function openLogicPanel(editor,title,docId='document',options={}){
+  const document=window.document;if(document.querySelector('.logic-workspace'))return;
+  const headings=[...editor.getEditorElements().wwEditor.querySelectorAll('h1,h2,h3,h4,h5,h6')];
+  const entries=headings.map((node,index)=>({title:node.textContent,level:Number(node.tagName.slice(1)),index}));
+  const levels=[...new Set(entries.map(h=>h.level))].sort();
+  const defaultLevel=entries.filter(h=>h.level===1).length===1&&entries.filter(h=>h.level===2).length>1?2:levels[0]||1;
+  let groups=logicSections(entries,title,defaultLevel);
+  const storageKey='markdeck-logic-'+docId;let state={version:1,notes:{},edges:[],frames:{},summaries:{},plans:[],positions:{},collapsed:{},zoom:1,left:0,top:0,cardLevel:defaultLevel},pending=Promise.resolve(),timer,drag=null;
+  const dialog=document.createElement('section');dialog.className='logic-workspace logic-board';dialog.setAttribute('aria-label','文档梳理');dialog.tabIndex=-1;dialog.inert=true;
+  dialog.innerHTML=`<nav class="logic-tools"><div class="logic-tool-group"><label>卡片层级 <select data-card-level aria-label="卡片层级">${(levels.length?levels:[1]).map(level=>`<option value="${level}">按 ${level} 级标题</option>`).join('')}</select></label></div><div class="logic-tool-group"><button data-add-note>＋ 新增便笺</button><button data-add-frame>＋ 分组框</button><button data-show-plan>安排展示</button></div><span></span><div class="logic-tool-group logic-zoom"><button data-zoom-out aria-label="缩小画布">−</button><output>100%</output><button data-zoom-in aria-label="放大画布">＋</button><button data-fit>查看全部</button></div></nav><div class="logic-viewport"><div class="logic-space"><div class="logic-canvas"></div></div></div><footer><span data-status role="status"></span></footer>`;
+  document.querySelector('#settings-dialog')?.close();(document.querySelector('main')||document.body).append(dialog);
+  const writingScroll=window.scrollY,shell=document.querySelector('.document-shell'),previousInert=!!shell?.inert;
+  if(shell)shell.inert=true;document.body.classList.add('organize-mode');
+  const viewport=dialog.querySelector('.logic-viewport'),space=dialog.querySelector('.logic-space'),canvas=dialog.querySelector('.logic-canvas'),status=dialog.querySelector('[data-status]');let ready=false,width=1200,height=800;
+  function persist(){if(!ready)return;state.left=viewport.scrollLeft;state.top=viewport.scrollTop;const snapshot=JSON.stringify(state);pending=pending.catch(()=>{}).then(async()=>{if(window.desktop?.saveLogic){const result=await window.desktop.saveLogic(docId,snapshot);if(!result.ok)throw new Error(result.error);}else window.localStorage.setItem(storageKey,snapshot);status.textContent='已保存';}).catch(error=>{status.textContent='保存失败：'+error.message;throw error;});pending.catch(()=>{});}
+  function position(group,index){const rendered=[...canvas.querySelectorAll('.logic-group')].find(card=>card.dataset.group===group.key);return state.positions[group.key]||(rendered?{x:parseFloat(rendered.style.left),y:parseFloat(rendered.style.top)}:null)||{x:40,y:40};}
+  function note(node){return `<textarea data-note="${escape(node.key)}" aria-label="便笺内容" rows="2" placeholder="写点想法…">${escape(state.notes[node.key]||'')}</textarea>`;}
+  function subtree(nodes){return nodes.map(child=>{const expanded=state.collapsed[child.key]===false;return `<section class="logic-subcard"><div class="logic-tree-row"><button data-heading="${child.index}">${escape(child.title)}</button>${child.children.length?`<button data-node-toggle="${escape(child.key)}" aria-label="展开或收起 ${escape(child.title)}" aria-expanded="${expanded}">${expanded?'⌃':'⌄'}</button>`:''}</div>${expanded?subtree(child.children):''}</section>`;}).join('');}
+  function paint(){
+    canvas.innerHTML=groups.map((group,index)=>{const p=position(group,index),collapsed=state.collapsed[group.key]!==false,children=collapsed?[]:group.children;return `<article class="logic-group ${group.frame?'logic-frame':group.sticky?'logic-sticky':''}" data-group="${escape(group.key)}" style="left:${p.x}px;top:${p.y}px;${group.frame?`width:${state.frames[group.key].width}px;height:${state.frames[group.key].height}px`:``}"><header data-drag="${index}"><button class="logic-grip" data-drag="${index}" aria-label="移动 ${escape(group.title)}" title="拖动移动；方向键微调">⠿</button>${group.frame?`<input data-frame-title="${escape(group.key)}" aria-label="分组名称" placeholder="分组名称（可选）" value="${escape(state.frames[group.key].title)}"><button data-delete="${index}" aria-label="删除分组框">×</button>`:group.sticky?`<b>便笺</b><button data-delete="${index}" aria-label="删除便笺">×</button>`:`<button class="logic-title-link" data-heading="${group.index}" title="${escape(group.context||group.title)}"><b>${escape(group.title)}</b></button>${group.children.length?`<button data-toggle="${index}" aria-expanded="${!collapsed}" aria-label="展开或收起 ${escape(group.title)}">${collapsed?'⌄':'⌃'}</button>`:''}`}</header>${group.frame?'':group.sticky?`<div class="logic-group-body">${note({key:group.noteKey,title:'便笺'})}</div>`:children.length?`<div class="logic-group-body">${subtree(children)}</div>`:''}${group.frame?'':connectionPorts(group.title)}</article>`;}).join('');
+    if(!groups.length)canvas.innerHTML='<p class="logic-empty">此层级暂无标题，可以切换层级或新增便笺。</p>';
+    canvas.querySelectorAll('[data-note]').forEach(sizeNote);
+    measure();
+  }
+  function sizeNote(field){
+    const scroll=field.scrollTop;
+    field.style.height='0px';
+    field.style.height=Math.min(220,Math.max(58,field.scrollHeight))+'px';
+    field.scrollTop=scroll;
+  }
+  function measure(){
+    const cards=[...canvas.querySelectorAll('.logic-group')];
+    const sizes=new Map(cards.map(card=>[card.dataset.group,{width:card.offsetWidth||parseFloat(card.style.width)||(card.classList.contains('logic-sticky')?228:CARD_WIDTH),height:card.offsetHeight||parseFloat(card.style.height)||100}]));
+    const layout=layoutLogicCards(groups,sizes,state.positions,viewport.clientWidth||1100);
+    for(const card of cards){const p=layout.positions[card.dataset.group];card.style.left=p.x+'px';card.style.top=p.y+'px';}
+    canvas.querySelectorAll('.logic-section-label').forEach(label=>label.remove());
+    for(const label of layout.labels){const element=document.createElement('h3');element.className='logic-section-label';element.textContent=label.title;element.title=label.title;element.style.cssText=`left:${label.x}px;top:${label.y}px;width:${label.width}px`;canvas.append(element);}
+    width=layout.width;height=layout.height;canvas.style.width=width+'px';canvas.style.height=height+'px';scale();drawEdges();
+  }
+  const connections=logicConnections({canvas,viewport,dialog,getState:()=>state,save:persist,status});
+  function drawEdges(){connections.render();}
+  dialog.querySelector('[data-add-frame]').onclick=()=>{const key='frame-'+window.crypto.randomUUID();state.frames[key]={title:'',width:780,height:400};state.positions[key]={x:Math.max(20,viewport.scrollLeft/state.zoom+30),y:Math.max(20,viewport.scrollTop/state.zoom+30)};groups.push({key,frame:true,title:'分组',children:[]});paint();persist();canvas.querySelector('[data-frame-title="'+key+'"]')?.focus();};
+  function scale(){state.zoom=Math.max(.25,Math.min(1.6,state.zoom));canvas.style.transform=`scale(${state.zoom})`;space.style.width=width*state.zoom+'px';space.style.height=height*state.zoom+'px';dialog.querySelector('output').textContent=Math.round(state.zoom*100)+'%';}
+  function fit(){state.zoom=Math.min(1,Math.max(.25,Math.min((viewport.clientWidth||1100)/width,(viewport.clientHeight||700)/height)*.95));scale();viewport.scrollLeft=viewport.scrollTop=0;persist();}
+  dialog.querySelector('[data-add-note]').onclick=()=>{const key='note-'+window.crypto.randomUUID(),group={key:'sticky:'+key,noteKey:key,title:'便笺',sticky:true,children:[]};state.notes[key]='';state.positions[group.key]={x:Math.max(20,viewport.scrollLeft/state.zoom+80),y:Math.max(20,viewport.scrollTop/state.zoom+80)};groups.push(group);paint();persist();canvas.querySelector(`[data-note="${key}"]`)?.focus();};
+  dialog.querySelector('[data-card-level]').onchange=event=>{state.cardLevel=Number(event.target.value);drag=null;connections.cancel();groups=[...logicSections(entries,title,state.cardLevel),...groups.filter(group=>group.sticky||group.frame)];state.zoom=1;paint();viewport.scrollLeft=viewport.scrollTop=0;persist();};
+  dialog.querySelector('[data-fit]').onclick=fit;
+  for(const [name,delta] of [['in',.1],['out',-.1]])dialog.querySelector('[data-zoom-'+name+']').onclick=()=>{state.zoom+=delta;scale();persist();};
+  canvas.addEventListener('toggle',measure,true);
+  canvas.onpointerup=()=>{for(const card of canvas.querySelectorAll(".logic-frame")){const frame=state.frames[card.dataset.group];frame.width=parseFloat(card.style.width);frame.height=parseFloat(card.style.height);}measure();persist();};
+  canvas.oninput=event=>{if(event.target.dataset.frameTitle){state.frames[event.target.dataset.frameTitle].title=event.target.value;clearTimeout(timer);timer=setTimeout(persist,250);return;}const key=event.target.dataset.note;if(key){state.notes[key]=event.target.value;sizeNote(event.target);measure();clearTimeout(timer);timer=setTimeout(persist,250);}};
+  canvas.onclick=async event=>{const button=event.target.closest('button');if(!button)return;if(button.dataset.heading!==undefined){const index=Number(button.dataset.heading);if(index<0)return;if(!await close())return;headings[index]?.scrollIntoView({block:'start'});}else if(button.dataset.nodeToggle!==undefined){const key=button.dataset.nodeToggle;state.collapsed[key]=state.collapsed[key]===false;paint();persist();}else if(button.dataset.toggle!==undefined){const group=groups[Number(button.dataset.toggle)];state.collapsed[group.key]=state.collapsed[group.key]===false;paint();persist();}else if(button.dataset.delete!==undefined){const index=Number(button.dataset.delete),group=groups[index];if(state.notes[group.noteKey]&&!window.confirm('删除这张便笺？'))return;delete state.frames[group.key];state.edges=state.edges.filter(edge=>edge.from!==group.key&&edge.to!==group.key);delete state.notes[group.noteKey];delete state.positions[group.key];groups.splice(index,1);paint();persist();}};
+  viewport.onpointerdown=event=>{if(event.button!==0)return;const grip=event.target.closest('button,textarea,input,select')?.matches('[data-drag]')?event.target.closest('[data-drag]'):event.target.closest('button,textarea,input,select')?null:event.target.closest('[data-drag]');if(!grip&&event.target.closest('button,textarea,input,select,.logic-group'))return;const index=grip?Number(grip.dataset.drag):null,p=index===null?null:position(groups[index],index);drag={x:event.clientX,y:event.clientY,left:viewport.scrollLeft,top:viewport.scrollTop,index,p,members:index!==null&&groups[index].frame?[...canvas.querySelectorAll('.logic-group:not(.logic-frame)')].filter(c=>parseFloat(c.style.left)>=p.x&&parseFloat(c.style.top)>=p.y&&parseFloat(c.style.left)+(c.offsetWidth||CARD_WIDTH)<=p.x+state.frames[groups[index].key].width&&parseFloat(c.style.top)+(c.offsetHeight||180)<=p.y+state.frames[groups[index].key].height).map(c=>({key:c.dataset.group,x:parseFloat(c.style.left),y:parseFloat(c.style.top)})):[]};viewport.setPointerCapture?.(event.pointerId);event.preventDefault();};
+  viewport.onpointermove=event=>{if(!drag)return;const dx=event.clientX-drag.x,dy=event.clientY-drag.y;if(drag.index===null){viewport.scrollLeft=drag.left-dx;viewport.scrollTop=drag.top-dy;}else{const group=groups[drag.index],p={x:Math.min(100000,Math.max(20,drag.p.x+dx/state.zoom)),y:Math.min(100000,Math.max(20,drag.p.y+dy/state.zoom))};state.positions[group.key]=p;for(const member of drag.members){const pos={x:member.x+p.x-drag.p.x,y:member.y+p.y-drag.p.y};state.positions[member.key]=pos;const el=[...canvas.querySelectorAll('.logic-group')].find(c=>c.dataset.group===member.key);el.style.left=pos.x+'px';el.style.top=pos.y+'px';}const card=[...canvas.querySelectorAll('.logic-group')].find(card=>card.dataset.group===group.key);if(card){card.style.left=p.x+'px';card.style.top=p.y+'px';}measure();}};
+  viewport.onpointerup=viewport.onpointercancel=()=>{if(drag){drag=null;persist();}};
+  canvas.onkeydown=event=>{const grip=event.target.closest('button.logic-grip');if(!grip||!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key))return;event.preventDefault();const index=Number(grip.dataset.drag),group=groups[index],p=position(group,index);state.positions[group.key]={x:Math.max(20,p.x+(event.key==='ArrowRight'?20:event.key==='ArrowLeft'?-20:0)),y:Math.max(20,p.y+(event.key==='ArrowDown'?20:event.key==='ArrowUp'?-20:0))};paint();canvas.querySelector(`button[data-drag="${index}"]`)?.focus();persist();};
+  viewport.onscroll=()=>{if(!ready||drag)return;clearTimeout(timer);timer=setTimeout(persist,250);};
+  viewport.onwheel=event=>{if(event.ctrlKey||event.metaKey){event.preventDefault();state.zoom+=event.deltaY>0?-.05:.05;scale();persist();}else if(event.shiftKey&&event.deltaX===0){event.preventDefault();viewport.scrollLeft+=event.deltaY;} };
+  async function saveNow(){clearTimeout(timer);persist();try{await pending;return true;}catch{return false;}}
+  dialog.querySelector('[data-show-plan]').onclick=()=>options.onArrange?.();
+  flushCurrent=saveNow;
+  let closed=false,closing;
+  async function close(){
+    if(closed)return true;if(closing)return closing;
+    closing=(async()=>{
+      if(!await saveNow())return false;
+      closed=true;ready=false;observer?.disconnect();connections.destroy();document.removeEventListener('keydown',escapeKey);
+      dialog.remove();document.body.classList.remove('organize-mode');if(shell)shell.inert=previousInert;
+      window.scrollTo({top:writingScroll,behavior:'instant'});flushCurrent=closeCurrent=async()=>true;options.onClose?.();
+      document.querySelector('[data-mode="write"]')?.focus({preventScroll:true});return true;
+    })();try{return await closing;}finally{closing=null;}
+  }
+  function escapeKey(event){if(event.key!=='Escape'||event.defaultPrevented||document.querySelector('dialog[open]'))return;event.preventDefault();if(!connections.cancel())close();}
+  closeCurrent=close;
+  const observer=window.ResizeObserver?new window.ResizeObserver(measure):null;observer?.observe(viewport);
+  try{const response=window.desktop?.loadLogic?await window.desktop.loadLogic(docId):{ok:true,state:window.localStorage.getItem(storageKey)};if(!response.ok)throw new Error(response.error);if(response.state){const saved=JSON.parse(response.state);if(saved.version!==1||!saved.notes||!saved.positions||!saved.collapsed||!Number.isFinite(saved.zoom))throw new Error('布局数据无效');state={...state,...saved};}if(!levels.includes(state.cardLevel))state.cardLevel=defaultLevel;groups=logicSections(entries,title,state.cardLevel);dialog.querySelector('[data-card-level]').value=String(state.cardLevel);for(const key of Object.keys(state.notes)){if(!state.notes[key]&&!key.startsWith('note-'))continue;groups.push({key:'sticky:'+key,noteKey:key,title:'便笺',sticky:true,children:[]});}for(const [key,value] of Object.entries(state.summaries||{})){const noteKey='note-summary-'+key;if((value.conclusion||value.points)&&!state.notes[noteKey]){state.notes[noteKey]=[value.conclusion,value.points].filter(Boolean).join('\n\n');groups.push({key:'sticky:'+noteKey,noteKey,title:'便笺',sticky:true,children:[]});}}state.summaries={};for(const key of Object.keys(state.frames))groups.push({key,frame:true,title:'分组',children:[]});ready=true;paint();if(response.state){viewport.scrollLeft=state.left;viewport.scrollTop=state.top;}else{groups.forEach(group=>state.collapsed[group.key]=true);paint();}}catch(error){status.textContent=error.message;paint();}
+  dialog.inert=false;dialog.focus({preventScroll:true});document.addEventListener('keydown',escapeKey);
+  return {close};
+}

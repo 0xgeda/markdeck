@@ -1,0 +1,24 @@
+import assert from 'node:assert/strict';
+import {compressImage} from '../src/compress-image.js';
+const MB=1024*1024;
+const small=new Blob(['small'],{type:'image/png'});
+assert.equal(await compressImage(small),small);
+await assert.rejects(compressImage(new Blob(['text'],{type:'text/plain'})),/请选择/);
+await assert.rejects(compressImage(new Blob([new Uint8Array(4*MB)],{type:'image/gif'})),/保留动画/);
+const large=new Blob([new Uint8Array(4*MB)],{type:'image/png'});
+let closed=0,draws=[],qualities=[];
+const canvas={width:0,height:0,getContext:()=>({drawImage:(_image,_x,_y,width,height)=>draws.push([width,height])}),toBlob(callback,type,quality){qualities.push(quality);assert.equal(type,'image/webp');callback(new Blob([new Uint8Array(quality===.9?2*MB:MB/2)],{type}));}};
+globalThis.document={createElement:()=>canvas};
+globalThis.createImageBitmap=async()=>({width:6000,height:4000,close:()=>closed++});
+const output=await compressImage(large);
+assert.equal(output.type,'image/webp');assert.ok(output.size<=MB);
+assert.deepEqual(draws,[[2560,1707]]);assert.deepEqual(qualities,[.9,.8]);assert.equal(closed,1);assert.equal(canvas.width,0);
+// If lowering quality is insufficient, shrink dimensions and retry.
+qualities=[];draws=[];
+canvas.toBlob=(callback,type)=>callback(new Blob([new Uint8Array(canvas.width>2000?4*MB:MB/2)],{type}));
+await compressImage(large);assert.deepEqual(draws,[[2560,1707],[1920,1280]]);
+canvas.toBlob=callback=>callback(null);
+await assert.rejects(compressImage(large),/压缩失败/);assert.equal(closed,3);
+globalThis.createImageBitmap=async()=>{throw new Error('decode');};
+await assert.rejects(compressImage(large),/无法读取/);
+console.log('Compression limits, aspect ratio, quality and size retries, format, cleanup and failures passed.');

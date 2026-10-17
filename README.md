@@ -1,70 +1,103 @@
 # Markdeck
 
-将 Markdown 转换为精美 HTML 提案幻灯片。输入 Markdown，AI 自动选择布局、渲染主题，生成可分享的静态页面。
+本地 Markdown 桌面工具，在排版后的正文里直接写作，也可以梳理章节关系、展示文档。技术栈为 Electron、Vite、原生 JavaScript 和 TOAST UI Editor。
 
-**生产域名：** [markdeck.pro](https://markdeck.pro)
+## 使用与保存
 
-## Tech Stack
+Apple Silicon Mac 打开 `release/Markdeck-darwin-arm64/Markdeck.app`。在文档导航中「新建文档」或「打开文档」，也可使用 ⌘N、⌘O。支持不超过 10 MB 的 UTF-8 `.md`、`.markdown`、`.txt`。
 
-- **框架：** Next.js 15 App Router
-- **AI：** DeepSeek API（布局智能选择）
-- **存储：** sessionStorage（无数据库 MVP）
-- **部署：** Vercel
+- 新文档自动存为应用草稿；「保存到文件」后，正文修改自动写回所选文件。顶部「已保存到文件」表示写入成功。
+- 修改应用内名称不会重命名磁盘文件；从文档列表移除文档也不会删除磁盘文件。保存正文不会额外添加重复标题。
+- 连续输入约 250 毫秒合并保存；⌘S、打开文档及关闭窗口会等待最新修改落盘。保存失败时保留草稿并提示。
+- 文件被外部软件修改时，停止覆盖冲突版本。可「另存为」保留自己的修改，或「刷新」采用磁盘版本。写作模式约每 1.5 秒检查当前文件，回到窗口也会检查；梳理和展示期间暂停自动更新。
+- 文件只打开而未编辑时保持原字节；编辑后会规范化 Markdown 源码格式。已关联文件保留 UTF-8 BOM 和 CRLF。
 
-## 功能
+应用数据位于 `~/Library/Application Support/云笺/`：`workspace.json` 保存草稿及文件关联，`history/` 保存修改记录，`logic/文档编号.json` 保存梳理布局、便笺、连线、分组框和展示方案。品牌改名保留原数据目录、`com.yunjian.markdown` 标识及 `yun-jian://` 协议，避免已有数据失联。
 
-- Markdown 输入 → AI 布局选择 → 主题渲染 → 可分享链接
-- 6 种幻灯片布局：`cover` / `content` / `quote` / `two-col` / `stat` / `image-full`
-- 图片替换（Upload 面板，存为 base64 data URL）
-- 编辑模式（inline contentEditable）
-- 导出 HTML
+浏览器预览使用 localStorage，不会自动写回本地文件，也不与桌面版同步。跨浏览器或桌面迁移需导出并重新打开 Markdown。当前没有云同步或多人协作。
 
-## 本地开发
+## 写作、梳理、展示
 
-```bash
-npm install
+三个模式共用顶部导航。选中状态跟随实际模式，连续切换会等待加载或保存完成。
+
+### 写作
+
+顶部「目录」随时显示或隐藏章节导航；箭头仅在有子章节时出现，并随层级逐级缩小。折叠目录不隐藏正文，点击标题跳转，搜索时临时显示匹配项。折叠状态保留在当前文档会话，标题结构变化后重置。
+
+「参考」打开只读侧栏，从其他已载入文档选择资料并独立滚动。它展示应用内快照，不实时追踪参考文件的外部修改。切换主文档关闭侧栏，同一会话再打开会恢复选择和位置（最多 30 份主文档）。
+
+段首输入列表标记可自动转换，空段落输入 `/` 可插入标题、列表、引用、代码块、表格和图片。选中文字显示格式快捷条；表格内使用顶部格式工具栏，避免浮条遮挡。表格操作条跟随表格上缘，分开提供行、列操作；支持「全选表格」后删除、直接「删除表格」及撤销。
+
+设置提供九套皮肤、正文大小、工具栏开关、查找替换、收藏和导出。查找支持 ⌘F／⌘H，Enter 下一处、Shift+Enter 上一处，替换可撤销。⌘K 搜索应用内文档名称，⌘R 刷新文件，⇧⌘S 另存为。
+
+### 梳理
+
+梳理是铺满主窗口的画布，没有弹窗边框、灰色遮罩或重复模式导航。可将文档实际存在的任一级标题作为卡片；只有一个一级标题且有多个二级标题时，默认按二级展示，否则采用最浅标题级别。
+
+同一父章节的卡片默认分组排列，下级标题在卡片内逐层展开，点击标题返回正文。标题不附带填写表单，补充想法使用独立小便笺；旧版摘要会迁移为便笺。卡片和便笺自由拖动，完整标题路径可悬停查看。
+
+从卡片边缘连接点拖到另一张卡片可连线，支持分支、汇合、取消和删除；键盘可聚焦连接点并按 Enter 连接。「分组框」可调整大小，拖动框标题带动完整包含的卡片，删除框保留内容。
+
+空白处可拖动画布，触控板横纵滚动，Shift+滚轮横移，Ctrl／⌘+滚轮缩放。新画布和切换层级使用 100% 缩放，已有布局保留手动位置；「查看全部」缩放到总览。离开前等待保存，保存失败保留页面。所有操作独立于 Markdown 正文；标题改名后原位置不会自动关联到新标题。
+
+### 展示与章节安排
+
+点击「展示」即可只读展示完整文档，保留当前阅读块位置；可以跳转章节、全屏、临时高亮文字，退出后清除标注并恢复编辑。
+
+工具栏「章节安排」打开右侧栏，正文仍可查看。点击章节名称预览对应正文，勾选决定是否展示，上下箭头调整顺序。常规章节取消勾选即可排除；「⋯」中管理新建、重命名和删除方案，默认收起名称输入框。梳理工具栏的「安排展示」会先保存画布，再切换到这里。
+
+「按所选顺序展示」逐章显示只读正文及子章节，左右方向键翻章，Esc 返回章节侧栏；再按 Esc 收起侧栏，再次按 Esc 退出展示。共享导航始终标记「展示」。切换模式或文档会关闭所属侧栏和逐章页面；保存失败时保留当前安排。
+
+方案独立保存，不重排原文。新方案使用当前梳理层级（未设置时自动选择），已有方案的层级固定；新增章节需主动加入，改名或删除导致的失效章节需移除后重新加入。旧方案保留。当前不导出独立展示方案，旧 PPT 确认稿入口已撤下，历史代码和数据仍保留。
+
+## 图片、历史与交付
+
+图片带柔和外框，点击后拖动四角等比例缩放：拖动显示尺寸框，松手应用，Esc 取消。支持图文环绕、两列／三列连续图片组、恢复单列，尺寸和布局可撤销并保存到 Markdown。
+
+已关联文档的新图片存到同目录的 `文档名.assets/`，草稿图片内嵌。另存为会复制引用的附件。收到同事的 Markdown 时也需要图片文件：相对路径缺失、绝对路径或目录外图片不能直接读取；缺图提示可「重新选择」修复。应用只读取文档目录内的受支持图片，单张读取上限 10 MB。
+
+设置中可以：
+
+- 查看修改记录并恢复：普通编辑每分钟最多一个快照，每份文档最多 30 个版本、约 20 MB；外部更新和恢复前额外留存。记录从功能启用后的修改开始。
+- 导出独立 HTML／PDF：嵌入样式和可读取图片，PDF 由 Electron 打印为 A4 浅色页面。图片不可读取时提示；真实 PDF 分页仍需桌面验收。
+- 打包 Markdown 与图片为 ZIP：保留相对路径，缺图阻止导出；网络图片仍需联网，普通附件链接不收集，本地图片合计最多 100 MB。原文不被改写。
+- 打开文档文件夹并搜索磁盘正文：跳过隐藏目录、符号链接和依赖／构建目录；最多 2000 份文档、200 条结果，正文扫描单文件最多 1 MB、每次最多 40 MB，超限会提示。文件夹选择仅保留在本次启动。
+
+## 开发与验证
+
+安装兼容 Vite 6 的 Node.js（本地验证使用 22.22.0），然后：
+
+```sh
+npm ci
+npx install-electron
+npm start
 ```
 
-创建 `.env.local`：
+`npm start` 先构建再启动 Electron；直接打开依赖中的 `Electron.app` 只会出现 Electron 欢迎页。`npm run dev` 启动浏览器预览，默认 `http://127.0.0.1:5173`。
 
-```env
-DEEPSEEK_API_KEY=<deepseek-key>
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
+```sh
+node tests/app-flow.mjs
+node tests/show-plan.mjs
+node tests/logic-panel.mjs
+node tests/logic-layout.mjs
+npm run test:files
+npm run test:shortcuts
+npm run build
+npm run package:mac
+node tests/package-size.mjs
 ```
 
-启动开发服务器：
+打包输出 `release/Markdeck-darwin-arm64/Markdeck.app`，使用 `desktop/icon.icns`，执行本地 ad-hoc 签名和校验；尚无 Developer ID 签名和公证。已有 Electron ZIP 时可设置 `ELECTRON_ZIP_DIR` 为缓存目录。
 
-```bash
-npm run dev
-```
+`npm run test:desktop` 需要能启动真实 Electron；`npm test` 和 `node tests/visual-review.mjs` 需要先启动 Vite 及可用 Playwright 浏览器（可用 `CHROME_PATH` 指定）。DOM 测试不代替真实渲染、拖动手感或 PDF 打印验证。当前验证、发布及待办状态以 [UX_REVIEW.md](UX_REVIEW.md) 为准；安装体积与内存边界见 [PERFORMANCE_REVIEW.md](PERFORMANCE_REVIEW.md)。
 
-## 测试
+## 目录与仓库
 
-```bash
-npm test
-```
+- `src/`：编辑器和三种模式，`main.js` 管理共享导航及串行切换。
+- `desktop/`：Electron 文件、附件、历史、打包和原生接口；渲染进程启用上下文隔离与沙箱，关闭 Node 集成。
+- `tests/`：DOM、文件、打包与真实浏览器／桌面检查。
+- `design/`、`dist/`、`release/`、`*.bundle`：设计素材或本地产物，已忽略；不要作为源码权威副本。
 
-## 部署到 Vercel
+GitHub 仓库为 `0xgeda/markdeck`。约定 `desktop-app` 维护桌面版，远端 `main` 用于网页；两套历史不可直接覆盖。桌面分支的 [vercel.json](vercel.json) 禁止该分支自动部署；Vercel 后台 Production Branch 和网页线上状态需单独核验。未来 `apps/web/`、`apps/desktop/` 的同仓迁移尚未实施。
 
-在 Vercel 项目设置中配置以下环境变量：
-
-| 变量 | 说明 |
-|------|------|
-| `DEEPSEEK_API_KEY` | DeepSeek API key |
-| `NEXT_PUBLIC_SITE_URL` | `https://markdeck.pro` |
-
-推送到 `main` 分支后 Vercel 自动部署。
-
-## 项目结构
-
-```
-src/
-  app/
-    api/generate/        # POST：生成 deck（调用 DeepSeek，返回 HTML）
-    upload/              # Markdown 上传入口
-    preview/[slug]/      # 预览 + 编辑页（读 sessionStorage）
-    d/[slug]/            # 公开预览页
-  lib/
-    markdeck/            # 核心逻辑：parser / layout-selector / renderer
-    env.ts               # Zod 环境变量校验
-```
+本机 `web/` 是从网页 `origin/main` 建立的独立 worktree，使用 `feat/website-rewrite` 分支重写 Next.js 官网，目标域名 `markdeck.pro`。该目录被桌面 Git 和打包规则排除；网页开发、测试及部署说明见 `web/README.md`。它在网页分支中仍对应仓库根目录。
