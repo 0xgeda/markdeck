@@ -2,12 +2,12 @@ import type { Metadata } from 'next';
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
-import { Instrument_Serif } from 'next/font/google';
+import { DM_Serif_Display } from 'next/font/google';
 import { routing } from '@/i18n/routing';
 import { site } from '@/lib/site';
 import '../globals.css';
 
-const brandSerif = Instrument_Serif({
+const brandSerif = DM_Serif_Display({
   subsets: ['latin'],
   weight: '400',
   variable: '--font-brand',
