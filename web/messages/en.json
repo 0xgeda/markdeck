@@ -1,0 +1,329 @@
+{
+  "site": {
+    "description": "Write it down. Think it through. Share it clearly. Markdeck is a local Markdown workspace for focused writing, thinking, and composed presentation."
+  },
+  "metadata": {
+    "home": {
+      "title": "Markdeck — Write it down. Think it through. Share it clearly.",
+      "ogTitle": "Markdeck — Space for your thinking.",
+      "ogAlt": "Markdeck — Write. Connect. Present."
+    },
+    "download": {
+      "title": "Get Markdeck",
+      "description": "Bring focus back to the desktop. Learn about the Mac build of Markdeck, release status, and how to get started."
+    },
+    "guide": {
+      "title": "User Guide",
+      "description": "From your first document onward: local saving, Markdown writing, outlining logic, chapter presentation, and sharing with images."
+    }
+  },
+  "nav": {
+    "home": "Markdeck home",
+    "menu": "Main navigation",
+    "mobileMenu": "Mobile navigation",
+    "openMenu": "Open navigation menu",
+    "experience": "The product",
+    "details": "Thoughtful details",
+    "guide": "User guide",
+    "cta": "Get Markdeck",
+    "languageLabel": "Language"
+  },
+  "shell": {
+    "skip": "Skip to main content",
+    "footerTag": "Space for your thinking.",
+    "footerNav": "Footer navigation",
+    "footerGuide": "User guide",
+    "footerFaq": "FAQ",
+    "footerDownload": "Get the app"
+  },
+  "home": {
+    "hero": {
+      "kicker": "Space for ideas. Built for expression.",
+      "edition": "MARKDECK / DESKTOP",
+      "titleLine1": "Put thoughts to paper.",
+      "titleLine2": "Shape them into form.",
+      "introLine1": "Write it down. Think it through. Share it clearly.",
+      "introLine2": "One Markdown file,",
+      "introLine3": "from the first spark to the finished thought.",
+      "cta": "Get Markdeck",
+      "demoLink": "Try it below",
+      "small": "Made for Mac · Local files · No account needed",
+      "handnote": "Less noise. More thought."
+    },
+    "workflow": {
+      "label": "THE WAY YOU THINK",
+      "titleLine1": "Good expression",
+      "titleLine2": "is more than finishing a draft.",
+      "intro1": "Sometimes you dive into the writing,",
+      "intro2": "sometimes you step back to see.",
+      "intro3": "Markdeck gives each state the space it needs.",
+      "cards": [
+        {
+          "number": "01",
+          "title": "Write",
+          "heading": "Let the words flow",
+          "body": "Edit inside the formatted document. Layout happens as you write. Keep attention on the content.",
+          "foot": "Begin with a single sentence"
+        },
+        {
+          "number": "02",
+          "title": "Outline",
+          "heading": "Trace the shape of your thinking",
+          "body": "Spread sections across a canvas. Drag, connect, and drop in a sticky note. Notice what is still missing.",
+          "foot": "See the whole from the parts"
+        },
+        {
+          "number": "03",
+          "title": "Present",
+          "heading": "Share the thought with ease",
+          "body": "Walk through the content in the order you want to tell it. Keep a clear through-line for every conversation.",
+          "foot": "From thinking to shared understanding"
+        }
+      ]
+    },
+    "details": {
+      "label": "THOUGHTFULLY SIMPLE",
+      "titleLine1": "A quiet interface,",
+      "titleLine2": "attentive details.",
+      "intro1": "The tool should not interrupt your thinking.",
+      "intro2": "Common actions sit exactly where your hand expects them.",
+      "miniPage": {
+        "eyebrow": "ON A QUIET AFTERNOON",
+        "number": "03",
+        "titleLine1": "A new angle",
+        "titleLine2": "on an ordinary day.",
+        "caption": "Words and pictures can each find a comfortable place.",
+        "svgLabel": "An illustration of books, coffee, and afternoon light by a window",
+        "artAriaLabel": "Illustration of a layout with text and image"
+      },
+      "illustrationNote": "A place for words & everything around them.",
+      "items": [
+        {
+          "n": "01",
+          "h": "Text and images, in easy company",
+          "p": "Soft image edges, adjustable sizes, and two- or three-column groups let visuals settle naturally into the prose."
+        },
+        {
+          "n": "02",
+          "h": "Long documents stay navigable",
+          "p": "The table of contents follows your heading hierarchy. Search sections, or open a reference doc, and read and write in one place."
+        },
+        {
+          "n": "03",
+          "h": "Every edit, with room to breathe",
+          "p": "The body autosaves. Revision history is viewable. Tables, images, and text actions all support undo."
+        },
+        {
+          "n": "04",
+          "h": "Your light, your rhythm",
+          "p": "Nine built-in themes for different writing moods. Adjust body size and shape the workspace until it feels right."
+        }
+      ]
+    },
+    "local": {
+      "label": "YOURS, FROM THE FIRST WORD",
+      "titleLine1": "Your files,",
+      "titleLine2": "always in your hands.",
+      "intro1": "Save your work in familiar Markdown.",
+      "intro2": "Writing stays local. Take it with you when you want to share.",
+      "link": "Learn about files and saving",
+      "aria": "Local document and export formats",
+      "pathLabel": "My Documents",
+      "pathProject": "Corner Bookshop Plan",
+      "fileName": "corner-bookshop-plan.md",
+      "fileSub": "From the first line to the final period",
+      "assets": "corner-bookshop-plan.assets",
+      "assetsSub": "Your images travel with you",
+      "exportIntro": "When you're ready to share"
+    },
+    "faq": {
+      "label": "A FEW GOOD QUESTIONS",
+      "titleLine1": "A few things",
+      "titleLine2": "you might want to know.",
+      "link": "See the user guide",
+      "items": [
+        {
+          "q": "Is Markdeck an online editor?",
+          "a": "Markdeck is a Mac desktop app. The interactive demo on this site shows how writing, outlining, and presentation feel; edits in the demo only apply to this page. Real documents open and save inside the desktop app."
+        },
+        {
+          "q": "Do I need an account to write?",
+          "a": "No. The desktop app opens local Markdown files directly. Writing, outlining, and presenting all work offline. Images hosted online still need a connection."
+        },
+        {
+          "q": "Will outlining or presenting change my original document?",
+          "a": "No. Sticky notes, card positions, connections, and presentation order are stored separately. You can reorganize your thinking or present only a few sections while the Markdown body stays in its original order."
+        },
+        {
+          "q": "How do I share documents together with their images?",
+          "a": "Export a standalone HTML or PDF, or bundle the Markdown and local images together as a ZIP. If you share a .md file directly, include the folder it references for images."
+        },
+        {
+          "q": "Which systems are supported today?",
+          "a": "The current desktop build targets Apple Silicon Macs. Builds for Windows, Linux, and Intel Macs are not yet available."
+        },
+        {
+          "q": "Can I keep using my existing Markdown files?",
+          "a": "Yes. Open UTF-8 encoded .md, .markdown, or .txt files directly, up to 10 MB each. Images should live inside the document folder; if something is missing, you can reselect it."
+        }
+      ]
+    },
+    "final": {
+      "label": "MAKE ROOM FOR YOUR THINKING",
+      "titleLine1": "Your next piece,",
+      "titleLine2": "starts here.",
+      "intro": "Bring one idea, or an unfinished document.",
+      "cta": "Get Markdeck",
+      "small": "macOS · Apple Silicon"
+    }
+  },
+  "download": {
+    "breadcrumb": "Back to home",
+    "label": "YOUR NEXT CHAPTER",
+    "titleLine1": "Bring that focus",
+    "titleLine2": "back to the desktop.",
+    "intro1": "Start from a local document.",
+    "intro2": "Writing, outlining, and presenting all live in Markdeck.",
+    "iconAlt": "Markdeck app icon",
+    "appName": "Markdeck for Mac",
+    "appSub": "For words, and the thinking behind them.",
+    "platformTitle": "macOS",
+    "platformSub": "Apple Silicon · M-series chips",
+    "descAvailable": "Download the installer for Apple Silicon Macs, unzip it, and drop Markdeck.app into your Applications folder.",
+    "descUnavailable": "A direct download from the site is not open yet. Check GitHub Releases for installer status; when a build is available, it will be listed on the matching release.",
+    "ctaDownload": "Download for Mac",
+    "ctaReleases": "View GitHub releases",
+    "footnote": "Builds for Windows, Linux, and Intel Macs are not currently offered.",
+    "source": "Interested in the project?",
+    "sourceLink": "View source code",
+    "firstTime": {
+      "h": "First time here",
+      "p": "Open the app, create a new document, or open an existing Markdown file. New documents start as drafts; once you choose Save to File, edits are written back to the local file automatically.",
+      "link": "Start here"
+    },
+    "existing": {
+      "h": "Already have lots of writing?",
+      "p": "Bring your .md files along. If the document references local images, keep the images folder and relative paths intact — or bundle the document and images from Markdeck and share them together.",
+      "link": "Files and images"
+    }
+  },
+  "guide": {
+    "breadcrumb": "Back to home",
+    "label": "A SMALL GUIDE",
+    "title": "Starting from the first sentence.",
+    "intro": "A few simple steps to find your own writing rhythm.",
+    "nav": "Guide index",
+    "chapters": {
+      "start": "Start writing",
+      "files": "Files and images",
+      "organize": "Outline your thinking",
+      "present": "Present the document",
+      "share": "Save and share"
+    },
+    "end": "Get Markdeck",
+    "start": {
+      "title": "01 / Start writing",
+      "p1": "Open Markdeck on your Mac and click New Document in the document navigator, or Open Document for existing work. Shortcuts: <strong>⌘N</strong> to create, <strong>⌘O</strong> to open.",
+      "p2": "Edit directly inside the formatted body. On an empty paragraph type <code>/</code> to insert a heading, list, quote, code block, table, or image. Select text to adjust its style with the formatting controls.",
+      "h3": "When you need to look things up",
+      "p3": "The top Outline controls section navigation; click a heading to jump into the body. Open Reference, pick another loaded document, and read while you write. Reference documents are read-only, so your source material stays safe."
+    },
+    "files": {
+      "title": "02 / Files and images",
+      "p1": "Markdeck supports UTF-8 encoded <code>.md</code>, <code>.markdown</code>, and <code>.txt</code> files up to 10 MB each. Documents live on your Mac — no account required.",
+      "h3": "Why don't my images show up sometimes?",
+      "p2": "Markdown usually records only an image path, not the image itself. When a colleague sends you a .md file, you also need the folder it references.",
+      "li1": "Keep images inside the document folder or a subfolder, preserving the original relative paths.",
+      "li2": "Absolute paths from another machine, images outside the folder, or missing files can't be read directly. Use the missing-image prompt to reselect.",
+      "li3": "Online images need a connection; local images are limited to 10 MB per file.",
+      "p3": "In documents already saved to a file, newly inserted images are placed in a <code>document-name.assets/</code> folder next to the file. Click an image and drag a corner to scale proportionally; adjacent images can form two- or three-column groups."
+    },
+    "organize": {
+      "title": "03 / Outline your thinking",
+      "p1": "Click Outline at the top to spread the document's sections across a canvas. Choose the heading level that suits you — you don't have to change the original headings to use the canvas.",
+      "li1": "Drag cards to arrange them, and expand sub-headings inside a card.",
+      "li2": "Drag from a card edge to another card to create a connection.",
+      "li3": "Drop in a sticky note where a judgement is still forming, or use a group frame to collect related items.",
+      "callout": "Card positions, connections, and sticky notes are stored separately — they never rearrange your Markdown body. They live in the desktop app's workspace data, so sharing a .md file alone will not include this canvas."
+    },
+    "present": {
+      "title": "04 / Present the document",
+      "p1": "Click Present at the top for a read-only view. Jump between chapters, go fullscreen, or temporarily highlight selected text. Highlights clear when you exit.",
+      "h3": "Say only what this moment needs",
+      "p2": "Open Section Plan, check the chapters you want to cover, and use the arrows to set the order. Choose Present in the chosen order to walk through each chapter; use arrow keys to switch and Esc to exit.",
+      "p3": "Presentation plans are saved independently of the body, so you can keep different plans for different occasions. They don't reorder the original and don't auto-convert the body into slides."
+    },
+    "share": {
+      "title": "05 / Save and share",
+      "p1": "New documents start as an app draft. Once you choose Save to File, edits write back to the chosen file automatically — a Saved to file indicator appears at the top. Use <strong>⌘S</strong> to save on demand and <strong>⇧⌘S</strong> to save a copy.",
+      "p2": "To review changes, enable Revision History in settings. If the file is modified by another app, Markdeck surfaces the conflict so you can refresh with the disk version or save your copy elsewhere.",
+      "h3": "Pick a share format for your reader",
+      "li1": "<strong>Markdown:</strong> good for ongoing edits and compatible with other Markdown tools.",
+      "li2": "<strong>Document + images bundle:</strong> export a ZIP that keeps local images and relative paths. Online images still need a connection.",
+      "li3": "<strong>HTML:</strong> good for browser reading, with styles and readable images embedded on export.",
+      "li4": "<strong>PDF:</strong> good for delivery and print, exported in A4 light pages. Check pagination for long docs or complex tables."
+    }
+  },
+  "demo": {
+    "label": "A SPACE FOR YOUR THOUGHTS",
+    "sub": "Interactive demo · Sample content",
+    "aria": "Markdeck interactive demo",
+    "windowFileName": "corner-bookshop-plan.md",
+    "windowLocal": "Local Markdown",
+    "wordmark": "Markdeck",
+    "tablist": "Switch demo modes",
+    "editHints": {
+      "write": "Click the body — try writing a line",
+      "organize": "Cards can be moved freely",
+      "present": "Same content, told a different way"
+    },
+    "modes": {
+      "write": { "title": "Write", "number": "01", "heading": "Just write — the thought follows.", "text": "Edit inside the formatted body. Headings, lists, images, and tables all live where you need them." },
+      "organize": { "title": "Outline", "number": "02", "heading": "Step back and see how ideas relate.", "text": "Turn sections into cards, connect the logic, and leave a sticky note for a new idea. The original stays untouched." },
+      "present": { "title": "Present", "number": "03", "heading": "Once it's clear in your head, share it clearly.", "text": "Choose sections and order. The same document becomes the setting for your talk — no re-copying required." }
+    },
+    "sections": [
+      { "title": "Starting with a pause", "text": "We want to open a bookshop where people are glad to linger. Books, coffee, and afternoons with no rush to leave. Reading, back as part of daily life rather than a to-do." },
+      { "title": "Connecting people with good things", "text": "Bring curation, space, and conversation together. Reading groups, handwritten recommendations — each becomes a thread between a book on the shelf and the person in front of it." },
+      { "title": "Letting good ideas grow slowly", "text": "Start with one block, one shelf, and a few people who love to share. Make space for experiments, and give change time to happen." }
+    ],
+    "note": "Keep a corner for things not yet decided.",
+    "paperOutline": "Document outline",
+    "paperOutlineTitle": "Corner Bookshop Plan",
+    "paperOutlineNote": "One idea,\nunfolding from here.",
+    "paperEyebrow": "A bookshop, and a way of living",
+    "paperHeadingLine1": "A good bookshop",
+    "paperHeadingLine2": "does more than sell books",
+    "paperQuote": "Let every visit bring something new.",
+    "paperMargin": "01 — 03",
+    "writeTextareaLabel": "Edit sample body",
+    "boardMeta": "Bookshop plan / Logic canvas",
+    "boardReset": "Reset layout",
+    "cardLabels": ["Observe", "Connect", "Act"],
+    "cardDragAria": "Drag card: {title}. Arrow keys also move it.",
+    "stickyLabel": "A quick thought",
+    "stickyTextareaLabel": "Edit sample sticky note",
+    "presentCaption": "Corner Bookshop Plan",
+    "presentSub": "From idea to everyday",
+    "slideEyebrow": "THE CORNER BOOKSHOP",
+    "slideFooter": "Every slide comes from your body text",
+    "prevChapter": "Previous chapter",
+    "nextChapter": "Next chapter",
+    "bottomLeft": "Your words, your pace.",
+    "bottomRight": "Edits in this demo only affect this page",
+    "themes": {
+      "label": "Change the mood",
+      "paper": "Paper",
+      "sage": "Sage",
+      "graphite": "Graphite",
+      "night": "Night",
+      "ariaSuffix": "theme"
+    },
+    "experienceLink": "Bring that focus back to the desktop"
+  },
+  "language": {
+    "label": "Language",
+    "en": "EN",
+    "zh": "中"
+  }
+}

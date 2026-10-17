@@ -1,0 +1,311 @@
+{
+  "site": {
+    "description": "把想法写下来，理清楚，讲明白。Markdeck 是为专注写作、梳理逻辑与从容展示而设计的本地 Markdown 工具。"
+  },
+  "metadata": {
+    "home": {
+      "title": "Markdeck — 写下来，理清楚，讲明白",
+      "ogTitle": "Markdeck — 给思考，留一点空间",
+      "ogAlt": "Markdeck — 写作，梳理，展示"
+    },
+    "download": {
+      "title": "获取 Markdeck",
+      "description": "把专注带回桌面。了解 Markdeck 的 Mac 版本、安装包发布状态与开始使用的方法。"
+    },
+    "guide": {
+      "title": "使用指南",
+      "description": "从第一份文档开始，了解 Markdeck 的本地保存、Markdown 写作、逻辑梳理、章节展示和图片分享。"
+    }
+  },
+  "nav": {
+    "home": "Markdeck 首页",
+    "menu": "主导航",
+    "mobileMenu": "移动导航",
+    "openMenu": "打开导航菜单",
+    "experience": "产品体验",
+    "details": "用心的细节",
+    "guide": "使用指南",
+    "cta": "获取 Markdeck",
+    "languageLabel": "语言"
+  },
+  "shell": {
+    "skip": "跳到主要内容",
+    "footerTag": "给思考，留一点空间。",
+    "footerNav": "页脚导航",
+    "footerGuide": "使用指南",
+    "footerFaq": "常见问题",
+    "footerDownload": "获取应用"
+  },
+  "home": {
+    "hero": {
+      "kicker": "为想法留白，为表达而生",
+      "edition": "MARKDECK / DESKTOP",
+      "titleLine1": "让想法落笔，",
+      "titleLine2": "让思路成形。",
+      "introLine1": "写下来，理清楚，讲明白。",
+      "introLine2": "一份 Markdown，",
+      "introLine3": "从最初的念头，到完整的表达。",
+      "cta": "获取 Markdeck",
+      "demoLink": "先感受一下",
+      "small": "为 Mac 而造 · 本地文件 · 无需账号",
+      "handnote": "Less noise. More thought."
+    },
+    "workflow": {
+      "label": "THE WAY YOU THINK",
+      "titleLine1": "好表达，",
+      "titleLine2": "从来不止于写完。",
+      "intro1": "有时需要沉进去写，",
+      "intro2": "有时需要退后一步看。",
+      "intro3": "Markdeck 给每一种状态，恰好的空间。",
+      "cards": [
+        {
+          "number": "01",
+          "title": "写作",
+          "heading": "让文字自然流动",
+          "body": "直接在正文里编辑，排版随写作发生。把注意力放在内容上。",
+          "foot": "从一句话开始"
+        },
+        {
+          "number": "02",
+          "title": "梳理",
+          "heading": "让思路有迹可循",
+          "body": "把章节铺开，拖动、连接，补一张便笺。看看哪里还缺一环。",
+          "foot": "从局部看见全貌"
+        },
+        {
+          "number": "03",
+          "title": "展示",
+          "heading": "让表达从容发生",
+          "body": "沿着想讲的顺序展开内容。为每一次沟通，留下清晰的主线。",
+          "foot": "从思考走向共识"
+        }
+      ]
+    },
+    "details": {
+      "label": "THOUGHTFULLY SIMPLE",
+      "titleLine1": "安静的界面，",
+      "titleLine2": "周到的细节。",
+      "intro1": "不必为工具打断思路。",
+      "intro2": "常用的操作，放在顺手的位置。",
+      "miniPage": {
+        "eyebrow": "ON A QUIET AFTERNOON",
+        "number": "03",
+        "titleLine1": "给日常，",
+        "titleLine2": "一点新的视角。",
+        "caption": "文字与图片，都可以有舒服的位置。",
+        "svgLabel": "书本、咖啡与窗边光线的简笔插画",
+        "artAriaLabel": "图文排版示意"
+      },
+      "illustrationNote": "A place for words & everything around them.",
+      "items": [
+        {
+          "n": "01",
+          "h": "图与文，相处得刚刚好",
+          "p": "柔和的图片边缘、可调整的尺寸，以及两列、三列组图，让资料自然融入文字。"
+        },
+        {
+          "n": "02",
+          "h": "长文档，也能找到方向",
+          "p": "目录跟随标题层级展开。搜索章节，或打开参考文档，在同一处完成查阅与写作。"
+        },
+        {
+          "n": "03",
+          "h": "每一次修改，都留有余地",
+          "p": "正文自动保存，修改记录可以回看。表格、图片和文字操作支持撤销。"
+        },
+        {
+          "n": "04",
+          "h": "喜欢的光线，熟悉的节奏",
+          "p": "九套内置皮肤，适合不同的写作时刻。调整正文大小，把工作区变成舒服的样子。"
+        }
+      ]
+    },
+    "local": {
+      "label": "YOURS, FROM THE FIRST WORD",
+      "titleLine1": "你的文件，",
+      "titleLine2": "始终在你手里。",
+      "intro1": "用熟悉的 Markdown 保存内容。",
+      "intro2": "写作留在本地，想分享的时候，再带它出发。",
+      "link": "了解文件与保存",
+      "aria": "本地文档与导出格式",
+      "pathLabel": "我的文档",
+      "pathProject": "街角书店计划",
+      "fileName": "街角书店计划.md",
+      "fileSub": "从第一行，到最后一个句号",
+      "assets": "街角书店计划.assets",
+      "assetsSub": "图片也一起带走",
+      "exportIntro": "准备好分享时"
+    },
+    "faq": {
+      "label": "A FEW GOOD QUESTIONS",
+      "titleLine1": "你可能",
+      "titleLine2": "还想知道。",
+      "link": "查看使用指南",
+      "items": [
+        { "q": "Markdeck 是在线编辑器吗？", "a": "Markdeck 目前是一款 Mac 桌面应用。官网里的交互演示帮助你了解写作、梳理和展示，示例修改只在当前页面生效。实际文档在桌面应用中打开与保存。" },
+        { "q": "需要注册账号才能写作吗？", "a": "不需要。桌面应用直接打开本地 Markdown 文件，写作、梳理和展示都可以离线使用。文档中的网络图片仍需要网络连接。" },
+        { "q": "梳理和展示会改变我的原文吗？", "a": "不会。便笺、卡片位置、连线和展示顺序单独保存。你可以换一种方式组织思路，也可以只选几个章节展示，Markdown 正文保持原来的顺序。" },
+        { "q": "怎么把文档和图片一起分享？", "a": "可以导出独立 HTML、PDF，或把 Markdown 和本地图片一起打包成 ZIP。直接分享 .md 文件时，请同时带上它引用的图片文件夹。" },
+        { "q": "目前支持哪些系统？", "a": "当前桌面构建面向配备 Apple Silicon 芯片的 Mac。Windows、Linux 和 Intel Mac 的发布包暂未提供。" },
+        { "q": "可以继续使用已有的 Markdown 文件吗？", "a": "可以，直接打开 UTF-8 编码的 .md、.markdown 或 .txt 文件即可，单文件上限 10 MB。图片需要位于文档目录内，缺失时可以重新选择。" }
+      ]
+    },
+    "final": {
+      "label": "MAKE ROOM FOR YOUR THINKING",
+      "titleLine1": "下一篇，",
+      "titleLine2": "从这里开始。",
+      "intro": "带上一个想法，或者一份还没写完的文档。",
+      "cta": "获取 Markdeck",
+      "small": "macOS · Apple Silicon"
+    }
+  },
+  "download": {
+    "breadcrumb": "回到首页",
+    "label": "YOUR NEXT CHAPTER",
+    "titleLine1": "把这份专注，",
+    "titleLine2": "带回桌面。",
+    "intro1": "从一份本地文档开始。",
+    "intro2": "写作、梳理与展示，都在 Markdeck。",
+    "iconAlt": "Markdeck 应用图标",
+    "appName": "Markdeck for Mac",
+    "appSub": "为文字，也为文字背后的思考。",
+    "platformTitle": "macOS",
+    "platformSub": "Apple Silicon · M 系列芯片",
+    "descAvailable": "下载适用于 Apple Silicon Mac 的安装包，解压后将 Markdeck.app 放入「应用程序」文件夹。",
+    "descUnavailable": "官网直达下载尚未开放。可以前往 GitHub Releases 查看安装包发布情况；有可用版本时，会列在对应发布记录下。",
+    "ctaDownload": "下载 Mac 版",
+    "ctaReleases": "查看 GitHub 发布页",
+    "footnote": "当前未提供 Windows、Linux 与 Intel Mac 发布包。",
+    "source": "想了解项目？",
+    "sourceLink": "查看源代码",
+    "firstTime": {
+      "h": "第一次使用",
+      "p": "打开应用后，新建一份文档，或直接打开已有的 Markdown 文件。新文档先作为草稿保存，选择「保存到文件」后，修改会自动写回本地文件。",
+      "link": "从这里开始"
+    },
+    "existing": {
+      "h": "已经有很多文字了？",
+      "p": "带上你的 .md 文件即可。如果文档包含本地图片，也请保留图片文件夹和相对路径；或者从 Markdeck 打包文档与图片，再一起分享。",
+      "link": "了解文件与图片"
+    }
+  },
+  "guide": {
+    "breadcrumb": "回到首页",
+    "label": "A SMALL GUIDE",
+    "title": "从第一句话开始。",
+    "intro": "几个简单的步骤，找到适合自己的写作节奏。",
+    "nav": "指南目录",
+    "chapters": {
+      "start": "开始写作",
+      "files": "文件与图片",
+      "organize": "梳理思路",
+      "present": "展示文档",
+      "share": "保存与分享"
+    },
+    "end": "获取 Markdeck",
+    "start": {
+      "title": "01 / 开始写作",
+      "p1": "在 Mac 上打开 Markdeck，点击文档导航中的「新建文档」；已有内容则选择「打开文档」。也可以使用 <strong>⌘N</strong> 新建、<strong>⌘O</strong> 打开。",
+      "p2": "直接在排版后的正文里编辑。空段落输入 <code>/</code>，插入标题、列表、引用、代码块、表格或图片；选中文字后，可以使用格式工具调整样式。",
+      "h3": "需要查阅时",
+      "p3": "顶部「目录」控制章节导航，点击标题跳转到正文。打开「参考」，选择另一份已载入的文档，就能一边查阅、一边写作。参考文档为只读，不会误改资料。"
+    },
+    "files": {
+      "title": "02 / 文件与图片",
+      "p1": "Markdeck 支持 UTF-8 编码的 <code>.md</code>、<code>.markdown</code> 和 <code>.txt</code> 文件，单文件不超过 10 MB。文档保存在本地，不需要账号。",
+      "h3": "图片为什么有时显示不出来？",
+      "p2": "Markdown 通常只记录图片路径，并不包含图片本身。收到同事的 .md 文件时，需要同时收到它引用的图片文件夹。",
+      "li1": "把图片放在文档所在目录或其子目录中，保持原有相对路径。",
+      "li2": "来自另一台电脑的绝对路径、目录外的图片，或缺失文件，都不能直接读取。可以在缺图提示中重新选择图片。",
+      "li3": "网络图片需要网络连接；本地图片单张读取上限为 10 MB。",
+      "p3": "已保存到文件的文档，新插入的图片会放入同目录下的 <code>文档名.assets/</code> 文件夹。点击图片、拖动四角可以等比例缩放；相邻图片可以组成两列或三列图组。"
+    },
+    "organize": {
+      "title": "03 / 梳理思路",
+      "p1": "点击顶部「梳理」，把文档的章节铺到画布上。在卡片层级中选择适合你的标题级别，不必为了画布改变原文的标题习惯。",
+      "li1": "拖动卡片调整位置，在卡片内展开下级标题。",
+      "li2": "从卡片边缘的连接点拖向另一张卡片，建立关系。",
+      "li3": "添加一张小便笺，放在需要补充判断的地方；也可以用分组框归拢相关内容。",
+      "callout": "卡片位置、连线和便笺独立保存，不会重排 Markdown 正文。它们属于桌面应用的工作区数据，单独分享 .md 文件不会包含这张画布。"
+    },
+    "present": {
+      "title": "04 / 展示文档",
+      "p1": "点击顶部「展示」，进入只读展示。可以跳转章节、全屏，或临时高亮选中的文字。退出展示后，临时标注会清除。",
+      "h3": "只讲这次需要的内容",
+      "p2": "打开「章节安排」，勾选要讲的章节，再用上下箭头调整讲述顺序。选择「按所选顺序展示」，即可逐章展开正文；左右方向键翻章，Esc 返回。",
+      "p3": "展示安排独立于原文保存，可以为不同场合保留不同方案。它不会改动原文的顺序，也不会自动把正文重新制作成 PPT。"
+    },
+    "share": {
+      "title": "05 / 保存与分享",
+      "p1": "新文档先自动保存为应用草稿。选择「保存到文件」后，正文修改会自动写回选定文件；顶部出现「已保存到文件」，表示写入成功。<strong>⌘S</strong> 可以主动保存，<strong>⇧⌘S</strong> 可以另存为。",
+      "p2": "需要回看修改时，在设置中打开「修改记录」。如果文件被其他应用改动，Markdeck 会提示冲突，可以刷新采用磁盘版本，也可以另存为保留自己的修改。",
+      "h3": "根据接收者，选择分享方式",
+      "li1": "<strong>Markdown：</strong>适合继续编辑，也可以用其他 Markdown 工具打开。",
+      "li2": "<strong>打包文档与图片：</strong>导出 ZIP，一起带走本地图片和相对路径。网络图片仍需要联网。",
+      "li3": "<strong>HTML：</strong>适合用浏览器阅读，导出时嵌入样式和可读取的图片。",
+      "li4": "<strong>PDF：</strong>适合交付和打印，以 A4 浅色页面导出。复杂表格或长文档建议先检查分页。"
+    }
+  },
+  "demo": {
+    "label": "A SPACE FOR YOUR THOUGHTS",
+    "sub": "交互演示 · 示例内容",
+    "aria": "Markdeck 交互演示",
+    "windowFileName": "街角书店计划.md",
+    "windowLocal": "本地 Markdown",
+    "wordmark": "Markdeck",
+    "tablist": "切换演示模式",
+    "editHints": {
+      "write": "点击正文，试着写几句",
+      "organize": "卡片可以自由拖动",
+      "present": "同一份内容，换一种表达"
+    },
+    "modes": {
+      "write": { "title": "写作", "number": "01", "heading": "只管写，思路自然往下走。", "text": "在排版好的正文里直接编辑。标题、列表、图片和表格，都在你需要的地方。" },
+      "organize": { "title": "梳理", "number": "02", "heading": "退后一步，看见想法之间的关系。", "text": "让章节成为卡片，用连线整理逻辑，留一张便笺记下新的判断。原文始终保留。" },
+      "present": { "title": "展示", "number": "03", "heading": "想清楚了，就从容地讲出来。", "text": "选好章节和讲述顺序，让同一份文档成为表达的现场。无需再复制一遍内容。" }
+    },
+    "sections": [
+      { "title": "从一次停留开始", "text": "我们想开一家让人愿意停留的书店。这里有书，有咖啡，也有不必急着离开的午后。让阅读重新回到日常，而不是待办清单。" },
+      { "title": "连接人与好内容", "text": "把选书、空间与交流放在一起。每一场读书会、每一张手写推荐，都让书架上的故事与眼前的人发生连接。" },
+      { "title": "让好想法慢慢生长", "text": "先从一个街区、一个书架和一群愿意分享的人开始。留出尝试的空间，也给改变一点时间。" }
+    ],
+    "note": "留一个角落，给还没想好的事。",
+    "paperOutline": "文档目录",
+    "paperOutlineTitle": "街角书店计划",
+    "paperOutlineNote": "一个想法，\n从这里展开。",
+    "paperEyebrow": "一间书店，和一种生活",
+    "paperHeadingLine1": "一家好书店，",
+    "paperHeadingLine2": "不止卖书",
+    "paperQuote": "让每次停留，都有新的发现。",
+    "paperMargin": "01 — 03",
+    "writeTextareaLabel": "编辑示例正文",
+    "boardMeta": "书店计划 / 逻辑画布",
+    "boardReset": "恢复布局",
+    "cardLabels": ["观察", "连接", "行动"],
+    "cardDragAria": "拖动卡片：{title}，也可用方向键移动",
+    "stickyLabel": "一点想法",
+    "stickyTextareaLabel": "编辑示例便笺",
+    "presentCaption": "街角书店计划",
+    "presentSub": "从想法，到日常",
+    "slideEyebrow": "THE CORNER BOOKSHOP",
+    "slideFooter": "每一页，都来自你的正文",
+    "prevChapter": "上一章",
+    "nextChapter": "下一章",
+    "bottomLeft": "你的文字，你的节奏。",
+    "bottomRight": "示例编辑仅在本页生效",
+    "themes": {
+      "label": "换一种心情",
+      "paper": "纸白",
+      "sage": "雾绿",
+      "graphite": "石墨",
+      "night": "夜色",
+      "ariaSuffix": "皮肤"
+    },
+    "experienceLink": "把这份专注，带回桌面"
+  },
+  "language": {
+    "label": "语言",
+    "en": "EN",
+    "zh": "中"
+  }
+}

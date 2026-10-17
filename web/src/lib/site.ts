@@ -1,7 +1,6 @@
 export const site = {
   name: 'Markdeck',
   url: 'https://markdeck.pro',
-  description: '把想法写下来，理清楚，讲明白。Markdeck 是为专注写作、梳理逻辑与从容展示而设计的本地 Markdown 工具。',
   repository: 'https://github.com/0xgeda/markdeck',
   releases: 'https://github.com/0xgeda/markdeck/releases',
 };
