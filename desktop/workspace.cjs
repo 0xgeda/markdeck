@@ -2,7 +2,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { randomUUID, createHash } = require('node:crypto');
 const hash = text => createHash('sha256').update(text).digest('hex');
-const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const limits = require('./limits.cjs');
+const MAX_FILE_SIZE = limits.maxDocumentBytes;
 function atomicWrite(filename, content) {
   const temp = path.join(path.dirname(filename), `.${path.basename(filename)}.${randomUUID()}.tmp`);
   const mode = fs.existsSync(filename) ? fs.statSync(filename).mode & 0o777 : 0o600;
@@ -16,7 +17,7 @@ function validateDocs(docs) {
   if (!Array.isArray(docs) || docs.length > 1000) throw new Error('文档列表无效');
   const ids = new Set();
   return docs.map(d => {
-    if (!d || typeof d.id !== 'string' || !/^[a-zA-Z0-9-]{1,100}$/.test(d.id) || ids.has(d.id) || typeof d.title !== 'string' || d.title.length > 1000 || typeof d.body !== 'string' || Buffer.byteLength(d.body) > MAX_FILE_SIZE) throw new Error('文档内容无效或超过 10 MB');
+    if (!d || typeof d.id !== 'string' || !/^[a-zA-Z0-9-]{1,100}$/.test(d.id) || ids.has(d.id) || typeof d.title !== 'string' || d.title.length > limits.maxTitleChars || typeof d.body !== 'string' || Buffer.byteLength(d.body) > MAX_FILE_SIZE) throw new Error('文档内容无效或超过 10 MB');
     ids.add(d.id);
     return { id:d.id, title:d.title, body:d.body, updated:Number.isFinite(d.updated)?d.updated:Date.now(), star:Boolean(d.star), ...(typeof d.revision==='string'?{revision:d.revision}:{}) };
   });

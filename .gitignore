@@ -9,6 +9,3 @@ release/
 *.zip
 design/
 *.bundle
-
-# Separate checkout of the Next.js website branch
-/web/
