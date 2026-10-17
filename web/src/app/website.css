@@ -27,8 +27,9 @@
 .website-skip:focus { top: 12px; }
 .website-header { border-bottom: 1px solid var(--line); }
 .website-nav { height: 100px; display: flex; align-items: center; gap: 48px; }
-.website-brand { display: inline-flex; align-items: center; gap: 11px; font-size: 25px; font-weight: 650; letter-spacing: -.9px; color: var(--cream); --brand-letter: var(--forest); }
+.website-brand { display: inline-flex; align-items: center; gap: 11px; color: var(--cream); --brand-letter: var(--forest); }
 .website-brand svg { width: 34px; height: 34px; }
+.website-brand > span { font-family: var(--font-brand), "Iowan Old Style", "Baskerville", Georgia, serif; font-size: 30px; font-weight: 400; letter-spacing: -.005em; line-height: 1; padding-top: 2px; }
 .website-desktop-nav { display: flex; align-items: center; gap: 32px; margin-left: auto; font-size: 13px; color: #c6d1c4; }
 .website-desktop-nav a, .website-footer a { transition: color .15s; }
 .website-desktop-nav a:hover, .website-footer a:hover { color: var(--sage); }

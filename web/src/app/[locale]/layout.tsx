@@ -2,9 +2,17 @@ import type { Metadata } from 'next';
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
+import { Instrument_Serif } from 'next/font/google';
 import { routing } from '@/i18n/routing';
 import { site } from '@/lib/site';
 import '../globals.css';
+
+const brandSerif = Instrument_Serif({
+  subsets: ['latin'],
+  weight: '400',
+  variable: '--font-brand',
+  display: 'swap',
+});
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -57,7 +65,7 @@ export default async function LocaleLayout({
   setRequestLocale(locale);
   const htmlLang = locale === 'zh' ? 'zh-CN' : 'en';
   return (
-    <html lang={htmlLang}>
+    <html lang={htmlLang} className={brandSerif.variable}>
       <body className="bg-zinc-950 text-white min-h-screen antialiased">
         <NextIntlClientProvider>{children}</NextIntlClientProvider>
       </body>
