@@ -7,6 +7,7 @@ const {Project}=require('./project.cjs');
 const project=new Project();
 const {Workspace,atomicWrite}=require('./workspace.cjs');
 const {ImageFix}=require('./image-fix.cjs');
+const limits=require('./limits.cjs');
 app.setName('Markdeck');
 protocol.registerSchemesAsPrivileged([{scheme:'yun-jian',privileges:{standard:true,secure:true,supportFetchAPI:true}}]);
 // Keep the previous data directory and renderer origin so renaming preserves drafts and preferences.
@@ -21,7 +22,7 @@ const filters=[{name:'Markdown 文档',extensions:['md','markdown','txt']}];
 function action(name){window?.webContents.send('app:action',name);}
 function createWindow(){
   allowClose=false;
-  window=new BrowserWindow({width:1440,height:1000,minWidth:820,minHeight:600,show:false,title:'Markdeck',backgroundColor:'#ffffff',webPreferences:{preload:path.join(__dirname,'preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true}});
+  window=new BrowserWindow({width:1440,height:1000,minWidth:820,minHeight:600,show:false,title:'Markdeck',backgroundColor:'#ffffff',webPreferences:{preload:path.join(__dirname,'preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true,spellcheck:false,backgroundThrottling:true}});
   window.once('ready-to-show',()=>{window.maximize();window.show();});
   window.webContents.setWindowOpenHandler(()=>({action:'deny'}));
   window.webContents.on('will-navigate',event=>event.preventDefault());
@@ -60,7 +61,7 @@ app.whenReady().then(()=>{
   register('workspace:versions',id=>({versions:workspace.versions(id)}));
   register('workspace:restore',(id,version)=>workspace.restore(id,version));
   register('document:export',async(title,html,format)=>{
-    if(typeof title!=='string'||title.length>1000||typeof html!=='string'||Buffer.byteLength(html)>30*1024*1024||!['html','pdf'].includes(format))throw new Error('导出内容无效');
+    if(typeof title!=='string'||title.length>limits.maxTitleChars||typeof html!=='string'||Buffer.byteLength(html)>limits.maxExportHtmlBytes||!['html','pdf'].includes(format))throw new Error('导出内容无效');
     const name=(title.replace(/[\\/:*?"<>|]/g,'_')||'文档')+'.'+format;
     const result=await dialog.showSaveDialog(window,{title:'导出 '+format.toUpperCase(),defaultPath:path.join(app.getPath('documents'),name),filters:[{name:format.toUpperCase(),extensions:[format]}]});
     if(result.canceled)return {canceled:true};if(!result.filePath.toLowerCase().endsWith('.'+format))throw new Error('文件扩展名无效');

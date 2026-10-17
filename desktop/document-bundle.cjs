@@ -2,6 +2,7 @@ const path=require('node:path');
 const fs=require('node:fs');
 const MarkdownIt=require('markdown-it');
 const JSZip=require('jszip');
+const limits=require('./limits.cjs');
 // Keep Markdown byte-for-byte and retain relative paths, including reference images.
 async function bundleDocument(workspace,id){
   const doc=workspace.attachments.doc(id),zip=new JSZip(),sources=new Set();
@@ -21,7 +22,7 @@ async function bundleDocument(workspace,id){
     try{
       const file=workspace.attachments.resolve(doc,src),relative=decodeURIComponent(src).split(path.sep).join('/').replace(/^\.\//,'');
       const bytes=fs.readFileSync(file);total+=bytes.length;
-      if(total>100*1024*1024)throw new Error('打包内容超过 100 MB');
+      if(total>limits.maxBundleBytes)throw new Error('打包内容超过 100 MB');
       zip.file(relative,bytes);count++;
     }catch(error){missing.push(`${src}：${error.message}`);}
   }

@@ -1,5 +1,6 @@
 const fs=require('node:fs/promises');
 const path=require('node:path');
+const limits=require('./limits.cjs');
 class Project{
   constructor(){this.root=null;this.files=new Set();this.truncated=false;this.revision=0;}
   async choose(directory){return this.scan(directory);}
@@ -38,14 +39,14 @@ class Project{
       let found=relative.toLowerCase().includes(needle),line=0,snippet='';
       try{
         const file=await this.resolve(relative,root,files),stat=await fs.stat(file);
-        if(stat.size<=1024*1024&&scanned+stat.size<=40*1024*1024){
+        if(stat.size<=limits.projectSearchFileBytes&&scanned+stat.size<=limits.projectSearchBudgetBytes){
           scanned+=stat.size;const text=await fs.readFile(file,'utf8'),lines=text.split(/\r?\n/);
           const index=lines.findIndex(value=>value.toLowerCase().includes(needle));
           if(index>=0){found=true;line=index+1;const offset=Math.max(0,lines[index].toLowerCase().indexOf(needle)-40);snippet=lines[index].slice(offset,offset+160);}
         }else skipped++;
       }catch{skipped++;}
       if(found)results.push({path:relative,line,snippet});
-      if(results.length>=200)break;
+      if(results.length>=limits.projectSearchMaxResults)break;
     }
     return {folder:root,results,truncated:truncated||results.length>=200&&!!needle,skipped};
   }

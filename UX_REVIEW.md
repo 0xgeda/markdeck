@@ -47,7 +47,7 @@ git --git-dir=/private/tmp/markdeck-upload/.git --work-tree=/Users/geda/Codex-CL
 
 未删除文件、分支或工作区。候选仅为根目录 `.DS_Store`，以及本轮一次性脚本 `/private/tmp/markdeck-plan-sidebar.py`、`/private/tmp/markdeck-show-plan-edit.py`；前者是 Finder 缓存，后两者已应用到源码。用户复核并确认后才可删除。
 
-设计方案、当前应用包、源码 bundle、外部 Git 元数据和 GUI 失败日志均保留。旧 `src/presentation/` 仍有测试与原生接口引用，不列作可直接删除项。其他项目与全局配置不在本轮修改范围。
+设计方案、当前应用包、源码 bundle、外部 Git 元数据和 GUI 失败日志均保留。`src/presentation/` 已软归档至 `archive/`（原生接口和关联测试同步下线），回滚说明见 `archive/README.md`，待下次发布平稳后可彻底删除。其他项目与全局配置不在本轮修改范围。
 
 ## 下一步
 

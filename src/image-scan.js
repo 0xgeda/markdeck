@@ -30,7 +30,7 @@ export function scanImages(markdown,docDir){
     if(mask[m.index])continue;
     const raw=m[0],alt=m[1]||'',src=stripAngle((m[2]||'').trim()),title=m[3]??m[4]??m[5]??null;
     const{line,column}=lineCol(markdown,m.index);
-    const base={raw,src,alt,title,line,column};
+    const base={raw,src,alt,title,line,column,index:m.index,length:raw.length};
     if(!src){results.push({...base,status:'missing',resolved:null});continue;}
     if(isData(src)){results.push({...base,status:'data'});continue;}
     if(isRemote(src)){results.push({...base,status:'remote'});continue;}

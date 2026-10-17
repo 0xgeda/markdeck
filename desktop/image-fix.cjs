@@ -75,37 +75,46 @@ class ImageFix{
     const folder=this.workspace.attachments.folder(doc.filePath);
     const parent=fs.realpathSync(folder);
     if(path.dirname(parent)!==fs.realpathSync(path.dirname(doc.filePath)))throw new Error('附件目录不能指向其他位置');
-    const written=[];const imported=[];
+    const written=[],tempFiles=[],imported=[];
     try{
       for(const item of validated){
         const bytes=fs.readFileSync(item.source);
         const name=hashBytes(bytes).slice(0,24)+'.'+(item.ext==='jpeg'?'jpeg':item.ext);
         const target=path.join(folder,name);
-        const existed=fs.existsSync(target);
-        if(!existed){
+        if(fs.existsSync(target)){
+          // Validate pre-existing file: must be a regular file inside the attachments folder (no symlinks escaping).
+          const real=fs.realpathSync(target);
+          if(path.dirname(real)!==parent||!fs.statSync(real).isFile())throw new Error('目标附件路径异常');
+        }else{
           const tmp=target+'.'+Date.now()+'.'+Math.random().toString(36).slice(2)+'.tmp';
+          tempFiles.push(tmp);
           fs.writeFileSync(tmp,bytes);fs.renameSync(tmp,target);
-          written.push(target);
+          tempFiles.pop();written.push(target);
         }
         const newSrc=encodeURI(path.relative(path.dirname(doc.filePath),target).split(path.sep).join('/'));
         imported.push({raw:item.raw,newSrc,target});
       }
     }catch(error){
+      for(const file of tempFiles){try{fs.unlinkSync(file);}catch{}}
       for(const file of written){try{fs.unlinkSync(file);}catch{}}
       throw error;
     }
-    let newBody=doc.body;
-    for(const entry of imported){
-      const m=entry.raw.match(IMG_RE);
-      let replacement;
-      if(m){
-        const alt=m[1]||'';const title=m[3]??m[4]??m[5]??null;
-        replacement=title!=null?`![${alt}](${entry.newSrc} "${title}")`:`![${alt}](${entry.newSrc})`;
-      }else{
-        replacement=`![](${entry.newSrc})`;
-      }
-      newBody=newBody.split(entry.raw).join(replacement);
+    // Index-based replacement: re-scan body so the scanner's code/comment mask applies to replacements too.
+    // We replace by (index, length) in reverse order so earlier offsets stay valid.
+    const {scanImages}=await import('../src/image-scan.js');
+    const entries=scanImages(doc.body,path.dirname(doc.filePath));
+    const targetSrcByRaw=new Map(imported.map(e=>[e.raw,e.newSrc]));
+    const edits=[];
+    for(const entry of entries){
+      if(!targetSrcByRaw.has(entry.raw))continue;
+      const m=entry.raw.match(IMG_RE);const alt=m?m[1]||'':'',title=m?(m[3]??m[4]??m[5]??null):null;
+      const newSrc=targetSrcByRaw.get(entry.raw);
+      const replacement=title!=null?`![${alt}](${newSrc} "${title}")`:`![${alt}](${newSrc})`;
+      edits.push({index:entry.index,length:entry.length,replacement});
     }
+    edits.sort((a,b)=>b.index-a.index);
+    let newBody=doc.body;
+    for(const edit of edits)newBody=newBody.slice(0,edit.index)+edit.replacement+newBody.slice(edit.index+edit.length);
     return {imported,errors,newBody};
   }
 }

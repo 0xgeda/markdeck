@@ -114,6 +114,19 @@ test('content hash dedupe: two calls produce same filename, no double copy',asyn
   }finally{fs.rmSync(root,{recursive:true,force:true});}
 });
 
+test('importBatch does not touch identical strings inside fenced code blocks',async()=>{
+  const body='![](shot.png)\n\n```md\n![](shot.png)\n```\n\n`![](shot.png)`';
+  const {root,fix,id}=setup(body);try{
+    const external=path.join(root,'extern');fs.mkdirSync(external);
+    const file=path.join(external,'shot.png');fs.writeFileSync(file,'xx');
+    const {newBody}=await fix.importBatch(id,[{raw:'![](shot.png)',sourcePath:file}]);
+    const fenced=newBody.split('```md\n')[1].split('\n```')[0];
+    assert.equal(fenced.trim(),'![](shot.png)','fenced code block must stay literal');
+    assert.ok(newBody.includes('`![](shot.png)`'),'inline code must stay literal');
+    assert.ok(/^!\[\]\(note\.assets\//.test(newBody),'first occurrence outside code must be replaced');
+  }finally{fs.rmSync(root,{recursive:true,force:true});}
+});
+
 test('importBatch throws if doc has no filePath',async()=>{
   const root=mkroot();try{
     const workspace=new Workspace(path.join(root,'data'));

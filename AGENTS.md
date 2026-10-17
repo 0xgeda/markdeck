@@ -16,7 +16,7 @@
 - npm run dev：浏览器预览；npm run build：生产构建。
 - npm run package:mac：生成 release/Markdeck-darwin-arm64/Markdeck.app。
 - 模式变更运行 node tests/app-flow.mjs、node tests/show-plan.mjs；画布变更另跑 logic-panel、logic-layout、logic-connections。
-- 文件变更运行 npm run test:files；打包后运行 node tests/package-size.mjs。
+- 文件变更运行 npm run test:files；图片修复变更另跑 tests/image-scan.mjs、tests/image-fix.cjs、tests/image-fix-dialog.mjs；打包后运行 node tests/package-size.mjs。
 - GUI 检查需可用桌面环境，DOM 通过不能表述为视觉验收通过。
 
 ## 必须保留的边界
@@ -26,6 +26,9 @@
 - 保留 com.yunjian.markdown、yun-jian:// 和旧“云笺”数据目录兼容性。
 - 桌面分支为 desktop-app，不用它覆盖网页 main；桌面分支禁止 Vercel 自动部署。
 - 不删除未核验的 Git 元数据、旧方案、历史稿件或恢复包。
+- 新增或修改操作上限（文件大小、批量数量、扫描深度等）先改 `desktop/limits.cjs`，不要在业务代码里再硬编码阈值。
+- 修改 Markdown 正文中的图片引用必须按扫描器返回的字符偏移切片替换；不要用全文 split/join，会误伤代码块。
+- 打包 ignore 规则在 `desktop/package.mjs`；给渲染端用的 `.js` 若也被主进程动态 `import()`，需在 ignore 中显式放行。
 
 ## 当前状态与下一步
 

@@ -82,17 +82,16 @@
 
 > 目标：解决问题 4、12、13、7、9（已在阶段 0 做了一半）。
 
-- **2.1 梳理卡片 ↔ 标题稳定 ID**：把目前"精确标题字符串匹配"改成"标题 slug + 顺序 hash + 兄弟序号"的组合键，并写一次性迁移脚本把旧 `logic/*.json` 升级。
-  - 风险：**高**（数据迁移，用户已有画布）；**必须先备份** `~/Library/Application Support/云笺/logic/`。
-  - 验证：新建单元测试 `tests/logic-rebind.mjs`，覆盖"改标题后卡片不脱钩"的三种常见修改。
-- **2.2 外部变更改事件驱动**：用 `fs.watch`（原生，不新增依赖）；轮询作为兜底 fallback，`fs.watch` 在 macOS 偶尔漏事件。
-  - 风险：**低**；验证：外部编辑器修改文件后，App 2 秒内弹冲突提示。
-- **2.3 图片引用修复向导**：收到他人 Markdown 后，一键扫描所有 `![](...)`，对缺失/绝对路径/目录外图片批量弹"重新选择 / 复制到 .assets/ / 跳过"。
-  - 风险：**低**；验证：手工构造 10 张混合路径图片的 .md 做验证。
-- **2.4 PDF 导出改用 Chromium `page.pdf()` + 自定义 CSS**：A4 可选，页眉页脚、代码块折行、分页点可控。
-  - 风险：**中**（Electron 版本差异）；验证：导出 50 页技术文档，人工看分页。
-- **2.5 文件/历史上限改为设置项**：10 MB → 可配置 1–50 MB；历史版本上限 30 → 10–200；磁盘正文搜索 1 MB → 可配。
-  - 风险：**低**；验证：设置页改值后生效。
+- **2.1 梳理卡片 ↔ 标题稳定 ID**：❌ **已论证不做（2026-10-17）**。现有 `title::count` 方案是"抗重排、不抗重命名"；换结构路径只是把失败模式平级交换为"抗重命名、不抗重排"。真正两头都抗的方案（在 Markdown 标题后嵌 `<!--lid:xxx-->`）会污染原文，得不偿失。丢失批注可重建，不是数据灾难。
+- **2.2 外部变更改事件驱动**：评估后暂缓。现有轮询有 `document.hidden` 守卫 + 窗口 focus 触发，开销低，`fs.watch` 在 macOS 漏事件风险 > 收益。
+- **2.3 图片引用修复向导**：✅ **已完成（2026-10-17）**。设置弹窗新增「修复图片引用」入口；核心代码：
+  - `src/image-scan.js`：纯扫描器（屏蔽代码块/注释），输出 `ok|missing|absolute-outside|relative-outside|remote|data|no-doc-dir` 状态 + `index/length` 偏移。
+  - `desktop/image-fix.cjs`：扫描文件夹（深度 10 / ≤2000 文件）、按文件名匹配、原子导入到 `.assets/`（10 MB/张、100 MB/批）、失败全量回滚。
+  - `src/image-fix-dialog.js`：懒加载弹窗，提供状态标签、候选预览、应用前重扫防陈旧。
+  - 回归：`tests/image-scan.mjs` 16/16、`tests/image-fix.cjs` 11/11（含"代码块免误伤"回归）、`tests/image-fix-dialog.mjs` 10/10。
+  - 打包：`desktop/package.mjs` ignore 规则放行 `src/image-scan.js`。
+- **2.4 PDF 导出**：✅ **已存在（本轮核查确认）**。`desktop/main.cjs` 的 `document:export` 已走 `BrowserWindow.printToPDF`（A4、0.5 英寸边距、打印背景），UI 入口为 `src/main.js` 的 `data-action="export-pdf"`。暂未加页眉页脚自定义。
+- **2.5 操作上限集中到 `desktop/limits.cjs`**：✅ **已完成（2026-10-17）**。15 项阈值（图片单张/批量、文档大小、历史、搜索预算、文件夹扫描深度与数量等）集中到 `desktop/limits.cjs`，由 `image-fix.cjs`、`workspace.cjs`、`attachments.cjs`、`history.cjs`、`document-bundle.cjs`、`project.cjs`、`main.cjs` 消费。未暴露 UI（第一性原理：这些是性能护栏不是业务参数，不该给用户配置）。
 
 ### 阶段 3 · 发现性与长期（2 周+，部分需要产品决策）
 
@@ -102,8 +101,7 @@
   - 风险：**中**；验证：新 DOM 测试 + 真机点一遍。
 - **3.2 云同步最小方案**：先不做多人协作，只做"识别 iCloud Drive / Dropbox / OneDrive 内的工作目录并把草稿写进去"。
   - 风险：**中**（文件锁、同步冲突）；验证：两台 Mac 共享同一 iCloud 目录 72 小时。
-- **3.3 i18n 骨架**：抽字符串到 `locales/zh-CN.json` + `locales/en-US.json`，不要求立刻翻译，但建立框架；界面语言跟随系统。
-  - 风险：**低**；验证：切换系统语言后 UI 对应变化。
+- **3.3 i18n 骨架**：✅ **骨架已完成（2026-10-17），未实际迁移字符串**。`src/i18n.js` + `locales/zh-CN.json` + `locales/en-US.json` 就绪，`I18N_GUIDE.md` 记录迁移路线和命名约定。实际字符串替换是后续窗口的事（11 文件、111 处中文字面量未动）。
 - **3.4 一键导出整个工作区 + 导入**：把 `~/Library/Application Support/云笺/` 的 `workspace.json` / `history/` / `logic/` 打成一个 `.markdeck-archive` ZIP，另一台机器一键恢复。
   - 风险：**中**；验证：Mac A 导出 → Mac B 导入 → 画布、历史、便笺齐全。
 - **3.5 真实视觉验收 CI**：把 `tests/visual-review.mjs` 跑在 GitHub Actions 的 macos-latest，Playwright 截图差分；Electron 启动截图差分走 `@electron/forge` 或手搓。
@@ -111,10 +109,14 @@
 
 ---
 
-## 本轮建议从这里开始
+## 当前状态（2026-10-17 收尾）
 
-1. **先做阶段 0 的 0.1 / 0.2 / 0.3**：纯本地、可回滚、立竿见影。
-2. **阶段 1 需要你确认**：是否已有 Apple Developer 账号？是否接受把更新源放 GitHub Releases？没有账号我可以把 `desktop/package.mjs` 的签名/公证挂钩写好，但走空实现，等账号到位再填环境变量。
-3. **阶段 2.1（梳理稳定 ID）** 风险最高——必须先在你的真实数据上备份一次 `~/Library/Application Support/云笺/logic/` 再动手。
+**已完成**：阶段 0.1/0.2/0.3；阶段 2.3（图片引用修复向导）、2.4（PDF 核查）、2.5（阈值集中）；阶段 3.3（i18n 骨架）。顺带做的收尾：`webPreferences` 加 `spellcheck:false, backgroundThrottling:true`；dialog 开启淡入动画（带 `prefers-reduced-motion` 守卫）。
 
-请回复：**同意阶段 0 开始**（或指定先做哪几项），我就动代码；阶段 1/2/3 的开关单独确认。
+**用户决定不做**：阶段 1 全部（无 Apple Developer 账号）；阶段 2.1（已论证平级交换，无净收益）；阶段 2.2（现有轮询够用）；阶段 3.1 / 3.2 / 3.4 / 3.5（价值不足）。
+
+**仍待后续窗口的事**：i18n 字符串实际迁移、Toast UI Editor 懒加载（预期启动省 15–25 MB，架构侵入大）、Developer ID 签名与自动更新（需账号）。
+
+Codex 对抗审查（2026-10-17）发现并修复了两个 release-blocker：
+- `desktop/package.mjs` 的 ignore 规则会排除 `src/image-scan.js`，导致产品版扫描崩溃 → 已放行。
+- `desktop/image-fix.cjs` 的 `split/join` 替换会误伤代码块内相同字串 → 改为按扫描偏移切片替换，并补回归测试。
