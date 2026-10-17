@@ -5,7 +5,7 @@ import { Link } from '@/i18n/navigation';
 import { WebsiteShell } from '@/components/website/site-shell';
 import { Arrow } from '@/components/website/brand';
 import { macDownloadUrl, site } from '@/lib/site';
-import { pageMetadata } from '@/lib/metadata';
+import { pageMetadata, safeJsonLd } from '@/lib/metadata';
 import '../../website.css';
 
 export async function generateMetadata({
@@ -38,7 +38,7 @@ export default async function DownloadPage({
 
   return (
     <WebsiteShell>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumb) }} />
       <main id="main-content" className="website-subpage website-container">
         <Link className="website-breadcrumb" href="/">
           ← <span>{t('breadcrumb')}</span>

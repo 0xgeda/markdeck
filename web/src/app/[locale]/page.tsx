@@ -4,6 +4,7 @@ import { WebsiteShell } from '@/components/website/site-shell';
 import { ProductDemo } from '@/components/website/product-demo';
 import { Arrow } from '@/components/website/brand';
 import { site } from '@/lib/site';
+import { safeJsonLd } from '@/lib/metadata';
 import '../website.css';
 
 export default async function HomePage({
@@ -250,7 +251,7 @@ export default async function HomePage({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
+            __html: safeJsonLd({
               '@context': 'https://schema.org',
               '@type': 'SoftwareApplication',
               name: site.name,
@@ -266,7 +267,7 @@ export default async function HomePage({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
+            __html: safeJsonLd({
               '@context': 'https://schema.org',
               '@type': 'FAQPage',
               mainEntity: faqItems.map((item) => ({
