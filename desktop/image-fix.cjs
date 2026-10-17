@@ -56,10 +56,14 @@ class ImageFix{
     const doc=this.workspace.attachments.doc(id);
     if(!doc.filePath)throw new Error('请先保存到本地文件再修复图片');
     if(!Array.isArray(picks)||picks.length>limits.maxImagePicks)throw new Error('选择的图片数量无效');
+    const {scanImages}=await import('../src/image-scan.js');
+    const preScan=scanImages(doc.body,path.dirname(doc.filePath));
+    const kindByRaw=new Map(preScan.map(e=>[e.raw,e.kind]));
     const errors={};const validated=[];let total=0;
     for(const pick of picks){
       const raw=pick&&pick.raw,source=pick&&pick.sourcePath;
       if(typeof raw!=='string'||typeof source!=='string'){errors[String(raw)]='图片选择无效';continue;}
+      if(kindByRaw.get(raw)==='html'){errors[raw]='HTML <img> 暂不支持自动替换，请用「删除选中」';continue;}
       try{
         if(!path.isAbsolute(source))throw new Error('图片路径必须是绝对路径');
         const st=fs.statSync(source);
@@ -101,11 +105,11 @@ class ImageFix{
     }
     // Index-based replacement: re-scan body so the scanner's code/comment mask applies to replacements too.
     // We replace by (index, length) in reverse order so earlier offsets stay valid.
-    const {scanImages}=await import('../src/image-scan.js');
     const entries=scanImages(doc.body,path.dirname(doc.filePath));
     const targetSrcByRaw=new Map(imported.map(e=>[e.raw,e.newSrc]));
     const edits=[];
     for(const entry of entries){
+      if(entry.kind==='html')continue;
       if(!targetSrcByRaw.has(entry.raw))continue;
       const m=entry.raw.match(IMG_RE);const alt=m?m[1]||'':'',title=m?(m[3]??m[4]??m[5]??null):null;
       const newSrc=targetSrcByRaw.get(entry.raw);
@@ -116,6 +120,30 @@ class ImageFix{
     let newBody=doc.body;
     for(const edit of edits)newBody=newBody.slice(0,edit.index)+edit.replacement+newBody.slice(edit.index+edit.length);
     return {imported,errors,newBody};
+  }
+  async deleteBatch(id,raws){
+    const doc=this.workspace.attachments.doc(id);
+    if(!doc.filePath)throw new Error('请先保存到本地文件再删除图片');
+    if(!Array.isArray(raws)||!raws.length)throw new Error('没有可删除的图片');
+    if(raws.length>limits.maxImagePicks)throw new Error('一次删除的图片过多');
+    const set=new Set(raws);
+    const {scanImages}=await import('../src/image-scan.js');
+    const entries=scanImages(doc.body,path.dirname(doc.filePath));
+    const edits=[];
+    for(const entry of entries){
+      if(!set.has(entry.raw))continue;
+      let start=entry.index,end=entry.index+entry.length;
+      // Consume whole-line whitespace if the image is the only content on its line.
+      while(start>0&&(doc.body[start-1]===' '||doc.body[start-1]==='\t'))start--;
+      const atLineStart=start===0||doc.body[start-1]==='\n';
+      const atLineEnd=end===doc.body.length||doc.body[end]==='\n';
+      if(atLineStart&&atLineEnd&&end<doc.body.length)end++;
+      edits.push({start,end});
+    }
+    edits.sort((a,b)=>b.start-a.start);
+    let newBody=doc.body;
+    for(const e of edits)newBody=newBody.slice(0,e.start)+newBody.slice(e.end);
+    return {ok:true,removed:edits.length,newBody};
   }
 }
 module.exports={ImageFix};

@@ -15,8 +15,9 @@
 - npm ci；npx install-electron；npm start。
 - npm run dev：浏览器预览；npm run build：生产构建。
 - npm run package:mac：生成 release/Markdeck-darwin-arm64/Markdeck.app。
+- npm run reinstall：kill 旧进程 + 重打包 + 启动，调试打包版的默认入口。
 - 模式变更运行 node tests/app-flow.mjs、node tests/show-plan.mjs；画布变更另跑 logic-panel、logic-layout、logic-connections。
-- 文件变更运行 npm run test:files；图片修复变更另跑 tests/image-scan.mjs、tests/image-fix.cjs、tests/image-fix-dialog.mjs；打包后运行 node tests/package-size.mjs。
+- 文件变更运行 npm run test:files；图片修复变更另跑 tests/image-scan.mjs、tests/image-fix.cjs、tests/image-fix-dialog.mjs；Workspace 启动路径改动跑 tests/workspace-startup.cjs（ANR 守门）；打包后运行 node tests/package-size.mjs。
 - GUI 检查需可用桌面环境，DOM 通过不能表述为视觉验收通过。
 
 ## 必须保留的边界
@@ -28,6 +29,7 @@
 - 不删除未核验的 Git 元数据、旧方案、历史稿件或恢复包。
 - 新增或修改操作上限（文件大小、批量数量、扫描深度等）先改 `desktop/limits.cjs`，不要在业务代码里再硬编码阈值。
 - 修改 Markdown 正文中的图片引用必须按扫描器返回的字符偏移切片替换；不要用全文 split/join，会误伤代码块。
+- `Workspace` 构造函数里对磁盘的预读循环必须留在 `setImmediate` 里延迟执行；同步读会在用户授权受限目录（Documents/Downloads）时触发 sandbox 审批挂起，整个窗口 ANR。
 - 打包 ignore 规则在 `desktop/package.mjs`；给渲染端用的 `.js` 若也被主进程动态 `import()`，需在 ignore 中显式放行。
 
 ## 当前状态与下一步

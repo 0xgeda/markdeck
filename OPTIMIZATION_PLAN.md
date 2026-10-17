@@ -84,11 +84,11 @@
 
 - **2.1 梳理卡片 ↔ 标题稳定 ID**：❌ **已论证不做（2026-10-17）**。现有 `title::count` 方案是"抗重排、不抗重命名"；换结构路径只是把失败模式平级交换为"抗重命名、不抗重排"。真正两头都抗的方案（在 Markdown 标题后嵌 `<!--lid:xxx-->`）会污染原文，得不偿失。丢失批注可重建，不是数据灾难。
 - **2.2 外部变更改事件驱动**：评估后暂缓。现有轮询有 `document.hidden` 守卫 + 窗口 focus 触发，开销低，`fs.watch` 在 macOS 漏事件风险 > 收益。
-- **2.3 图片引用修复向导**：✅ **已完成（2026-10-17）**。设置弹窗新增「修复图片引用」入口；核心代码：
-  - `src/image-scan.js`：纯扫描器（屏蔽代码块/注释），输出 `ok|missing|absolute-outside|relative-outside|remote|data|no-doc-dir` 状态 + `index/length` 偏移。
-  - `desktop/image-fix.cjs`：扫描文件夹（深度 10 / ≤2000 文件）、按文件名匹配、原子导入到 `.assets/`（10 MB/张、100 MB/批）、失败全量回滚。
-  - `src/image-fix-dialog.js`：懒加载弹窗，提供状态标签、候选预览、应用前重扫防陈旧。
-  - 回归：`tests/image-scan.mjs` 16/16、`tests/image-fix.cjs` 11/11（含"代码块免误伤"回归）、`tests/image-fix-dialog.mjs` 10/10。
+- **2.3 图片引用修复向导**：✅ **已完成（2026-10-17）**，2026-10-18 扩展为同时支持 HTML `<img>` + 「删除选中」。核心代码：
+  - `src/image-scan.js`：纯扫描器（屏蔽代码块/注释），同时识别 Markdown `![]()` 和 HTML `<img>`（带 `kind:'md'|'html'`），输出 `ok|missing|absolute-outside|relative-outside|remote|data|no-doc-dir` 状态 + `index/length` 偏移。
+  - `desktop/image-fix.cjs`：扫描文件夹（深度 10 / ≤2000 文件）、按文件名匹配、原子导入到 `.assets/`（10 MB/张、100 MB/批）、失败全量回滚；HTML 条目自动跳过 `importBatch`。另有 `deleteBatch(id, raws)` 按偏移删除正文中失效引用（吞掉独占行的空白+换行），不触碰磁盘文件。
+  - `src/image-fix-dialog.js`：懒加载弹窗，状态标签 + HTML 徽标 + 候选预览；底部两个动作「应用修复」「删除选中」，应用前重扫防陈旧。
+  - 回归：`tests/image-scan.mjs`、`tests/image-fix.cjs`、`tests/image-fix-dialog.mjs` 全数通过（HTML 和 delete 分支尚无专项测试，后续补）。
   - 打包：`desktop/package.mjs` ignore 规则放行 `src/image-scan.js`。
 - **2.4 PDF 导出**：✅ **已存在（本轮核查确认）**。`desktop/main.cjs` 的 `document:export` 已走 `BrowserWindow.printToPDF`（A4、0.5 英寸边距、打印背景），UI 入口为 `src/main.js` 的 `data-action="export-pdf"`。暂未加页眉页脚自定义。
 - **2.5 操作上限集中到 `desktop/limits.cjs`**：✅ **已完成（2026-10-17）**。15 项阈值（图片单张/批量、文档大小、历史、搜索预算、文件夹扫描深度与数量等）集中到 `desktop/limits.cjs`，由 `image-fix.cjs`、`workspace.cjs`、`attachments.cjs`、`history.cjs`、`document-bundle.cjs`、`project.cjs`、`main.cjs` 消费。未暴露 UI（第一性原理：这些是性能护栏不是业务参数，不该给用户配置）。

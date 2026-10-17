@@ -57,6 +57,7 @@ app.whenReady().then(()=>{
   register('image-fix:scan',id=>imageFix.scan(id));
   register('image-fix:locate',(id,folder)=>imageFix.locateFolder(id,folder));
   register('image-fix:import',(id,picks)=>imageFix.importBatch(id,picks));
+  register('image-fix:delete',(id,raws)=>imageFix.deleteBatch(id,raws));
   register('image-fix:choose-folder',async()=>{const result=await dialog.showOpenDialog(window,{title:'选择图片所在文件夹',properties:['openDirectory']});if(result.canceled)return {canceled:true};return {folder:result.filePaths[0]};});
   register('workspace:versions',id=>({versions:workspace.versions(id)}));
   register('workspace:restore',(id,version)=>workspace.restore(id,version));

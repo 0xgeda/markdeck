@@ -57,8 +57,10 @@ export function showChapters(editor,title,sections,summaries,onClose=()=>{}){
   const document=window.document,root=editor.getEditorElements().wwEditor;
   const headings=[...root.querySelectorAll('h1,h2,h3,h4,h5,h6')];
   const viewer=document.createElement('section');viewer.className='chapter-show';viewer.tabIndex=-1;viewer.setAttribute('aria-label',title);
-  viewer.innerHTML='<header><strong></strong><button data-exit>返回章节 · Esc</button></header><div class="chapter-show-content toastui-editor-contents"></div><footer><button data-prev>上一章</button><output></output><button data-next>下一章</button></footer>';
+  viewer.innerHTML='<header><strong></strong><select data-jump aria-label="跳转到章节"></select><button data-exit>返回章节 · Esc</button></header><div class="chapter-show-content toastui-editor-contents"></div><footer><button data-prev>← 上一章</button><output></output><button data-next>下一章 →</button></footer>';
   viewer.querySelector('strong').textContent=title;document.body.append(viewer);document.body.classList.add('chapter-showing');let index=0;
+  const jump=viewer.querySelector('[data-jump]');jump.innerHTML=sections.map((s,i)=>`<option value="${i}">${i+1}. ${s.title.replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]))}</option>`).join('');
+  jump.onchange=event=>{index=Number(event.target.value);paint();};
   function paint(){
     const section=sections[index],heading=headings[section.index],content=viewer.querySelector('.chapter-show-content');content.replaceChildren();
     if(!heading)return;
@@ -68,7 +70,7 @@ export function showChapters(editor,title,sections,summaries,onClose=()=>{}){
     const summary=summaries[section.key];
     if(summary?.conclusion||summary?.points){const aside=document.createElement('aside');aside.className='chapter-takeaway';const label=document.createElement('small');label.textContent='本章重点';aside.append(label);for(const text of [summary.conclusion,summary.points]){if(text){const p=document.createElement('p');p.textContent=text;aside.append(p);}}content.append(aside);}
     const fragment=range.cloneContents();fragment.querySelectorAll('[id]').forEach(node=>node.removeAttribute('id'));fragment.querySelectorAll('[contenteditable]').forEach(node=>node.removeAttribute('contenteditable'));fragment.querySelectorAll('input,textarea,select,button').forEach(node=>node.disabled=true);content.append(fragment);content.scrollTop=0;
-    viewer.querySelector('output').textContent=`${index+1} / ${sections.length}`;viewer.querySelector('[data-prev]').disabled=index===0;viewer.querySelector('[data-next]').disabled=index===sections.length-1;
+    viewer.querySelector('output').textContent=`${index+1} / ${sections.length}`;viewer.querySelector('[data-prev]').disabled=index===0;viewer.querySelector('[data-next]').disabled=index===sections.length-1;jump.value=String(index);
   }
   viewer.querySelector('[data-prev]').onclick=()=>{if(index>0){index--;paint();}};
   viewer.querySelector('[data-next]').onclick=()=>{if(index<sections.length-1){index++;paint();}};

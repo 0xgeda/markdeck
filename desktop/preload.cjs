@@ -15,6 +15,7 @@ contextBridge.exposeInMainWorld('desktop', {
   scanImages:id=>ipcRenderer.invoke('image-fix:scan',id),
   locateImageFolder:(id,folder)=>ipcRenderer.invoke('image-fix:locate',id,folder),
   importImages:(id,picks)=>ipcRenderer.invoke('image-fix:import',id,picks),
+  deleteImages:(id,raws)=>ipcRenderer.invoke('image-fix:delete',id,raws),
   chooseImageFolder:()=>ipcRenderer.invoke('image-fix:choose-folder'),
   // Archived 2026-10-17: deck/presentation surface moved to archive/presentation/.
   // loadDeck:id=>ipcRenderer.invoke('deck:load',id),

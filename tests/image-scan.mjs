@@ -124,6 +124,53 @@ test('line/column of multi-line document',()=>{
   }finally{clean(dir);}
 });
 
+test('HTML <img> with existing src → kind:html, status:ok',()=>{
+  const dir=mkdir();try{fs.writeFileSync(path.join(dir,'h.png'),'x');
+    const r=scanImages('<img src="h.png" alt="x">',dir);
+    assert.equal(r.length,1);
+    assert.equal(r[0].kind,'html');
+    assert.equal(r[0].status,'ok');
+    assert.equal(r[0].src,'h.png');
+    assert.equal(r[0].alt,'x');
+  }finally{clean(dir);}
+});
+
+test('HTML <img> missing → status:missing',()=>{
+  const dir=mkdir();try{
+    const r=scanImages('<img src="images/gone.png">',dir);
+    assert.equal(r.length,1);
+    assert.equal(r[0].kind,'html');
+    assert.equal(r[0].status,'missing');
+  }finally{clean(dir);}
+});
+
+test('HTML <img> remote and single-quoted src',()=>{
+  const r=scanImages("<img src='https://a.com/x.png' alt='remote'>",null);
+  assert.equal(r.length,1);
+  assert.equal(r[0].status,'remote');
+  assert.equal(r[0].alt,'remote');
+});
+
+test('markdown and HTML images mixed, sorted by position',()=>{
+  const dir=mkdir();try{fs.writeFileSync(path.join(dir,'a.png'),'x');
+    const md='top\n<img src="miss.png">\n![](a.png)\n<img src="a.png" alt="">';
+    const r=scanImages(md,dir);
+    assert.equal(r.length,3);
+    assert.equal(r[0].kind,'html');assert.equal(r[0].status,'missing');
+    assert.equal(r[1].kind,'md');assert.equal(r[1].status,'ok');
+    assert.equal(r[2].kind,'html');assert.equal(r[2].status,'ok');
+  }finally{clean(dir);}
+});
+
+test('HTML <img> inside fenced code block is skipped',()=>{
+  const dir=mkdir();try{
+    const md='```html\n<img src="skip.png">\n```\n<img src="catch.png">';
+    const r=scanImages(md,dir);
+    assert.equal(r.length,1);
+    assert.equal(r[0].src,'catch.png');
+  }finally{clean(dir);}
+});
+
 test('symlink inside docDir pointing outside → absolute-outside',()=>{
   const dir=mkdir();const outside=mkdir();try{
     fs.writeFileSync(path.join(outside,'target.png'),'x');

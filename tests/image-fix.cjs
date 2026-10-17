@@ -137,3 +137,70 @@ test('importBatch throws if doc has no filePath',async()=>{
     await assert.rejects(fix.importBatch(id,[]),/请先保存到本地文件/);
   }finally{fs.rmSync(root,{recursive:true,force:true});}
 });
+
+test('deleteBatch removes markdown image on its own line including trailing newline',async()=>{
+  const {root,fix,id}=setup('para\n![](gone.png)\nafter');try{
+    const raw='![](gone.png)';
+    const {ok,removed,newBody}=await fix.deleteBatch(id,[raw]);
+    assert.equal(ok,true);assert.equal(removed,1);
+    assert.equal(newBody,'para\nafter');
+  }finally{fs.rmSync(root,{recursive:true,force:true});}
+});
+
+test('deleteBatch inline removal consumes leading whitespace',async()=>{
+  const {root,fix,id}=setup('before ![](gone.png) after');try{
+    const {newBody,removed}=await fix.deleteBatch(id,['![](gone.png)']);
+    assert.equal(removed,1);
+    assert.equal(newBody,'before after');
+  }finally{fs.rmSync(root,{recursive:true,force:true});}
+});
+
+test('deleteBatch removes HTML <img>',async()=>{
+  const {root,fix,id}=setup('top\n<img src="miss.png" alt="x">\nbot');try{
+    const {newBody,removed}=await fix.deleteBatch(id,['<img src="miss.png" alt="x">']);
+    assert.equal(removed,1);
+    assert.equal(newBody,'top\nbot');
+  }finally{fs.rmSync(root,{recursive:true,force:true});}
+});
+
+test('deleteBatch removes all occurrences of a repeated raw',async()=>{
+  const {root,fix,id}=setup('x ![](a.png) and ![](a.png) y');try{
+    const {newBody,removed}=await fix.deleteBatch(id,['![](a.png)']);
+    assert.equal(removed,2);
+    assert.equal(newBody,'x and y');
+  }finally{fs.rmSync(root,{recursive:true,force:true});}
+});
+
+test('deleteBatch ignores raws not present in body',async()=>{
+  const {root,fix,id}=setup('![](exists.png)');try{
+    const {newBody,removed}=await fix.deleteBatch(id,['![](ghost.png)']);
+    assert.equal(removed,0);
+    assert.equal(newBody,'![](exists.png)');
+  }finally{fs.rmSync(root,{recursive:true,force:true});}
+});
+
+test('deleteBatch rejects empty list and unsaved docs',async()=>{
+  const {root,fix,id}=setup('![](x.png)');try{
+    await assert.rejects(fix.deleteBatch(id,[]),/没有可删除/);
+  }finally{fs.rmSync(root,{recursive:true,force:true});}
+  const root2=fs.mkdtempSync(path.join(os.tmpdir(),'markdeck-fix-no-'));
+  try{
+    const workspace=new Workspace(path.join(root2,'data'));
+    const docId=require('node:crypto').randomUUID();
+    workspace.state.docs.push({id:docId,title:'t',body:'![](x.png)',updated:Date.now(),star:false});
+    const fix=new ImageFix(workspace);
+    await assert.rejects(fix.deleteBatch(docId,['![](x.png)']),/请先保存到本地文件/);
+  }finally{fs.rmSync(root2,{recursive:true,force:true});}
+});
+
+test('importBatch flags HTML <img> raws with an error instead of mangling the tag',async()=>{
+  const {root,fix,id}=setup('<img src="miss.png" alt="x">');try{
+    const external=path.join(root,'extern');fs.mkdirSync(external);
+    const srcFile=path.join(external,'miss.png');fs.writeFileSync(srcFile,'bytes');
+    const raw='<img src="miss.png" alt="x">';
+    const {errors,imported,newBody}=await fix.importBatch(id,[{raw,sourcePath:srcFile}]);
+    assert.equal(imported.length,0);
+    assert.match(errors[raw]||'',/HTML/);
+    assert.equal(newBody,'<img src="miss.png" alt="x">');
+  }finally{fs.rmSync(root,{recursive:true,force:true});}
+});

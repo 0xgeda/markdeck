@@ -34,10 +34,15 @@ class Workspace {
       const stored = JSON.parse(fs.readFileSync(this.filename, 'utf8'));
       const docs = validateDocs(stored.docs);
       this.state = {docs:docs.map(d=>({...d, ...this.fileFields(stored.docs.find(x=>x.id===d.id))})), active:stored.active};
-      for (const d of this.state.docs) {
-        if (!d.filePath || hash(this.encode(d)) !== d.diskHash) continue;
-        try { const previous={...d};this.readInto(d,d.filePath);if(previous.body!==d.body)this.history.record(previous,'外部修改前',true); } catch { /* Keep the last saved copy when a file is unavailable. */ }
-      }
+      // Deferred so a sandbox-approval hang on protected folders (Documents/Downloads)
+      // cannot block app startup. Periodic sync in the renderer picks up external
+      // changes within 1.5s anyway.
+      setImmediate(() => {
+        for (const d of this.state.docs) {
+          if (!d.filePath || hash(this.encode(d)) !== d.diskHash) continue;
+          try { const previous={...d};this.readInto(d,d.filePath);if(previous.body!==d.body)this.history.record(previous,'外部修改前',true); } catch { /* Keep the last saved copy when a file is unavailable. */ }
+        }
+      });
     }
   }
   fileFields(d) {

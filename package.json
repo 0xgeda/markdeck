@@ -10,6 +10,7 @@
     "test": "node tests/browser.mjs",
     "start": "npm run build && electron .",
     "package:mac": "npm run build && node desktop/package.mjs",
+    "reinstall": "pkill -f Markdeck 2>/dev/null; npm run package:mac && open release/Markdeck-darwin-arm64/Markdeck.app",
     "test:files": "node --test tests/files.cjs",
     "test:desktop": "npm run build && node tests/desktop.mjs",
     "test:shortcuts": "node --test tests/shortcuts.mjs"
