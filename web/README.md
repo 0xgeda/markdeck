@@ -10,7 +10,7 @@ Markdeck 桌面 Markdown 工具的产品官网，基于 **Next.js 15 App Router�
 
 首页示例可以编辑正文、切换章节、拖动卡片、修改便笺和切换四种预览皮肤。编辑后的内容会出现在展示模式；数据仅在当前页面内存中保留。它是产品演示，不是完整的浏览器编辑器，也不读写访客的本地文件。
 
-页面主体为服务端组件，只有演示和移动导航需要客户端状态。三个官网页面均预渲染；本地字体、SVG 插画及应用图标不依赖外部字体或图片服务。包含 canonical、Open Graph、Twitter 分享图、robots 和 sitemap。
+页面主体为服务端组件，只有演示和移动导航需要客户端状态。官网包含 en / zh 两套页面，默认英文，中文路径为 /zh、/zh/download、/zh/guide。消息按语言独立加载，尚无缺失翻译回退链。品牌字体 DM Serif Display 使用 next/font/google，构建时需要访问字体服务；SVG 插画及应用图标随项目提供。包含 canonical、Open Graph、Twitter 分享图、robots 和 sitemap。
 
 ## 本地运行
 
@@ -24,12 +24,11 @@ npm run dev
 访问 `http://localhost:3000`。官网首页、指南和下载页不需要 API key、数据库或账号。
 
 ```sh
-npm test
 npm run build
 npm start
 ```
 
-本工作区的网站在 `web/` 独立 Git worktree 中，分支为 `feat/website-rewrite`，从已有网页分支 `origin/main` 建立；进入这个目录执行上述命令。正常克隆网页分支时，Next.js 项目就在仓库根目录。
+官网位于同一仓库的 `web/` 子目录；进入该目录执行上述命令。Vercel 构建根目录设为 `web/`。
 
 ## 安装包入口
 
@@ -40,10 +39,10 @@ npm start
 ## 代码结构
 
 ```text
-src/app/page.tsx               首页（服务端组件）
+src/app/[locale]/page.tsx               首页（服务端组件）
 src/app/website.css            官网样式与响应式规则，限定在 .website 内
-src/app/download/              获取应用
-src/app/guide/                 使用指南
+src/app/[locale]/download/              获取应用
+src/app/[locale]/guide/                 使用指南
 src/app/opengraph-image.tsx    Next.js 生成的分享图
 src/app/robots.ts              搜索引擎规则
 src/app/sitemap.ts             官网 sitemap
@@ -51,13 +50,15 @@ src/components/website/        共享导航、页脚、品牌与交互演示
 src/lib/site.ts                域名、仓库与安装包链接
 ```
 
-此前网页分支中的 AI 幻灯片功能（`/upload`、`/preview/[slug]`、`/api/generate`）和登录 / 数据库代码保留，不作为新版官网入口。AI 生成功能仍需要 `DEEPSEEK_API_KEY`；数据库与登录功能需要 Supabase 配置。它们不应被宣传为桌面版已提供的云服务。不要在构建时急切解析 `src/lib/env.ts`。
+旧 AI 幻灯片、登录与数据库路由已移除；当前官网不需要相关私钥。
 
 ## 验证与部署
 
-2026-10-17：75 项测试通过，Next.js 生产构建通过。新增验证覆盖模式高亮、编辑内容进入展示、卡片拖动与键盘移动、便笺保留、皮肤状态、移动菜单退出及下载链接回退。
+2026-10-18：生产构建和真实 Chrome 检查通过。覆盖 EN/zh 首页、指南、下载六页的 1440px / 390px 布局、语言双向切换、移动菜单、演示正文同步和便笺保留、canonical/OG URL、本地安全头、robots、sitemap 和分享图。修复了语言切换未更新 cookie 及语言按钮颜色变量错误。
 
-本次运行环境禁止监听本地 HTTP 端口（`listen EPERM`），Chromium 也因 macOS Mach 服务权限失败，**尚未完成真实浏览器的视觉验收**。上线前需要在普通终端启动，核对手机与桌面宽度、键盘操作及下载链接。已有幻灯片测试的 React `act` 警告、Supabase Edge Runtime 构建警告仍存在，均来自保留的旧功能。
+浏览器回归位于 tests/browser.mjs，使用仓库根目录的 Playwright 开发依赖。先在 web/ 运行 `npm start -- --hostname localhost --port 3188`，再从仓库根目录执行 `CHROME_PATH='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' node web/tests/browser.mjs`；其他环境可安装 Playwright Chromium 后省略 CHROME_PATH。当前没有 npm test 脚本，旧版本测试数量不作为当前证据。
+
+构建仍提示 metadataBase fallback；六个公共页面的实际 canonical/OG 域名检查通过。本地响应头验收不代表线上配置已核验。
 
 部署步骤和域名设置见 [docs/deployment.md](docs/deployment.md)。本次未部署 Vercel、未绑定域名。
 

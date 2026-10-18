@@ -4,11 +4,9 @@
 
 ## 分支与根目录
 
-网页重写位于 `feat/website-rewrite`，基于原网页 `origin/main`。审阅后将网页变更合入 `main`，再将 Vercel Production Branch 设置为 `main`。桌面版保留在 `desktop-app`，不要用桌面代码覆盖网页分支。
+当前 main 是 monorepo，同时包含桌面应用和 web/ 官网。Vercel Production Branch 使用经审阅的 main，Root Directory 设置为 web/；不能使用仓库根目录的 Vite 桌面构建。保留的 desktop-app 分支不得自动部署。
 
-本次基线是本地已有的 `origin/main`（`6fbac70`）；网络环境未能刷新远端。合入前先 fetch 并检查远端后续变更，再正常合并，不强制覆盖远端。
-
-本机 `lark-markdown/web/` 是独立 worktree，**不是仓库内的 apps/web 子项目**。Vercel 导入网页分支时，Root Directory 保持仓库根目录 `./`。
+部署前核验远端分支与 Vercel 项目的实际配置；本文件描述目标配置，不代表已修改线上设置。
 
 ## 构建与环境
 
@@ -17,16 +15,15 @@
 - Install Command：`npm ci`。
 - Build Command：`npm run build`。
 - Output Directory：Next.js 默认值。
-- 官网三个公共页面不需要 DeepSeek 或 Supabase 环境变量。
+- 官网公共页面不需要 DeepSeek 或 Supabase 环境变量。
+- 品牌字体使用 next/font/google，构建时需要访问字体服务。
 
 可选变量 `NEXT_PUBLIC_MAC_DOWNLOAD_URL` 填入已发布、可公开访问的 HTTPS 安装包地址。该值在构建时读取，修改后需要重新部署；未配置时页面显示「查看 GitHub 发布页」。不要在安装包尚未发布时填写推测地址。
 
-保留的旧 AI 路由需要 `DEEPSEEK_API_KEY`，相关链接使用 `NEXT_PUBLIC_SITE_URL`；登录与数据库路由需要对应 Supabase 变量。不要将私钥放进 `NEXT_PUBLIC_*` 变量。
-
 ## 验证顺序
 
-1. 本地执行 `npm test`、`npm run build`，通过后创建网页分支的 Vercel Preview。
-2. 检查首页、`/download`、`/guide`；测试三个模式高亮、编辑与展示、卡片拖动、皮肤、FAQ 和移动导航。
+1. 进入 web/ 执行 `npm run build`，通过后创建 Vercel Preview。当前没有 test 脚本，旧测试数量不能作为当前验收依据。
+2. 检查首页、`/download`、`/guide` 及对应 /zh 页面；测试三个模式高亮、编辑与展示、卡片拖动、皮肤、FAQ 和移动导航。
 3. 在 375px、768px、1440px 宽度核对横向溢出、文字换行、触控操作和键盘焦点；画布允许独立横向滚动。
 4. 验证 `/robots.txt`、`/sitemap.xml`、`/opengraph-image`、canonical 与真实下载链接。公开内容不需要登录。
 5. 确认效果后合入 `main`，等待 Production 为 Ready，再验收生产地址。
@@ -39,6 +36,6 @@
 
 官方说明：[Vercel 自定义域名](https://vercel.com/docs/domains/working-with-domains/add-a-domain)、[Next.js Metadata](https://nextjs.org/docs/app/getting-started/metadata-and-og-images)。
 
-## 本次状态
+## 当前验收边界
 
-官网代码、构建和交互测试已完成；浏览器视觉验收受本地运行权限阻断。Vercel 部署、GitHub 合并、公开安装包和域名绑定尚未执行。
+2026-10-18 已核对仓库结构与脚本。本轮修正说明未执行 Vercel 部署、GitHub 合并或域名绑定，也未核验线上配置。当前版本已通过生产构建及本机 Chrome 的六页双语、桌面／移动布局与语言切换检查。线上配置与域名仍需部署时验证。

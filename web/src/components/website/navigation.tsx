@@ -3,7 +3,6 @@ import { useRef } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { usePathname } from '@/i18n/navigation';
 import { Link } from '@/i18n/navigation';
-import NextLink from 'next/link';
 import { Brand, Arrow } from './brand';
 
 export function WebsiteNavigation() {
@@ -15,11 +14,6 @@ export function WebsiteNavigation() {
   const close = () => {
     if (menu.current) menu.current.open = false;
   };
-
-  // Build locale-swap hrefs. Keep same pathname, swap locale prefix via NextLink since
-  // next-intl's Link would double-prefix if we construct absolute URLs.
-  const enHref = pathname === '/' ? '/' : pathname;
-  const zhHref = `/zh${pathname === '/' ? '' : pathname}`;
 
   return (
     <header className="website-header">
@@ -34,9 +28,9 @@ export function WebsiteNavigation() {
         </nav>
         <div className="website-nav-right">
           <div className="website-lang-switch" role="group" aria-label={t('languageLabel')}>
-            <NextLink href={enHref} aria-current={locale === 'en' ? 'true' : undefined} className={locale === 'en' ? 'active' : ''}>{tLang('en')}</NextLink>
+            <Link href={pathname} locale="en" aria-current={locale === 'en' ? 'true' : undefined} className={locale === 'en' ? 'active' : ''}>{tLang('en')}</Link>
             <span aria-hidden="true">/</span>
-            <NextLink href={zhHref} aria-current={locale === 'zh' ? 'true' : undefined} className={locale === 'zh' ? 'active' : ''}>{tLang('zh')}</NextLink>
+            <Link href={pathname} locale="zh" aria-current={locale === 'zh' ? 'true' : undefined} className={locale === 'zh' ? 'active' : ''}>{tLang('zh')}</Link>
           </div>
           <Link className="website-nav-cta" href="/download">
             {t('cta')} <Arrow diagonal />
@@ -62,9 +56,9 @@ export function WebsiteNavigation() {
             <Link href="/guide" onClick={close}>{t('guide')}</Link>
             <Link href="/download" onClick={close}>{t('cta')}</Link>
             <div className="website-mobile-lang">
-              <NextLink href={enHref} onClick={close} className={locale === 'en' ? 'active' : ''}>{tLang('en')}</NextLink>
+              <Link href={pathname} locale="en" onClick={close} className={locale === 'en' ? 'active' : ''}>{tLang('en')}</Link>
               <span aria-hidden="true">/</span>
-              <NextLink href={zhHref} onClick={close} className={locale === 'zh' ? 'active' : ''}>{tLang('zh')}</NextLink>
+              <Link href={pathname} locale="zh" onClick={close} className={locale === 'zh' ? 'active' : ''}>{tLang('zh')}</Link>
             </div>
           </nav>
         </details>
