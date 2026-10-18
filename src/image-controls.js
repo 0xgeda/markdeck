@@ -1,5 +1,7 @@
 import {closeHistory} from 'prosemirror-history';
 import {compressImage} from './compress-image.js';
+import MarkdownIt from 'markdown-it';
+const layoutMarkdown=new MarkdownIt({html:true});
 const groupStyle=size=>`width:calc(${size}% - 12px);max-width:100%;height:auto;display:inline-block;vertical-align:top;margin:0 6px`;
 const escape=value=>String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 export const imageMarkdownRenderer={image:({node},context)=>{
@@ -19,14 +21,18 @@ export function imageBlobHook(blob,callback,docId){
 // Toast UI drops HTML image attributes while parsing Markdown; restore only our
 // constrained layout metadata into its existing image nodes (never arbitrary CSS).
 export function restoreImageLayout(editor,markdown){
-  const parsed=new DOMParser().parseFromString(markdown,'text/html');
-  const layouts=[...parsed.querySelectorAll('img[data-larkdown-image]')];
+  // Include plain images in occurrence matching; otherwise a later styled
+  // occurrence of the same source steals an earlier plain image's position.
+  // Rendering Markdown also excludes image examples inside code blocks.
+  const parsed=new DOMParser().parseFromString(layoutMarkdown.render(markdown),'text/html');
+  const layouts=[...parsed.querySelectorAll('img')];
   const view=editor.wwEditor.view;let tr=view.state.tr;
   view.state.doc.descendants((node,pos)=>{
     if(node.type.name!=='image')return;
     const index=layouts.findIndex(image=>image.getAttribute('src')===node.attrs.imageUrl);
     if(index<0)return;
     const image=layouts.splice(index,1)[0];
+    if(!image.hasAttribute('data-larkdown-image'))return;
     const columns=['2','3'].includes(image.dataset.columns)?image.dataset.columns:null;
     const pair=image.getAttribute('style')?.includes('display:inline-block');
     const align=['left','center','right','text-left','text-right'].includes(image.dataset.align)?image.dataset.align:'center';
@@ -148,6 +154,12 @@ export default function imageControls(editor,root){
   }
   function escapeResize(event){if(event.key==='Escape'){drag=null;sizeLabel.hidden=true;refresh();}}
   function reposition(){if(drag)drag=null;sizeLabel.hidden=true;refresh();}
+  // Image node views stop ProseMirror's mouse selection handling. Native focus
+  // would then scroll to the old text caret instead of the clicked image.
+  function imageMouseDown(event){
+    if(event.button===0&&view.dom.getAttribute('contenteditable')!=='false'&&event.target.closest('.ProseMirror img[src]'))event.preventDefault();
+  }
+  root.addEventListener('mousedown',imageMouseDown,true);
   document.addEventListener('pointermove',move);document.addEventListener('pointerup',finish);document.addEventListener('pointercancel',finish);document.addEventListener('keydown',escapeResize);
   document.addEventListener('scroll',reposition,true);document.addEventListener('load',reposition,true);window.addEventListener('resize',reposition);
   function click(event){
@@ -161,7 +173,7 @@ export default function imageControls(editor,root){
   // Hide when the document changes elsewhere: stale positions must never edit another image.
   function change(){bar.hidden=true;position=null;drag=null;frame.hidden=true;sizeLabel.hidden=true;}
   document.addEventListener('click',click);editor.on('change',change);root.append(bar);
-  return ()=>{document.removeEventListener('click',click);editor.off('change',change);bar.remove();frame.remove();document.removeEventListener('pointermove',move);document.removeEventListener('pointerup',finish);document.removeEventListener('pointercancel',finish);document.removeEventListener('keydown',escapeResize);document.removeEventListener('scroll',reposition,true);document.removeEventListener('load',reposition,true);window.removeEventListener('resize',reposition);};
+  return ()=>{root.removeEventListener('mousedown',imageMouseDown,true);document.removeEventListener('click',click);editor.off('change',change);bar.remove();frame.remove();document.removeEventListener('pointermove',move);document.removeEventListener('pointerup',finish);document.removeEventListener('pointercancel',finish);document.removeEventListener('keydown',escapeResize);document.removeEventListener('scroll',reposition,true);document.removeEventListener('load',reposition,true);window.removeEventListener('resize',reposition);};
 }
 
 const imageCaches=new WeakMap();

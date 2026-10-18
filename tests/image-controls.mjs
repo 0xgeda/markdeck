@@ -9,6 +9,18 @@ w.Range.prototype.getClientRects=()=>[];
 w.eval(bundle.outputFiles[0].text);w.make();
 const root=w.document.querySelector('#editor');
 const body=w.editor.getEditorElements().wwEditor;
+const initial=w.editor.getMarkdown();
+const duplicate='![same](repeat.png)\n\n```html\n<img src="repeat.png" data-larkdown-image="true" data-size="99%">\n```\n\n<img src="repeat.png" alt="same" data-larkdown-image="true" data-size="25%">\n\n<img src="repeat.png" alt="same" data-larkdown-image="true" data-size="75%">';
+w.editor.setMarkdown(duplicate,false);w.restore(w.editor,duplicate);
+let repeated=[...body.querySelectorAll('.ProseMirror img[src="repeat.png"]')];assert.equal(repeated.length,3);
+assert.deepEqual(repeated.map(img=>img.getAttribute('data-size')),[null,'25%','75%']);
+const roundtrip=w.editor.getMarkdown();w.editor.setMarkdown(roundtrip,false);w.restore(w.editor,roundtrip);
+repeated=[...body.querySelectorAll('.ProseMirror img[src="repeat.png"]')];assert.deepEqual(repeated.map(img=>img.getAttribute('data-size')),[null,'25%','75%']);
+w.editor.setMarkdown(initial,false);
+function imageDown(button=0){let prevented;const observe=event=>{prevented=event.defaultPrevented;};root.addEventListener('mousedown',observe,{capture:true,once:true});const event=new w.MouseEvent('mousedown',{bubbles:true,cancelable:true,button});body.querySelector('.ProseMirror img[src]').dispatchEvent(event);return prevented;}
+assert.equal(imageDown(),true,'image toolbar selection must not restore an old text caret');
+assert.equal(imageDown(2),false,'context menu must remain available');
+const editable=body.querySelector('.ProseMirror');editable.setAttribute('contenteditable','false');assert.equal(imageDown(),false);editable.setAttribute('contenteditable','true');
 function choose(){body.querySelector('.ProseMirror img[src]').click();}
 function click(label){[...root.querySelectorAll('.image-controls button')].find(button=>button.textContent===label).click();}
 choose();assert.equal(root.querySelector('.image-controls').hidden,false);
@@ -97,5 +109,5 @@ w.editor.setMarkdown('![ok](local.png)',false);await w.hydrate(w.editor,'doc');a
 let inFlight=0,peak=0;
 w.desktop.readImage=async()=>{peak=Math.max(peak,++inFlight);await new Promise(resolve=>setTimeout(resolve,2));inFlight--;return {ok:true,data:'data:image/png;base64,cG5n'};};
 w.editor.setMarkdown(Array.from({length:40},(_,i)=>`![图${i}](stress-${i}.png)`).join('\n\n'),false);await w.hydrate(w.editor,'doc');assert.ok(peak<=4);assert.ok(peak>0);assert.equal(body.querySelector('.ProseMirror img[src]').getAttribute('loading'),'lazy');
-w.dispose();w.editor.destroy();dom.window.close();
+w.dispose();assert.equal(imageDown(),false,'disposed controls must release the mouse handler');w.editor.destroy();dom.window.close();
 console.log('Image sizing, alignment, side-by-side and Markdown reload passed.');

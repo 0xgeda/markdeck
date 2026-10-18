@@ -1,50 +1,55 @@
-// Guards the ANR fix: when workspace.json references a filePath that is slow or
-// unreadable (e.g. sandbox-approval protected folders in a packaged macOS build),
-// the Workspace constructor MUST return promptly. External sync picks up changes
-// 1.5 s later via the renderer. If someone refactors the startup readInto loop out
-// of setImmediate, the app window will hang indefinitely waiting for approval.
+// Assert scheduling directly: wall-clock thresholds cannot prove disk reads are
+// deferred. Matching hashes ensure these fixtures actually enter readInto.
 const {test}=require('node:test');const assert=require('node:assert/strict');
 const fs=require('node:fs');const os=require('node:os');const path=require('node:path');
+const {createHash}=require('node:crypto');
 const {Workspace}=require('../desktop/workspace.cjs');
-function mkroot(){return fs.mkdtempSync(path.join(os.tmpdir(),'markdeck-startup-'));}
-
-test('constructor completes synchronously even when a doc.filePath is unreadable',()=>{
-  const root=mkroot();try{
-    const dataDir=path.join(root,'data');fs.mkdirSync(dataDir,{recursive:true});
-    // Save a workspace.json that references a file that does not exist. If the
-    // startup read were synchronous and the sandbox blocked on it, this call
-    // would hang; if it threw, this test would fail with the thrown error.
-    const ghostPath=path.join(root,'nope','ghost.md');
-    fs.writeFileSync(path.join(dataDir,'workspace.json'),JSON.stringify({
-      active:'doc-1',
-      docs:[{id:'doc-1',title:'ghost',body:'previous body',updated:Date.now(),star:false,
-             filePath:ghostPath,diskHash:'deadbeef',bom:false,eol:'\n',blocked:false}]
-    }));
-    const t0=Date.now();
-    const workspace=new Workspace(dataDir);
-    const elapsed=Date.now()-t0;
-    assert.ok(elapsed<500,`constructor took ${elapsed}ms, should be <500ms`);
-    assert.equal(workspace.state.docs.length,1);
-    assert.equal(workspace.state.docs[0].body,'previous body','draft preserved when disk read fails');
-  }finally{fs.rmSync(root,{recursive:true,force:true});}
+const nextTurn=()=>new Promise(resolve=>setImmediate(resolve));
+function fixture(t){
+  const root=fs.mkdtempSync(path.join(os.tmpdir(),'markdeck-startup-'));
+  t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
+  const file=path.join(root,'note.md'),directory=path.join(root,'data');
+  fs.mkdirSync(directory);fs.writeFileSync(file,'new disk content');
+  const body='saved content';
+  fs.writeFileSync(path.join(directory,'workspace.json'),JSON.stringify({
+    active:'doc-1',docs:[{id:'doc-1',title:'note',body,updated:Date.now(),star:false,
+      filePath:file,diskHash:createHash('sha256').update(body).digest('hex'),bom:false,eol:'\n',blocked:false}]
+  }));
+  return {file,directory,body};
+}
+test('startup reads clean documents only after constructor returns',async t=>{
+  const f=fixture(t);let reads=0;
+  class ObservedWorkspace extends Workspace{
+    readInto(...args){reads++;return super.readInto(...args);}
+  }
+  const workspace=new ObservedWorkspace(f.directory);
+  assert.equal(reads,0,'constructor must not read external files');
+  assert.equal(workspace.state.docs[0].body,f.body);
+  await nextTurn();
+  assert.equal(reads,1,'fixture must exercise the deferred read');
+  assert.equal(workspace.state.docs[0].body,'new disk content');
 });
-
-test('deferred startup read does not throw out of the constructor',async()=>{
-  const root=mkroot();try{
-    const dataDir=path.join(root,'data');fs.mkdirSync(dataDir,{recursive:true});
-    const ghostPath=path.join(root,'nope','ghost.md');
-    fs.writeFileSync(path.join(dataDir,'workspace.json'),JSON.stringify({
-      active:'doc-1',
-      docs:[{id:'doc-1',title:'ghost',body:'draft',updated:Date.now(),star:false,
-             filePath:ghostPath,diskHash:'deadbeef',bom:false,eol:'\n',blocked:false}]
-    }));
-    // Catch any unhandled rejection the deferred readInto might emit.
-    let caught=null;const handler=err=>{caught=err;};process.on('unhandledException',handler);
-    const workspace=new Workspace(dataDir);
-    await new Promise(resolve=>setImmediate(resolve));
-    await new Promise(resolve=>setImmediate(resolve));
-    process.removeListener('unhandledException',handler);
-    assert.equal(caught,null);
-    assert.equal(workspace.state.docs[0].body,'draft');
-  }finally{fs.rmSync(root,{recursive:true,force:true});}
+test('failed deferred reads preserve saved content',async t=>{
+  const f=fixture(t);let reads=0;
+  fs.unlinkSync(f.file);
+  class ObservedWorkspace extends Workspace{
+    readInto(...args){reads++;return super.readInto(...args);}
+  }
+  const workspace=new ObservedWorkspace(f.directory);
+  assert.equal(reads,0);
+  await nextTurn(); // An uncaught deferred exception fails the Node test runner.
+  assert.equal(reads,1);
+  assert.equal(workspace.state.docs[0].body,f.body);
+});
+test('edits made before deferred startup read are preserved',async t=>{
+  const f=fixture(t);let reads=0;
+  class ObservedWorkspace extends Workspace{
+    readInto(...args){reads++;return super.readInto(...args);}
+  }
+  const workspace=new ObservedWorkspace(f.directory);
+  workspace.state.docs[0].body='unsaved edit';
+  await nextTurn();
+  assert.equal(reads,0);
+  assert.equal(workspace.state.docs[0].body,'unsaved edit');
+  assert.equal(fs.readFileSync(f.file,'utf8'),'new disk content');
 });

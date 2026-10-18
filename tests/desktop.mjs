@@ -7,10 +7,10 @@ import {createRequire} from 'node:module';
 const require=createRequire(import.meta.url);
 const root=await fs.mkdtemp(path.join(os.tmpdir(),'yunjian-desktop-'));
 const file=path.join(root,'研究.md');await fs.writeFile(file,'# 项目研究\n\n原始正文\n\n| 品类 | 数量 |\n| --- | --- |\n| 面包 | 2 |');
-let app;
-async function launch(){const instance=await electron.launch({executablePath:process.env.YUNJIAN_EXECUTABLE||require('electron'),args:['.'],env:{...process.env,YUNJIAN_DATA_DIR:path.join(root,'data')}});const page=await instance.firstWindow();await page.getByRole('textbox',{name:'文档正文'}).waitFor();return {instance,page};}
+let app;const errors=[];
+async function launch(){const instance=await electron.launch({executablePath:process.env.YUNJIAN_EXECUTABLE||require('electron'),args:['.'],env:{...process.env,YUNJIAN_DATA_DIR:path.join(root,'data')}});if(process.env.YUNJIAN_EXECUTABLE)assert.equal(await instance.evaluate(({app})=>app.isPackaged),true);const page=await instance.firstWindow();page.on('pageerror',e=>errors.push(e.stack||e.message));await page.getByRole('textbox',{name:'文档正文'}).waitFor();return {instance,page};}
 try{
-  let result=await launch();app=result.instance;let page=result.page;const errors=[];page.on('pageerror',e=>errors.push(e.message));
+  let result=await launch();app=result.instance;let page=result.page;
   assert.equal(await page.evaluate(()=>typeof window.require),'undefined');
   assert.equal(await page.locator('[data-action="edit"],.view-switch').count(),0);
   await app.evaluate(({dialog},filename)=>{dialog.showOpenDialog=async()=>({canceled:false,filePaths:[filename]});},file);

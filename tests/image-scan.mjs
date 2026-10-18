@@ -182,3 +182,14 @@ test('symlink inside docDir pointing outside → absolute-outside',()=>{
     assert.equal(r[0].status,'absolute-outside');
   }finally{clean(dir);clean(outside);}
 });
+
+test('indented and nested code is skipped without hiding list images',()=>{
+  const md='    ![](code.png)\n\t<img src="code.png">\n\n- item\n\n    ![](list.png)\n\n> ```\n> ![](quoted-code.png)\n> ```\n\n![](real.png)';
+  const entries=scanImages(md,null);
+  assert.deepEqual(entries.map(e=>e.src),['list.png','real.png']);
+  for(const e of entries)assert.equal(md.slice(e.index,e.index+e.length),e.raw);
+});
+test('escaped image markers are text; even backslash counts permit images',()=>{
+  const md=String.raw`\![](text.png) \\![](real.png) \<img src="text.png">`;
+  assert.deepEqual(scanImages(md,null).map(e=>e.src),['real.png']);
+});

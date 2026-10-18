@@ -8,4 +8,11 @@ for(const name of ['vite','esbuild','rollup','pptxgenjs','@toast-ui/editor','.vi
 for(const name of ['jszip','markdown-it'])assert.ok(files.includes('/node_modules/'+name+'/package.json'));
 const metadata=JSON.parse(extractFile(archive,'package.json'));
 assert.deepEqual(Object.keys(metadata.dependencies).sort(),['jszip','markdown-it']);
+for(const name of ['src/image-scan.js','desktop/workspace.cjs','desktop/image-fix.cjs','desktop/limits.cjs']){
+  assert.deepEqual(extractFile(archive,name),fs.readFileSync(name),`Packaged source is stale: ${name}`);
+}
+for(const name of ['index.html',...fs.readdirSync('dist/assets').map(name=>'assets/'+name)]){
+  assert.deepEqual(extractFile(archive,'dist/'+name),fs.readFileSync('dist/'+name),`Packaged build is stale: ${name}`);
+}
+console.log('Packaged scanner, workspace, repair code and renderer match current source/build.');
 console.log(`Packaged application archive: ${(fs.statSync(archive).size/1048576).toFixed(2)} MiB; build-only dependencies excluded.`);

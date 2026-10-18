@@ -5,6 +5,9 @@ const hash = text => createHash('sha256').update(text).digest('hex');
 const limits = require('./limits.cjs');
 const MAX_FILE_SIZE = limits.maxDocumentBytes;
 function atomicWrite(filename, content) {
+  // Renaming a new file over an existing one only checks the directory's
+  // permissions. Respect the target's read-only status before replacing it.
+  if (fs.existsSync(filename)) fs.accessSync(filename, fs.constants.W_OK);
   const temp = path.join(path.dirname(filename), `.${path.basename(filename)}.${randomUUID()}.tmp`);
   const mode = fs.existsSync(filename) ? fs.statSync(filename).mode & 0o777 : 0o600;
   try {

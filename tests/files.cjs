@@ -5,6 +5,13 @@ const os=require('node:os');
 const path=require('node:path');
 const {Workspace}=require('../desktop/workspace.cjs');
 function fixture(t){const root=fs.mkdtempSync(path.join(os.tmpdir(),'yunjian-files-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));return {root,store:path.join(root,'data'),file:path.join(root,'研究.md')};}
+test('read-only original is not replaced; draft survives and retry succeeds after permission restoration',t=>{
+  const f=fixture(t);fs.writeFileSync(f.file,'# 原文');const w=new Workspace(f.store),state=w.open(f.file);const id=state.active;
+  fs.chmodSync(f.file,0o444);assert.throws(()=>fs.accessSync(f.file,fs.constants.W_OK),{code:'EACCES'});
+  state.docs[0].body='# 未写回的修改';const result=w.save(state);assert.ok(result.errors[id]);assert.equal(fs.readFileSync(f.file,'utf8'),'# 原文');
+  const recovered=new Workspace(f.store);assert.equal(recovered.snapshot().docs[0].body,state.docs[0].body);
+  fs.chmodSync(f.file,0o600);assert.deepEqual(recovered.save(recovered.snapshot()).errors,{});assert.equal(fs.readFileSync(f.file,'utf8'),state.docs[0].body);
+});
 test('open without changes keeps exact bytes; editing writes the same file and survives restart',t=>{
   const f=fixture(t);const original='\ufeff# 研究\r\n\r\n正文\r\n';fs.writeFileSync(f.file,original);
   const w=new Workspace(f.store);const state=w.open(f.file);assert.equal(state.docs[0].body,'# 研究\n\n正文\n');
@@ -27,9 +34,12 @@ test('renderer paths cannot authorize writes; drafts become real files only thro
   const saved=path.join(f.root,'新建.md');Object.assign(d,w.saveAs(d.id,saved).docs[0]);d.body+='\n\n直接编辑';w.save({docs:[d],active:d.id});assert.equal(fs.readFileSync(saved,'utf8'),d.body);
   w.save({docs:[],active:null});assert.equal(fs.readFileSync(saved,'utf8'),d.body);
 });
-test('restart refreshes unchanged external documents; explicit reload discards a conflicting draft',t=>{
+test('restart refreshes unchanged external documents; explicit reload discards a conflicting draft',async t=>{
   const f=fixture(t);fs.writeFileSync(f.file,'原内容');const w=new Workspace(f.store);const state=w.open(f.file);
-  fs.writeFileSync(f.file,'最新内容');const restarted=new Workspace(f.store);assert.equal(restarted.snapshot().docs[0].body,'最新内容');
+  fs.writeFileSync(f.file,'最新内容');const restarted=new Workspace(f.store);
+  assert.equal(restarted.snapshot().docs[0].body,'原内容');
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(restarted.snapshot().docs[0].body,'最新内容');
   const snapshot=restarted.snapshot();snapshot.docs[0].body='应用修改';fs.writeFileSync(f.file,'再次外部修改');restarted.save(snapshot);
   restarted.reload(state.active);assert.equal(restarted.snapshot().docs[0].body,'再次外部修改');
 });

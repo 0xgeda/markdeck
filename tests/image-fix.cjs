@@ -204,3 +204,16 @@ test('importBatch flags HTML <img> raws with an error instead of mangling the ta
     assert.equal(newBody,'<img src="miss.png" alt="x">');
   }finally{fs.rmSync(root,{recursive:true,force:true});}
 });
+
+test('repair and deletion preserve indented code and escaped image examples',async()=>{
+  const raw='![](missing.png)';
+  const protectedText='    '+raw+'\n\n\\'+raw+'\n\n';
+  const {root,fix,id}=setup(protectedText+raw+'\n');
+  try{
+    const sourcePath=path.join(root,'source.png');fs.writeFileSync(sourcePath,'image');
+    const repaired=await fix.importBatch(id,[{raw,sourcePath}]);
+    assert.equal(repaired.newBody,protectedText+`![](${repaired.imported[0].newSrc})\n`);
+    const deleted=await fix.deleteBatch(id,[raw]);
+    assert.equal(deleted.removed,1);assert.equal(deleted.newBody,protectedText);
+  }finally{fs.rmSync(root,{recursive:true,force:true});}
+});

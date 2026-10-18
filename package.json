@@ -13,7 +13,10 @@
     "reinstall": "pkill -f Markdeck 2>/dev/null; npm run package:mac && open release/Markdeck-darwin-arm64/Markdeck.app",
     "test:files": "node --test tests/files.cjs",
     "test:desktop": "npm run build && node tests/desktop.mjs",
-    "test:shortcuts": "node --test tests/shortcuts.mjs"
+    "test:shortcuts": "node --test tests/shortcuts.mjs",
+    "postinstall": "node scripts/patch-editor.cjs",
+    "prebuild": "node scripts/patch-editor.cjs",
+    "predev": "node scripts/patch-editor.cjs"
   },
   "dependencies": {
     "markdown-it": "^15.0.2",

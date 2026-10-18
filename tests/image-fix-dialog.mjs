@@ -81,15 +81,16 @@ test('全选可修复 only checks rows with candidate + fixable status',async()=
   dialog.close();dom.window.close();
 });
 
-test('row checkbox disabled when no candidate',async()=>{
+test('missing image without candidate can be selected for deletion only',async()=>{
   const dom=setup();
   const entries=[{raw:'![](a.png)',src:'a.png',alt:'',title:null,line:1,column:1,status:'missing'}];
   const {desktop}=makeDesktop({scanImages:async()=>({ok:true,entries,docDir:'/tmp'})});
   await openDialog(desktop);
   const dialog=document.querySelector('.image-fix-dialog');
   const cb=dialog.querySelector('tbody input[type=checkbox]');
-  assert.equal(cb.disabled,true);
-  cb.checked=true;// cannot be unchecked via click because disabled; still, apply must stay disabled
+  assert.equal(cb.disabled,false);
+  cb.click();
+  assert.equal(dialog.querySelector('[data-delete]').disabled,false);
   assert.equal(dialog.querySelector('[data-apply]').disabled,true);
   dialog.close();dom.window.close();
 });
