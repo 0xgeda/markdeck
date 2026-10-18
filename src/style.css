@@ -416,10 +416,12 @@ dialog::backdrop{background:#10191466}
 #outline{border-left:0;padding-right:3px}
 .outline-title{margin-bottom:14px;font-weight:600}
 .outline-filter{margin:0 0 8px;width:100%;padding:8px 10px;border-radius:7px;font-size:12px}
-#outline .outline-entry{margin-left:calc(var(--outline-depth,0)*10px);padding-left:3px;gap:2px;align-items:flex-start;border-radius:7px}
+#outline .outline-entry{flex-shrink:0;margin-left:calc(var(--outline-depth,0)*10px);padding-left:3px;gap:2px;align-items:flex-start;border-radius:7px}
 #outline .outline-entry[data-level="1"]:not(:first-child){margin-top:8px}
 #outline .outline-entry[hidden]{display:none!important}
-#outline .outline-entry>a{padding:7px 6px 7px 2px!important;margin:0;font-size:13px;line-height:1.5;border-radius:5px;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere}
+#outline .outline-entry>a{padding:7px 6px 7px 2px!important;margin:0;font-size:13px;line-height:1.5;border-radius:5px;display:block;overflow-wrap:anywhere}
+/* Clamp the unpadded label so a third line cannot bleed into link padding. */
+#outline .outline-label{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
 #outline .outline-entry>a[hidden]{display:none}
 :root[data-theme] #outline .outline-entry:hover{background:color-mix(in srgb,var(--accent) 5%,transparent)}
 :root[data-theme] #outline .outline-entry:has(>a.active){background:color-mix(in srgb,var(--accent) 9%,transparent)}
