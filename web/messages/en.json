@@ -4,7 +4,7 @@
   },
   "metadata": {
     "home": {
-      "title": "Markdeck — Write it down. Think it through. Share it clearly.",
+      "title": "Markdeck — Local Markdown editor for Mac. Write, outline, present.",
       "ogTitle": "Markdeck — Space for your thinking.",
       "ogAlt": "Markdeck — Write. Connect. Present."
     },
@@ -47,7 +47,7 @@
       "introLine3": "from the first spark to the finished thought.",
       "cta": "Get Markdeck",
       "demoLink": "Try it below",
-      "small": "Made for Mac · Local files · No account needed",
+      "small": "Made for Mac · Local Markdown · No account needed",
       "handnote": "Less noise. More thought."
     },
     "workflow": {

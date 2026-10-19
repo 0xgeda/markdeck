@@ -47,6 +47,9 @@ export default async function GuidePage({
     description: t('intro'),
     inLanguage: locale === 'zh' ? 'zh-CN' : 'en',
     url: `${base}/guide`,
+    keywords: locale === 'zh'
+      ? ['Markdown 编辑器', 'Mac Markdown', '本地 Markdown', 'Markdown 大纲', 'Markdown 演示', 'Markdeck']
+      : ['Markdown editor', 'Mac Markdown app', 'local Markdown', 'Markdown outline', 'Markdown presentation', 'Markdeck'],
   };
 
   return (

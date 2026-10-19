@@ -4,7 +4,7 @@
   },
   "metadata": {
     "home": {
-      "title": "Markdeck — 写下来，理清楚，讲明白",
+      "title": "Markdeck — Mac 本地 Markdown 编辑器 · 写作 / 大纲 / 演示",
       "ogTitle": "Markdeck — 给思考，留一点空间",
       "ogAlt": "Markdeck — 写作，梳理，展示"
     },
@@ -47,7 +47,7 @@
       "introLine3": "从最初的念头，到完整的表达。",
       "cta": "获取 Markdeck",
       "demoLink": "先感受一下",
-      "small": "为 Mac 而造 · 本地文件 · 无需账号",
+      "small": "为 Mac 而造 · 本地 Markdown · 无需账号",
       "handnote": "Less noise. More thought."
     },
     "workflow": {
