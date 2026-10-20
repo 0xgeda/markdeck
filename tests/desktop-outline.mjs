@@ -12,7 +12,7 @@ try{
  app=await electron.launch({executablePath:process.env.YUNJIAN_EXECUTABLE||require('electron'),args:['.'],env:{...process.env,YUNJIAN_DATA_DIR:path.join(root,'data')}});
  if(process.env.YUNJIAN_EXECUTABLE)assert.equal(await app.evaluate(({app})=>app.isPackaged),true);
  const page=await app.firstWindow();page.setDefaultTimeout(20000);page.on('pageerror',e=>errors.push(e.stack||e.message));await page.emulateMedia({reducedMotion:'reduce'});
- await page.getByRole('textbox',{name:'文档正文'}).waitFor();await app.evaluate(({dialog},file)=>{dialog.showOpenDialog=async()=>({canceled:false,filePaths:[file]});},file);await page.getByRole('button',{name:'打开',exact:true}).click();await page.getByRole('textbox',{name:'文档正文'}).getByText('目录验收',{exact:true}).waitFor();
+ await page.getByRole('textbox',{name:'文档正文'}).waitFor();await app.evaluate(({dialog},file)=>{dialog.showOpenDialog=async()=>({canceled:false,filePaths:[file]});},file);if(await page.locator('.sidebar').evaluate(el=>el.getBoundingClientRect().x<0))await page.getByRole('button',{name:'切换导航',exact:true}).click();await page.getByRole('button',{name:'打开文档',exact:true}).click();if(await page.locator('body').evaluate(el=>el.classList.contains('sidebar-open')))await page.getByRole('button',{name:'关闭导航',exact:true}).click();await page.getByRole('textbox',{name:'文档正文'}).getByText('目录验收',{exact:true}).waitFor();
  await page.getByRole('button',{name:'设置',exact:true}).click();await page.locator('#theme-select').selectOption('sage');await page.locator('[data-action="close-settings"]').click();
  const window=await app.browserWindow(page);
  for(const [width,height,zoom] of [[1440,900,1],[900,750,1],[1440,900,1.25]]){

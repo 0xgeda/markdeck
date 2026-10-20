@@ -1,5 +1,19 @@
-const {contextBridge,ipcRenderer}=require('electron');
+const {contextBridge,ipcRenderer,webUtils}=require('electron');
+let droppedFileHandler;
+const droppedFiles=new Map();
+window.addEventListener('drop',event=>{
+  const files=Array.from(event.dataTransfer?.files||[]);
+  if(!files.length||files.every(file=>file.type.startsWith('image/')))return;
+  event.preventDefault();event.stopImmediatePropagation();
+  document.querySelector('.document-drop-overlay')?.remove();
+  const tokens=files.map(file=>{const token=crypto.randomUUID();droppedFiles.set(token,webUtils.getPathForFile(file));return token;});
+  Promise.resolve(droppedFileHandler?.(tokens)).finally(()=>tokens.forEach(token=>droppedFiles.delete(token)));
+},true);
 contextBridge.exposeInMainWorld('desktop', {
+  feishuStatus:()=>ipcRenderer.invoke('feishu:status'),
+  feishuConnect:()=>ipcRenderer.invoke('feishu:connect'),
+  feishuFinishConnect:()=>ipcRenderer.invoke('feishu:finish-connect'),
+  feishuUpload:(id,folder)=>ipcRenderer.invoke('feishu:upload',id,folder),
   bundleDocument:id=>ipcRenderer.invoke('document:bundle',id),
   chooseProject:()=>ipcRenderer.invoke('project:choose'),
   searchProject:query=>ipcRenderer.invoke('project:search',query),
@@ -26,7 +40,11 @@ contextBridge.exposeInMainWorld('desktop', {
   load:()=>ipcRenderer.invoke('workspace:load'),
   sync:id=>ipcRenderer.invoke('workspace:sync',id),
   save:state=>ipcRenderer.invoke('workspace:save',state),
+  onDroppedFiles:callback=>{droppedFileHandler=callback;},
+  openDroppedFile:token=>{const filename=droppedFiles.get(token);if(!filename)return Promise.resolve({ok:false,error:'无法读取拖入文件的本地路径'});return ipcRenderer.invoke('workspace:open-dropped',filename);},
   open:()=>ipcRenderer.invoke('workspace:open'),
+  showInFolder:id=>ipcRenderer.invoke('workspace:show-in-folder',id),
+  openExternal:href=>ipcRenderer.invoke('app:open-external',href),
   saveAs:id=>ipcRenderer.invoke('workspace:save-as',id),
   reload:id=>ipcRenderer.invoke('workspace:reload',id),
   onAction:callback=>{const handler=(_event,action)=>callback(action);ipcRenderer.on('app:action',handler);return ()=>ipcRenderer.removeListener('app:action',handler);},

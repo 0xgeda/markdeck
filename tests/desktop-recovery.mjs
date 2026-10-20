@@ -24,7 +24,7 @@ async function cancelClose(expected){
  const message=await app.evaluate(()=>globalThis.testCloseMessage);assert.equal(message.message,expected);assert.equal(message.buttons[0],'返回文档');assert.equal(page.isClosed(),false);await page.getByRole('textbox',{name:'文档正文'}).getByText(text,{exact:true}).waitFor();
 }
 try{
- await launch();await app.evaluate(({dialog},file)=>{dialog.showOpenDialog=async()=>({canceled:false,filePaths:[file]});},file);await page.getByRole('button',{name:'打开',exact:true}).click();await page.getByRole('textbox',{name:'文档正文'}).getByText(text,{exact:true}).waitFor();
+ await launch();await app.evaluate(({dialog},file)=>{dialog.showOpenDialog=async()=>({canceled:false,filePaths:[file]});},file);if(await page.locator('.sidebar').evaluate(el=>el.getBoundingClientRect().x<0))await page.getByRole('button',{name:'切换导航',exact:true}).click();await page.getByRole('button',{name:'打开文档',exact:true}).click();if(await page.locator('body').evaluate(el=>el.classList.contains('sidebar-open')))await page.getByRole('button',{name:'关闭导航',exact:true}).click();await page.getByRole('textbox',{name:'文档正文'}).getByText(text,{exact:true}).waitFor();
  await fs.chmod(file,0o444);await assert.rejects(fs.access(file,fs.constants.W_OK),{code:'EACCES'});
  await append(' 只读草稿');await status('文件未写回');assert.equal(await fs.readFile(file,'utf8'),original);
  assert.ok(JSON.parse(await fs.readFile(path.join(data,'workspace.json'),'utf8')).docs.some(d=>d.body.includes(text)));

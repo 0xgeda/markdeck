@@ -3,6 +3,9 @@
 // If you need to raise one, do it here so related code paths stay consistent.
 const MB=1024*1024;
 module.exports={
+  maxFeishuBytes:100*MB,
+  feishuTimeoutMs:180_000,
+  feishuOutputBytes:4*MB,
   // Single Markdown document body (loaded, edited, written atomically).
   maxDocumentBytes:10*MB,
   // Document title, logic group title, etc.

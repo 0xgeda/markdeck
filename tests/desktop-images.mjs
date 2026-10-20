@@ -33,7 +33,7 @@ try{
  }),'base64');
  await fs.writeFile(path.join(root,'local.png'),png);await fs.writeFile(path.join(external,'missing.png'),png);
  await app.evaluate(({dialog},file)=>{dialog.showOpenDialog=async()=>({canceled:false,filePaths:[file]});},file);
- await page.getByRole('button',{name:'打开',exact:true}).click();
+ if(await page.locator('.sidebar').evaluate(el=>el.getBoundingClientRect().x<0))await page.getByRole('button',{name:'切换导航',exact:true}).click();await page.getByRole('button',{name:'打开文档',exact:true}).click();if(await page.locator('body').evaluate(el=>el.classList.contains('sidebar-open')))await page.getByRole('button',{name:'关闭导航',exact:true}).click();
  const body=page.getByRole('textbox',{name:'文档正文'});
  await body.locator('h1').filter({hasText:'图片验收'}).waitFor();
  console.log('Opened image document');
@@ -54,7 +54,7 @@ try{
  assert.match((await fs.readFile(file,'utf8')).replaceAll(encodeURI('图片验收.assets'),'图片验收.assets'),/在此粘贴.*!\[pasted.png\]/);
  assert.ok((await fs.readdir(path.join(root,'图片验收.assets'))).length>0);
  console.log('PASS: local image hydration, remote image rendering, paste event -> attachment -> Markdown save');
- await page.getByRole('button',{name:'设置',exact:true}).click();await page.locator('[data-action="image-fix"]').click();
+ await page.getByRole('button',{name:'设置',exact:true}).click();if(!await page.locator('[data-settings-group="maintenance"]').evaluate(el=>el.open))await page.locator('[data-settings-group="maintenance"] summary').click();await page.locator('[data-action="image-fix"]').click();
  const dialog=page.locator('.image-fix-dialog');await dialog.locator('tbody tr').first().waitFor();
  assert.equal(await dialog.locator('tbody tr').count(),4);
  await page.screenshot({animations:'disabled',path:path.join(root,'repair-before.png')});

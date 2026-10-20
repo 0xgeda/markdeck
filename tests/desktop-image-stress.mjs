@@ -16,7 +16,7 @@ async function launch(){
  if(process.env.YUNJIAN_EXECUTABLE)assert.equal(await app.evaluate(({app})=>app.isPackaged),true);
  page=await app.firstWindow();page.setDefaultTimeout(30000);page.on('pageerror',e=>errors.push(e.stack||e.message));await page.getByRole('textbox',{name:'文档正文'}).waitFor();
 }
-async function open(filename,marker){await app.evaluate(({dialog},file)=>{dialog.showOpenDialog=async()=>({canceled:false,filePaths:[file]});},filename);await page.getByRole('button',{name:'打开',exact:true}).click();await page.getByRole('textbox',{name:'文档正文'}).getByText(marker,{exact:true}).waitFor();}
+async function open(filename,marker){await app.evaluate(({dialog},file)=>{dialog.showOpenDialog=async()=>({canceled:false,filePaths:[file]});},filename);if(await page.locator('.sidebar').evaluate(el=>el.getBoundingClientRect().x<0))await page.getByRole('button',{name:'切换导航',exact:true}).click();await page.getByRole('button',{name:'打开文档',exact:true}).click();if(await page.locator('body').evaluate(el=>el.classList.contains('sidebar-open')))await page.getByRole('button',{name:'关闭导航',exact:true}).click();await page.getByRole('textbox',{name:'文档正文'}).getByText(marker,{exact:true}).waitFor();}
 async function checkImages(){
  const images=page.getByRole('textbox',{name:'文档正文'}).locator('img[alt^="图 "]');assert.equal(await images.count(),24);
  for(let i=0;i<24;i++){await images.nth(i).scrollIntoViewIfNeeded();await page.waitForFunction(i=>document.querySelectorAll('[role="textbox"][aria-label="文档正文"] img[alt^="图 "]')[i]?.getAttribute('src')?.startsWith('data:'),i);await images.nth(i).evaluate(img=>img.decode());assert.deepEqual(await images.nth(i).evaluate(img=>[img.naturalWidth,img.naturalHeight]),[1024,768]);}

@@ -15,7 +15,7 @@ async function launch(){app=await electron.launch({executablePath:process.env.YU
 async function drag(page,from,to){await page.mouse.move(from.x,from.y);await page.mouse.down();await page.mouse.move(to.x,to.y,{steps:12});await page.mouse.up();}
 const center=box=>({x:box.x+box.width/2,y:box.y+box.height/2});
 try{
- let page=await launch();await app.evaluate(({dialog},file)=>{dialog.showOpenDialog=async()=>({canceled:false,filePaths:[file]});},file);await page.getByRole('button',{name:'打开',exact:true}).click();await page.getByRole('textbox',{name:'文档正文'}).locator('h1').first().waitFor();
+ let page=await launch();await app.evaluate(({dialog},file)=>{dialog.showOpenDialog=async()=>({canceled:false,filePaths:[file]});},file);if(await page.locator('.sidebar').evaluate(el=>el.getBoundingClientRect().x<0))await page.getByRole('button',{name:'切换导航',exact:true}).click();await page.getByRole('button',{name:'打开文档',exact:true}).click();if(await page.locator('body').evaluate(el=>el.classList.contains('sidebar-open')))await page.getByRole('button',{name:'关闭导航',exact:true}).click();await page.getByRole('textbox',{name:'文档正文'}).locator('h1').first().waitFor();
  await page.locator('[data-action="logic"]').click();await page.locator('.logic-workspace').waitFor();
  const cards=page.locator('.logic-group'),first=cards.first();assert.equal(await cards.count(),3);
  const before=await first.evaluate(el=>({left:parseFloat(el.style.left),top:parseFloat(el.style.top)}));

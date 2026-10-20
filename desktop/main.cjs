@@ -1,4 +1,4 @@
-const {app,BrowserWindow,Menu,dialog,ipcMain,protocol,net,session,nativeTheme}=require('electron');
+const {app,BrowserWindow,Menu,dialog,ipcMain,protocol,net,session,nativeTheme,shell}=require('electron');
 const path=require('node:path');
 const themePalettes=require('./themes.json');
 const fs=require('node:fs');
@@ -90,9 +90,30 @@ app.whenReady().then(()=>{
   register('project:search',query=>project.search(query));
   register('project:refresh',()=>project.refresh());
   register('project:open',async relative=>({state:workspace.open(await project.resolve(relative))}));
+  const feishu=new (require('./feishu.cjs').Feishu)(workspace);
+  register('feishu:status',()=>feishu.status());
+  register('feishu:connect',()=>feishu.connect());
+  register('feishu:finish-connect',()=>feishu.finishConnect());
+  register('feishu:upload',(id,folder)=>feishu.upload(id,folder));
   register('workspace:load',()=>({state:workspace.snapshot()}));
+  register('workspace:show-in-folder',id=>{
+    const doc=workspace.state.docs.find(doc=>doc.id===id);
+    if(!doc?.filePath)throw new Error('请先将文档保存到本地文件');
+    if(!fs.existsSync(doc.filePath))throw new Error('原文件已移动或删除，请另存为后重试');
+    shell.showItemInFolder(doc.filePath);return {};
+  });
+  register('app:open-external',async href=>{
+    if(typeof href!=='string')throw new Error('链接无效');
+    const url=new URL(href);
+    if(!['https:','http:'].includes(url.protocol))throw new Error('仅支持在浏览器中打开 HTTP 或 HTTPS 链接');
+    await shell.openExternal(url.href);return {};
+  });
   register('workspace:sync',id=>workspace.sync(id));
   register('workspace:save',state=>workspace.save(state));
+  register('workspace:open-dropped',filename=>{
+    if(typeof filename!=='string'||!path.isAbsolute(filename))throw new Error('拖入文件路径无效');
+    return {state:workspace.open(filename)};
+  });
   register('workspace:open',async()=>{
     const result=await dialog.showOpenDialog(window,{title:'打开 Markdown 文档',filters,properties:['openFile']});
     if(result.canceled) return {canceled:true};

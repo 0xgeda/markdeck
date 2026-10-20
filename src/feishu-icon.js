@@ -1,0 +1,2 @@
+// Simplified outline of the Lark bird, matched to the toolbar's 24px / 1.6px icons.
+export const feishuIcon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 14C9.5 10 7 6.5 4.5 4H13c2 1.5 3.6 3.5 4.6 5.8"/><path d="M3 9.5c4 3.5 8.5 6.5 13 6.5 3 0 3.8-4 6-6-3.3-1.6-5.4-.7-7.5 1.5L11 15"/><path d="M3 9.5V18c6 4 14.1 2.2 17-4.5"/></svg>';

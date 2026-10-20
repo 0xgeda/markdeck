@@ -14,7 +14,7 @@ const code=Array.from({length:240},(_,i)=>`LINE_${String(i+1).padStart(3,'0')}: 
 const cells=Array.from({length:16},(_,i)=>`COL_${i+1}_END`);
 const original='# 边界验收\n\n## 超长代码\n\n```text\n'+code+'\n```\n\n## 超宽表格\n\n| '+cells.join(' | ')+' |\n| '+cells.map(()=>'---').join(' | ')+' |\n| '+cells.map((_,i)=>`VALUE_${i+1}_END`).join(' | ')+' |\n\nBOUNDARY-END\n';
 await fs.writeFile(file,original);
-async function open(filename){await app.evaluate(({dialog},filename)=>{dialog.showOpenDialog=async()=>({canceled:false,filePaths:[filename]});},filename);await page.getByRole('button',{name:'打开',exact:true}).click();}
+async function open(filename){await app.evaluate(({dialog},filename)=>{dialog.showOpenDialog=async()=>({canceled:false,filePaths:[filename]});},filename);if(await page.locator('.sidebar').evaluate(el=>el.getBoundingClientRect().x<0))await page.getByRole('button',{name:'切换导航',exact:true}).click();await page.getByRole('button',{name:'打开文档',exact:true}).click();if(await page.locator('body').evaluate(el=>el.classList.contains('sidebar-open')))await page.getByRole('button',{name:'关闭导航',exact:true}).click();}
 async function waitDisk(filename,predicate){for(let n=0;n<200;n++){try{const bytes=await fs.readFile(filename);if(predicate(bytes))return bytes;}catch{}await new Promise(r=>setTimeout(r,100));}assert.fail('Expected disk content not ready: '+filename);}
 let page;
 try{
@@ -24,7 +24,7 @@ try{
  await page.getByRole('textbox',{name:'文档正文'}).waitFor();await open(file);
  await page.getByRole('textbox',{name:'文档正文'}).getByText('BOUNDARY-END',{exact:true}).waitFor();
  const pdf=path.join(root,'boundary.pdf');await app.evaluate(({dialog},filePath)=>{dialog.showSaveDialog=async()=>({canceled:false,filePath});},pdf);
- await page.getByRole('button',{name:'设置',exact:true}).click();await page.locator('[data-action="export-pdf"]').click();await waitDisk(pdf,b=>b.length>100);
+ await page.getByRole('button',{name:'设置',exact:true}).click();if(!await page.locator('[data-settings-group="export"]').evaluate(el=>el.open))await page.locator('[data-settings-group="export"] summary').click();await page.locator('[data-action="export-pdf"]').click();await waitDisk(pdf,b=>b.length>100);
  const text=execFileSync('pdftotext',['-raw',pdf,'-'],{encoding:'utf8'});
  for(const marker of ['LINE_001','END_001','LINE_240','END_240','COL_16_END','VALUE_16_END','BOUNDARY-END'])assert.ok(text.replace(/\s/g,'').includes(marker),`PDF clips ${marker}`);
  assert.equal(await fs.readFile(file,'utf8'),original);

@@ -40,7 +40,7 @@ try{
  }
  async function open(index){
   await app.evaluate(({dialog},file)=>{dialog.showOpenDialog=async()=>({canceled:false,filePaths:[file]});},files[index]);
-  await page.getByRole('button',{name:'打开',exact:true}).click();
+  if(await page.locator('.sidebar').evaluate(el=>el.getBoundingClientRect().x<0))await page.getByRole('button',{name:'切换导航',exact:true}).click();await page.getByRole('button',{name:'打开文档',exact:true}).click();if(await page.locator('body').evaluate(el=>el.classList.contains('sidebar-open')))await page.getByRole('button',{name:'关闭导航',exact:true}).click();
   await page.getByRole('textbox',{name:'文档正文'}).getByText(index?'SHORT-END':'LONG-END',{exact:true}).waitFor();
  }
  await delay(3000);await sample('startup');await open(0);await delay(3000);await sample('long-document');

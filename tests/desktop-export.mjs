@@ -19,7 +19,7 @@ try{
  const page=await app.firstWindow();page.setDefaultTimeout(15000);page.on('pageerror',e=>errors.push(e.stack||e.message));await page.emulateMedia({reducedMotion:'reduce'});
  await page.getByRole('textbox',{name:'文档正文'}).waitFor();
  await app.evaluate(({dialog},file)=>{dialog.showOpenDialog=async()=>({canceled:false,filePaths:[file]});},file);
- await page.getByRole('button',{name:'打开',exact:true}).click();await page.getByRole('textbox',{name:'文档正文'}).locator('h1').waitFor();
+ if(await page.locator('.sidebar').evaluate(el=>el.getBoundingClientRect().x<0))await page.getByRole('button',{name:'切换导航',exact:true}).click();await page.getByRole('button',{name:'打开文档',exact:true}).click();if(await page.locator('body').evaluate(el=>el.classList.contains('sidebar-open')))await page.getByRole('button',{name:'关闭导航',exact:true}).click();await page.getByRole('textbox',{name:'文档正文'}).locator('h1').waitFor();
  for(const theme of Object.keys(themes)){
   await page.getByRole('button',{name:'设置',exact:true}).click();await page.locator(`[data-theme-choice="${theme}"]`).click();await page.locator('[data-action="close-settings"]').click();
   assert.equal(await page.locator('html').getAttribute('data-theme'),theme);
@@ -31,7 +31,7 @@ try{
  for(const format of ['html','pdf']){
   const output=path.join(root,'output.'+format);
   await app.evaluate(({dialog},filePath)=>{dialog.showSaveDialog=async()=>({canceled:false,filePath});},output);
-  await page.getByRole('button',{name:'设置',exact:true}).click();await page.locator(`[data-action="export-${format}"]`).click();await exists(output);
+  await page.getByRole('button',{name:'设置',exact:true}).click();if(!await page.locator('[data-settings-group="export"]').evaluate(el=>el.open))await page.locator('[data-settings-group="export"] summary').click();await page.locator(`[data-action="export-${format}"]`).click();await exists(output);
  }
  const html=await fs.readFile(path.join(root,'output.html'),'utf8');assert.match(html,/END-OF-DOCUMENT/);assert.match(html,/data-theme="midnight"/);
  const pdf=await fs.readFile(path.join(root,'output.pdf'));assert.equal(pdf.subarray(0,5).toString(),'%PDF-');

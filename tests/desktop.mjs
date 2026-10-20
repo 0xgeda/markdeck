@@ -14,7 +14,7 @@ try{
   assert.equal(await page.evaluate(()=>typeof window.require),'undefined');
   assert.equal(await page.locator('[data-action="edit"],.view-switch').count(),0);
   await app.evaluate(({dialog},filename)=>{dialog.showOpenDialog=async()=>({canceled:false,filePaths:[filename]});},file);
-  await page.getByRole('button',{name:'打开',exact:true}).click();
+  if(await page.locator('.sidebar').evaluate(el=>el.getBoundingClientRect().x<0))await page.getByRole('button',{name:'切换导航',exact:true}).click();await page.getByRole('button',{name:'打开文档',exact:true}).click();if(await page.locator('body').evaluate(el=>el.classList.contains('sidebar-open')))await page.getByRole('button',{name:'关闭导航',exact:true}).click();
   let body=page.getByRole('textbox',{name:'文档正文'});await body.locator('h1').waitFor();
   await body.locator('p').first().click();await page.keyboard.press('End');await page.keyboard.insertText('自动落盘');
   await page.waitForFunction(()=>document.querySelector('#save-state').textContent==='已保存到文件');assert.match(await fs.readFile(file,'utf8'),/自动落盘/);
