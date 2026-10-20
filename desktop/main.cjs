@@ -1,4 +1,4 @@
-const {app,BrowserWindow,Menu,dialog,ipcMain,protocol,net,session,nativeTheme,shell}=require('electron');
+const {app,BrowserWindow,Menu,dialog,ipcMain,protocol,net,session,nativeTheme,shell,clipboard}=require('electron');
 const path=require('node:path');
 const themePalettes=require('./themes.json');
 const fs=require('node:fs');
@@ -45,6 +45,7 @@ app.whenReady().then(()=>{
     return net.fetch(pathToFileURL(filename).href);
   });
   session.defaultSession.setPermissionRequestHandler((contents,permission,callback)=>callback(permission==='fullscreen'&&contents===window?.webContents&&contents.getURL()===startURL));
+  register('clipboard:write',text=>{if(typeof text!=='string')throw new Error('复制内容无效');clipboard.writeText(text);return {};});
   register('app:theme',theme=>{if(!Object.hasOwn(themePalettes,theme))throw new Error('皮肤无效');const palette=themePalettes[theme];nativeTheme.themeSource=palette.mode;window.setBackgroundColor(palette.page);return {};});
   // Archived 2026-10-17: presentation / deck handlers moved to archive/presentation/.
   // See archive/README.md for restoration steps.

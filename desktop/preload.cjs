@@ -10,6 +10,7 @@ window.addEventListener('drop',event=>{
   Promise.resolve(droppedFileHandler?.(tokens)).finally(()=>tokens.forEach(token=>droppedFiles.delete(token)));
 },true);
 contextBridge.exposeInMainWorld('desktop', {
+  copyText:async text=>{const result=await ipcRenderer.invoke('clipboard:write',text);if(!result.ok)throw new Error(result.error);},
   feishuStatus:()=>ipcRenderer.invoke('feishu:status'),
   feishuConnect:()=>ipcRenderer.invoke('feishu:connect'),
   feishuFinishConnect:()=>ipcRenderer.invoke('feishu:finish-connect'),
