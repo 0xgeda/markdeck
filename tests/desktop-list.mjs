@@ -1,0 +1,19 @@
+import {_electron as electron} from 'playwright';import fs from 'node:fs/promises';import path from 'node:path';import os from 'node:os';import assert from 'node:assert/strict';import {createRequire} from 'node:module';
+const require=createRequire(import.meta.url),root=await fs.mkdtemp(path.join(os.tmpdir(),'markdeck-list-')),data=path.join(root,'data');const files=[];for(const title of ['甲文档','乙文档','丙文档']){const file=path.join(root,title+'.md');await fs.writeFile(file,'# '+title+'\n\n保留原文件');files.push(file);}let app;
+const launch=()=>electron.launch({executablePath:process.env.YUNJIAN_EXECUTABLE||require('electron'),args:['.'],env:{...process.env,YUNJIAN_DATA_DIR:data}});
+try{
+ app=await launch();let page=await app.firstWindow();page.setDefaultTimeout(15000);await page.getByRole('textbox',{name:'文档正文'}).waitFor();await page.emulateMedia({reducedMotion:'reduce'});
+ for(const file of files){await app.evaluate(({dialog},file)=>{dialog.showOpenDialog=async()=>({canceled:false,filePaths:[file]});},file);assert.equal((await page.evaluate(()=>window.desktop.open())).ok,true);}
+ await page.reload();await page.getByRole('textbox',{name:'文档正文'}).waitFor();await page.emulateMedia({reducedMotion:'reduce'});
+ const openSidebar=async()=>{if(await page.locator('.sidebar').evaluate(el=>el.getBoundingClientRect().x<0&&!document.body.classList.contains('sidebar-open')))await page.getByRole('button',{name:'切换导航',exact:true}).click();};await openSidebar();
+ const rows=page.locator('.doc-row'),first=rows.filter({has:page.getByRole('button',{name:'丙文档',exact:true})}),last=rows.filter({has:page.getByRole('button',{name:'甲文档',exact:true})});const height=(await last.boundingBox()).height;
+ await first.dragTo(last,{sourcePosition:{x:45,y:15},targetPosition:{x:45,y:height-2}});
+ await page.waitForFunction(()=>document.querySelector('#doc-list .doc-select').textContent.includes('乙文档'));
+ await page.waitForTimeout(300);let state=JSON.parse(await fs.readFile(path.join(data,'workspace.json'),'utf8'));assert.deepEqual(state.docs.slice(0,3).map(d=>d.title),['乙文档','甲文档','丙文档']);
+ await rows.filter({has:page.getByRole('button',{name:'乙文档',exact:true})}).hover();await page.getByRole('button',{name:'从列表移除 乙文档',exact:true}).click();await page.getByRole('button',{name:'取消',exact:true}).click();assert.equal(await rows.filter({has:page.getByRole('button',{name:'乙文档',exact:true})}).count(),1);
+ await page.getByRole('button',{name:'从列表移除 乙文档',exact:true}).click();await page.locator('[data-action="confirm-delete"]').click();await page.waitForFunction(()=>!Array.from(document.querySelectorAll('.doc-select')).some(el=>el.textContent==='乙文档'));
+ assert.equal(await fs.readFile(files[1],'utf8'),'# 乙文档\n\n保留原文件');await app.close();app=await launch();page=await app.firstWindow();await page.getByRole('textbox',{name:'文档正文'}).waitFor();await page.emulateMedia({reducedMotion:'reduce'});await openSidebar();assert.deepEqual((await page.locator('.doc-select').allTextContents()).slice(0,2),['甲文档','丙文档']);await page.screenshot({path:path.join(root,'list.png')});
+ const remaining=await page.locator('.doc-select').allTextContents();for(const title of ['丙文档',...remaining.filter(title=>title!=='丙文档')]){await openSidebar();const row=page.locator('.doc-row').filter({has:page.getByRole('button',{name:title,exact:true})});await row.hover();await row.locator('[data-action="delete"]').click();await page.locator('[data-action="confirm-delete"]').click();await page.waitForFunction(()=>!document.querySelector('#delete-dialog')?.open);}
+ assert.equal(await page.locator('.doc-select').count(),1);assert.equal(await page.locator('#title').inputValue(),'无标题文档');for(const file of files)assert.match(await fs.readFile(file,'utf8'),/保留原文件/);
+ console.log('PASS: real drag reorder, persisted order across restart, active/non-active/last-item remove, cancel, original Markdown preserved. Evidence:',root);
+}finally{if(app)await app.close();}
