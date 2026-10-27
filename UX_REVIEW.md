@@ -159,3 +159,10 @@ GUI 测试的文件选择器返回预置路径，远程图由测试响应提供�
 - HTML 导出带上 `--on-accent`，打印固定为白色勾配深绿底，避免深色主题的勾色在纸面上失去对比。
 - theme-layout、生产构建、package-size 和 ad-hoc 签名检查通过。临时脚本 `/private/tmp/markdeck-checkbox-style.cjs` 在隔离打包版验证九套主题、四档正文字号、点击区域左上／右下角、嵌套待办、文字点击、自动保存和重启；已查看深色与浅色截图，证据 `markdeck-checkbox-style-alticI`。
 - `/private/tmp/markdeck-checkbox-export.cjs` 检查黑底绿字／午夜蓝／经典白的独立 HTML 配色和打印配色，并实际导出 PDF，核对文字与纸面勾选效果；只操作临时文档，导出不改 Markdown。证据 `markdeck-checkbox-export-TAcDZx`。已重新打包，未提交或推送。
+
+### 2026-10-27 首个 GitHub 预览安装包
+
+- 已公开发布 [v1.0.0-preview.1](https://github.com/0xgeda/markdeck/releases/tag/v1.0.0-preview.1)，应用版本 1.0.0，固定到源码提交 `36e5878e3c0680f5bdaa55d26e4cb4e7fc5300de`。仅提供 Apple Silicon、macOS 13+ 的预览构建；继续使用 ad-hoc 签名，未开通 Developer ID、公证或 App Store 流程。
+- Assets 包含 `Markdeck-1.0.0-preview.1-macos-arm64.zip`（131,409,186 字节）和 `SHA256SUMS.txt`。ZIP 包含应用及 Electron／Chromium 许可文件，SHA-256 为 `fdc23e5461106316851259d49de022f2b3f684465a101fe98d4ec85193c5d3db`，与 GitHub 接收结果一致。
+- ZIP 完整性、解压后的深度签名和 app.asar 一致性校验通过；解压副本运行 `tests/desktop.mjs`，编辑、自动保存、外部刷新、冲突保护、重启与另存为通过，测试文档隔离。此验证不等于通过 Apple 公证。
+- 已读取线上 `/download`，按钮实际指向仓库 Releases。发布后确认 `isDraft=false`、附件为 uploaded，未登录的安装包直链经网络重试后返回 HTTP 200；官网下载入口现在可通过发布页取得安装包。本次未更改官网部署或直达下载环境变量。

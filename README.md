@@ -35,7 +35,11 @@
 
 ## 下载
 
-从 [Releases](https://github.com/0xgeda/markdeck/releases) 下载最新 macOS 构建，解压后把 `Markdeck.app` 拖到「应用程序」。
+当前提供 [v1.0.0-preview.1 预览版](https://github.com/0xgeda/markdeck/releases/tag/v1.0.0-preview.1)，适用于 **macOS 13 及以上、Apple Silicon（M 系列）Mac**。
+
+下载发布页 Assets 中的 `Markdeck-1.0.0-preview.1-macos-arm64.zip`，解压后进入 `Markdeck-darwin-arm64` 文件夹，将 `Markdeck.app` 拖到「应用程序」。同时提供 `SHA256SUMS.txt` 校验文件；GitHub 自动生成的 Source code 压缩包是源码，不是应用安装包。
+
+当前预览包使用 ad-hoc 签名，尚未使用 Developer ID 证书或完成 Apple 公证。首次运行如提示无法验证开发者，确认下载来源后，可按 [Apple 官方说明](https://support.apple.com/zh-cn/102445)，在尝试打开应用后进入「系统设置 → 隐私与安全性 → 仍要打开」。
 
 数据保存在 `~/Library/Application Support/云笺/`。
 
