@@ -21,6 +21,7 @@
 - GUI 检查需可用桌面环境，DOM 通过不能表述为视觉验收通过。安装版回归使用 YUNJIAN_EXECUTABLE 指向 .app/Contents/MacOS/Markdeck，运行 tests/desktop.mjs、desktop-images、desktop-clipboard、desktop-export、desktop-boundaries、desktop-interactions（后五项同目录 .mjs）；PDF 检查需 Poppler 的 pdfinfo/pdftotext/pdftoppm。测试只操作隔离临时文档。
 - `tests/desktop-memory.mjs` 采样安装版 60 轮切换及空闲后的进程 RSS 和渲染堆；最后的强制 GC 样本仅为诊断，不能代替自然空闲或长期泄漏验收。
 - `MARKDECK_HEAP_DIAGNOSTICS=1` 开启多阶段 GC 与堆快照诊断；依赖生命周期修补变更需跑 `node tests/editor-lifecycle.mjs`，验证旧文档索引释放且另一编辑器不受影响。
+- HTML 表格／锚点解析变更跑 `node tests/editor-html-tables.mjs` 和安装版 `tests/desktop-html-tables.mjs`；可用 `MARKDECK_HTML_TABLE_FIXTURE` 指定只读源文件，测试会复制到隔离目录后编辑。
 - 图片排版或加载变更跑 `node tests/image-controls.mjs`；安装版多图持续验收为 `node tests/desktop-image-stress.mjs`，覆盖重复引用尺寸、首次点击与拖动、30 轮保存及重启。其堆采样主动 GC，不等于自然空闲内存。
 - 保存边界变更另跑 `node tests/desktop-recovery.mjs`；只修改隔离临时文件权限，SIGKILL 仅用于测试启动的进程，并在草稿持久化确认后执行。
 

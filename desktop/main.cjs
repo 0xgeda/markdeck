@@ -92,10 +92,12 @@ app.whenReady().then(()=>{
   register('project:refresh',()=>project.refresh());
   register('project:open',async relative=>({state:workspace.open(await project.resolve(relative))}));
   const feishu=new (require('./feishu.cjs').Feishu)(workspace);
-  register('feishu:status',()=>feishu.status());
+  register('feishu:status',id=>feishu.status(id));
   register('feishu:connect',()=>feishu.connect());
   register('feishu:finish-connect',()=>feishu.finishConnect());
   register('feishu:upload',(id,folder)=>feishu.upload(id,folder));
+  register('feishu:prepare-update',(id,url)=>feishu.prepareUpdate(id,url));
+  register('feishu:update',(id,confirmation)=>feishu.update(id,confirmation));
   register('workspace:load',()=>({state:workspace.snapshot()}));
   register('workspace:show-in-folder',id=>{
     const doc=workspace.state.docs.find(doc=>doc.id===id);

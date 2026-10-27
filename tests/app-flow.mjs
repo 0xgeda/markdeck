@@ -92,5 +92,16 @@ click('find');click('find');assert.equal(w.document.querySelectorAll('.find-pane
 click('project');await new Promise(resolve=>setTimeout(resolve,10));const projectDialog=w.document.querySelector('.project-dialog');projectDialog.querySelector('[data-choose]').click();await new Promise(resolve=>setTimeout(resolve,20));
 const search=projectDialog.querySelector('[data-query]');search.value='跨文件关键词';search.dispatchEvent(new w.Event('input'));await new Promise(resolve=>setTimeout(resolve,250));assert.equal(projectDialog.querySelectorAll('.project-result').length,1);
 projectDialog.querySelector('.project-result').click();await until(()=>!w.document.querySelector('.project-dialog'));assert.equal(w.document.querySelector('.project-dialog'),null);assert.match(w.document.querySelector('[aria-label="文档正文"]').textContent,/跨文件关键词/);assert.equal(w.document.querySelectorAll('.find-panel').length,1);assert.equal(w.document.querySelector('.find-panel [data-query]').value,'跨文件关键词');assert.match(w.document.querySelector('.find-panel [data-count]').textContent,/1 \/ 1/);assert.match(fs.readFileSync(file,'utf8'),/关闭前最后一次输入/);
+// Native menu actions must not change the target underneath image repair.
+w.confirm=()=>true;
+w.desktop.scanImages=async()=>({ok:true,entries:[{raw:'![x](missing.png)',src:'missing.png',status:'missing',kind:'md',line:1}]});
+w.desktop.deleteImages=async()=>({ok:true,newBody:'repaired original',removed:1});
+const originalId=workspace.state.active,countBefore=workspace.state.docs.length;
+click('image-fix');await until(()=>w.document.querySelector('.image-fix-dialog [data-select-broken]'));await settled();
+await appAction('new');assert.equal(workspace.state.active,originalId);assert.equal(workspace.state.docs.length,countBefore);
+w.document.querySelector('.image-fix-dialog [data-select-broken]').click();
+[...w.document.querySelectorAll('.image-fix-dialog button')].find(b=>b.textContent.includes('删除选中')).click();
+await until(()=>workspace.state.docs.find(d=>d.id===originalId).body==='repaired original');
+w.document.querySelector('.image-fix-dialog').close();await settled();await appAction('new');await settled();assert.notEqual(workspace.state.active,originalId);
 console.log('Whole renderer: find/replace, save after closing find, outline search, display exit and version capture passed.');
 }finally{dom.window.close();fs.rmSync(root,{recursive:true,force:true});}

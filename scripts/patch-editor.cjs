@@ -85,5 +85,54 @@ for(const file of ['toastui-editor.js','esm/index.js']){
     if(source.split(mutationTarget).length!==2)throw new Error('Review code copy mutation patch: '+file);
     source=source.replace(mutationTarget,mutationGuard+mutationTarget);
   }
+  // Table cells use the first/last child to open/close their paragraph. Native
+  // HTML inline tags (especially <a>) were omitted, unbalancing the node stack.
+  const inlineBefore="return node.type === 'htmlInline' && !!(schema.marks[typeName] || schema.nodes[typeName]);";
+  const inlineAfter=`// Markdeck: ignored inline tags still belong to the cell's paragraph.
+        return node.type === 'htmlInline' && (!!(schema.marks[typeName] || schema.nodes[typeName]) ||
+            !/^(br|hr|pre|ul|ol|li)$/.test(typeName));`;
+  // An empty named anchor cannot be a ProseMirror mark: marks without text are
+  // discarded. Keep it as an inline atom so editing does not erase jump targets.
+  const schemaTarget='    WysiwygEditor.prototype.createSchema = function (htmlSchemaMap) {\n';
+  const schemaAfter=schemaTarget+`        // Markdeck: preserve empty named anchors through WYSIWYG edits.
+        htmlSchemaMap.nodes = Object.assign({}, htmlSchemaMap.nodes);
+        htmlSchemaMap.nodes.markdeckAnchor = {
+            inline: true, group: 'inline', atom: true, selectable: false,
+            attrs: { anchorId: { default: '' }, anchorName: { default: '' }, anchorHTML: { default: '' } },
+            parseDOM: [{ tag: 'a[id], a[name]', getAttrs: function (dom) {
+                if (dom.childNodes.length) return false;
+                return { anchorId: dom.getAttribute('id') || '', anchorName: dom.getAttribute('name') || '', anchorHTML: dom.outerHTML };
+            } }],
+            toDOM: function (node) {
+                var attrs = {};
+                if (node.attrs.anchorId) attrs.id = node.attrs.anchorId;
+                if (node.attrs.anchorName) attrs.name = node.attrs.anchorName;
+                return ['a', attrs];
+            }
+        };
+`;
+  const anchorTarget="    a: function (state, node, openTagName) {\n";
+  const anchorAfter=anchorTarget+`        // Markdeck: retain the empty anchor and consume its closing tag.
+        var start = openTagName ? node : node.prev;
+        if (start && start.type === 'htmlInline' && /^<a\\s/i.test(start.literal) &&
+            start.next && start.next.type === 'htmlInline' && /^<\\/a\\s*>$/i.test(start.next.literal)) {
+            var anchorAttrs = getMatchedAttributeValue(start.literal, 'id', 'name');
+            if (anchorAttrs[0] || anchorAttrs[1]) {
+                if (openTagName) state.addNode(state.schema.nodes.markdeckAnchor, {
+                    anchorId: anchorAttrs[0], anchorName: anchorAttrs[1], anchorHTML: start.literal + start.next.literal
+                });
+                return;
+            }
+        }
+`;
+  const writerTarget='var nodeTypeWriters = {\n';
+  const writerAfter=writerTarget+`    // Markdeck: the anchor is source content, not visible text.
+    markdeckAnchor: function (state, nodeInfo) { state.write(nodeInfo.node.attrs.anchorHTML); },
+`;
+  for(const [before,after] of [[inlineBefore,inlineAfter],[schemaTarget,schemaAfter],[anchorTarget,anchorAfter],[writerTarget,writerAfter]]){
+    if(source.includes(after))continue;
+    if(source.split(before).length!==2)throw new Error('Review HTML table/anchor patch after editor upgrade: '+file);
+    source=source.replace(before,after);
+  }
   fs.writeFileSync(filename,source);
 }

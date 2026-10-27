@@ -11,10 +11,12 @@ window.addEventListener('drop',event=>{
 },true);
 contextBridge.exposeInMainWorld('desktop', {
   copyText:async text=>{const result=await ipcRenderer.invoke('clipboard:write',text);if(!result.ok)throw new Error(result.error);},
-  feishuStatus:()=>ipcRenderer.invoke('feishu:status'),
+  feishuStatus:id=>ipcRenderer.invoke('feishu:status',id),
   feishuConnect:()=>ipcRenderer.invoke('feishu:connect'),
   feishuFinishConnect:()=>ipcRenderer.invoke('feishu:finish-connect'),
   feishuUpload:(id,folder)=>ipcRenderer.invoke('feishu:upload',id,folder),
+  feishuPrepareUpdate:(id,url)=>ipcRenderer.invoke('feishu:prepare-update',id,url),
+  feishuUpdate:(id,confirmation)=>ipcRenderer.invoke('feishu:update',id,confirmation),
   bundleDocument:id=>ipcRenderer.invoke('document:bundle',id),
   chooseProject:()=>ipcRenderer.invoke('project:choose'),
   searchProject:query=>ipcRenderer.invoke('project:search',query),

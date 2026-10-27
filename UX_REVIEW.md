@@ -115,3 +115,47 @@ GUI 测试的文件选择器返回预置路径，远程图由测试响应提供�
 - `tests/desktop-code-copy.mjs` 使用隔离文档验证真实剪贴板、键盘操作、编辑后复制、反馈恢复、按钮与正文不重叠及语言标记保留；已查看桌面截图。编辑器 UMD/ESM 生命周期和 app-flow 回归通过。已重新打包，package-size 校验通过；纳入本轮代码块复制功能交付。
 
 - 后续视觉调整：去掉复制按钮独占的顶部空行，绿色主题截图已检查；打包版复制回归通过（`markdeck-code-copy-ItWAp8`），包含文字与按钮边界检查。
+
+### 2026-10-23 审核问题修复
+
+- 图片修复回调绑定打开时的文档 ID，写回前确认当前文档仍匹配；保存失败不报告成功。原生菜单在模态对话框打开时不执行新建、打开、刷新等操作，关闭应用仍走原有保存流程。
+- 跨目录另存为复用图片扫描器，按引用字符偏移倒序替换；保留代码块、行内代码、缩进代码和注释中的示例，以及真实图片的标题和 HTML 属性。原文文件保留。
+- 飞书“复制链接”改用已有原生剪贴板接口。
+- 验证通过：files、attachments（新增代码示例与真实引用混合用例）、app-flow（新增原生菜单跨文档防护）、image-scan、image-fix、image-fix-dialog、show-plan；desktop-feishu 使用模拟 CLI 验证真实剪贴板，没有上传用户文档。
+- 已重打包；打包版 desktop-images、desktop-save-as（真实 IPC 另存为与扫描器加载）、package-size 均通过。未修改界面布局，未做新一轮全应用视觉验收。本轮尚未提交或推送。
+
+### 2026-10-23 查找替换浮层
+
+- 两行共用输入区与操作区的对齐基准；按钮统一为 34px 高，替换操作增加轻底色与细边框，导航和关闭使用同一套线条图标。输入框背景随深浅主题与浮层区分，保留键盘焦点提示。
+- history-find、app-flow、生产构建和 package-size 通过；已重新打包并通过 ad-hoc 签名校验。隔离打包应用检查九套主题、320–1440px 窗口下的浮层对齐与无重叠，验证鼠标／Enter／Shift+Enter 导航、单处／全部替换、无匹配禁用、关闭和 Markdown 写回；查看了浅绿、石墨、窄窗口与完整窗口截图。
+- 本轮证据为临时脚本 `/private/tmp/markdeck-find-visual.cjs` 与系统临时目录 `markdeck-find-visual-nr3lL2`。窄窗口由测试临时放宽窗口最小尺寸，仅验证此浮层；未据此宣称整个桌面应用支持 320px 窗口。未提交或推送。
+
+### 2026-10-24 飞书设置层级
+
+入口改名为「飞书账号配置」，在飞书开关下缩进 16px，分隔线移至整组底部；README 同步入口名称。app-flow、构建、打包一致性与 ad-hoc 签名检查通过。隔离打包版验证三套主题、配置入口打开、默认隐藏与开关持久化；已查看浅绿和石墨截图。证据为临时脚本 `/private/tmp/markdeck-feishu-settings.cjs` 和系统临时目录 `markdeck-feishu-settings-a2aff7`；账号状态使用模拟 CLI，未上传文档。已重新打包，未提交或推送。
+
+### 2026-10-24 按链接更新飞书文档
+
+- 上传窗口提供「新建文档」「更新已有文档」。粘贴 Docx / Wiki 链接、读取目标标题后显式确认覆盖；打开窗口不再自动创建副本。更新保留目标标题和链接，替换全部正文与图片，并按本地文档记住目标，切换账号不沿用其他账号的目标。
+- 主进程将确认绑定到本地文档、账号、正文快照、解析后的 Docx ID 和远端版本。覆盖前重新读取并核对，传递 revision-id，执行 dry-run，保存原始读取 JSON 到本机 `feishu-backups/` 后写入并回读版本。快照含资源引用，不是完整媒体／评论恢复包。部分成功、请求失败或回读失败保留 unknown，不自动重试。
+- 11 项 feishu 服务／转换测试、11 项 files、app-flow、show-plan、生产构建、package-size 与 ad-hoc 签名检查通过。打包版 `desktop-feishu-update.mjs` 覆盖目标确认、输入变更使确认失效、Wiki ID 解析、版本冲突、图片、正文不变、按文档记忆、部分失败和无自动写入；确认截图已查看，证据 `markdeck-feishu-update-gui-KSQkPV`。原有 `desktop-feishu.mjs` 新建／开关／账号／复制链接回归通过，证据 `markdeck-feishu-gui-pMI6FP`；剪贴板测试后恢复。
+- 两套桌面测试使用模拟 CLI；真实 CLI 已读取用户给出的 Wiki 链接并验证覆盖命令 dry-run，未向该文档写入，也未进行真实服务端覆盖验收。已重新打包，未提交或推送。
+
+### 2026-10-25 工具栏悬停白块
+
+- 通用按钮悬停／禁用样式使用 background 简写，清空 TOAST UI 图标精灵图；深色主题再对整个按钮反色，导致浅色空块。改为只更新背景色，并将图标绘制到继承原精灵图与坐标的伪元素，仅对图标层反色；悬停、选中和键盘焦点背景统一跟随主题。
+- theme-layout、生产构建、package-size 与 ad-hoc 签名检查通过，已重打包。临时脚本 `/private/tmp/markdeck-toolbar-states.cjs` 在隔离打包版覆盖九套主题、每套 14 个可用工具栏图标、实际正文选择产生的加粗／删除线选中状态、键盘焦点和设置 disabled 属性后的视觉状态，原 Markdown 字节保持不变。初轮指针检查通过；截图补拍用 CDP 固定 hover，避免采样时悬停状态变化。已查看黑底绿字、午夜蓝和经典白截图，最终证据目录 `markdeck-toolbar-states-oLOhN8`。未提交或推送。
+
+### 2026-10-25 含 HTML 锚点的长文档打开失败
+
+- TOAST UI 3.2.2 在判断表格单元格首尾是否需要段落时，漏掉原生 HTML 行内标签。单元格以 `<a id="…"></a>` 开头、以文本结尾时，段落栈失衡并抛出 `Cannot read properties of undefined (reading 'type')`，页面只剩文档标题。修补脚本统一识别行内 HTML，并保留换行和列表的独立处理。
+- 空的 id／name 锚点改用行内节点保存，避免只修复打开后，下一次编辑仍将这些无文字的跳转目标丢弃；不扩大为任意 HTML 保真支持。
+- `editor-html-tables.mjs` 在 UMD／ESM 中覆盖表格首尾锚点、连续锚点、普通 HTML 链接、粗斜体、换行、列表、图片、代码示例、编辑、重复转换与 HTML 粘贴。`editor-lifecycle.mjs`、app-flow、show-plan、生产构建、package-size 和 ad-hoc 签名检查通过。
+- 安装版 `desktop-html-tables.mjs` 使用用户文件的隔离副本，核对 47 张表格的全部单元格文字、218 个锚点及保存后的链接目标；打开／展示不改源内容，编辑自动保存并重启后仍完整。只读源文件 SHA-256 前后一致。已查看正文与原失败表格的真实截图，证据目录 `markdeck-html-tables-om7OGV`。原有 `desktop.mjs` 的普通编辑、外部刷新、保存、冲突保护、重启与另存为也通过。已重打包，未提交或推送。
+
+### 2026-10-27 正文复选框视觉
+
+- 移除编辑器固定蓝色／白底的复选框图像，使用主题色选中态、柔和描边和 CSS 勾形。可见方框为 16px，外层点击区域为 24px，与文字留出 12px 间距；按首行行高中线定位，不再用 transform 移动点击检测框。
+- HTML 导出带上 `--on-accent`，打印固定为白色勾配深绿底，避免深色主题的勾色在纸面上失去对比。
+- theme-layout、生产构建、package-size 和 ad-hoc 签名检查通过。临时脚本 `/private/tmp/markdeck-checkbox-style.cjs` 在隔离打包版验证九套主题、四档正文字号、点击区域左上／右下角、嵌套待办、文字点击、自动保存和重启；已查看深色与浅色截图，证据 `markdeck-checkbox-style-alticI`。
+- `/private/tmp/markdeck-checkbox-export.cjs` 检查黑底绿字／午夜蓝／经典白的独立 HTML 配色和打印配色，并实际导出 PDF，核对文字与纸面勾选效果；只操作临时文档，导出不改 Markdown。证据 `markdeck-checkbox-export-TAcDZx`。已重新打包，未提交或推送。

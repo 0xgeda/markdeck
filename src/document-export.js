@@ -13,10 +13,10 @@ export async function exportDocument(editor,doc,theme,format){
     const canvas=document.createElement('canvas');canvas.width=bitmap.naturalWidth;canvas.height=bitmap.naturalHeight;canvas.getContext('2d').drawImage(bitmap,0,0);
     try{image.src=canvas.toDataURL('image/png');}catch{throw new Error('图片不允许离线导出，请重新插入本地图片');}finally{canvas.width=canvas.height=0;}
   }
-  const palette=palettes[theme]||palettes.light;const variables=Object.entries(palette).filter(([key])=>!['name','mode','onAccent'].includes(key)).map(([key,value])=>'--'+key+':'+value).join(';');
+  const palette=palettes[theme]||palettes.light;const variables=Object.entries(palette).filter(([key])=>!['name','mode','onAccent'].includes(key)).map(([key,value])=>'--'+key+':'+value).concat('--on-accent:'+palette.onAccent).join(';');
   const html=`<!doctype html><html lang="zh-CN" data-theme="${escape(theme)}" style="${escape(variables)};color-scheme:${palette.mode}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; font-src data:"><title>${escape(doc.title)}</title><style>${editorCSS}\n${appCSS}\nbody{padding:40px 28px;background:var(--page);color:var(--ink)}article#editor{max-width:1040px;margin:auto}#editor .toastui-editor-contents{padding:0}article>h1{font-size:32px;margin:0 0 32px}#editor .toastui-editor-contents table{width:100%;table-layout:auto}#editor .toastui-editor-contents img{max-width:100%;height:auto}#editor .toastui-editor-ww-code-block::after{display:none!important;content:none!important}
 @media print{
-  :root{color-scheme:light!important;--page:#fff!important;--panel:#f5f6f7!important;--ink:#172018!important;--secondary:#465448!important;--border:#c8d0ca!important;--code:#f5f6f7!important;--accent:#245b36!important}
+  :root{color-scheme:light!important;--page:#fff!important;--panel:#f5f6f7!important;--ink:#172018!important;--secondary:#465448!important;--border:#c8d0ca!important;--code:#f5f6f7!important;--accent:#245b36!important;--on-accent:#fff!important}
   html,body{background:white!important;color:#172018!important;padding:0}
   #editor .toastui-editor-contents,#editor .toastui-editor-contents :is(p,li,strong,h1,h2,h3,h4,h5,h6,td,th,pre,code){color:#172018!important}
   #editor .toastui-editor-contents pre{white-space:pre-wrap;overflow-wrap:anywhere}

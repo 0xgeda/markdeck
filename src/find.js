@@ -17,7 +17,16 @@ export function openFind(editor,initialQuery){
   const view=editor.wwEditor.view;
   const readOnly=document.body.classList.contains('display-mode');
   const panel=document.createElement('section');panel.className='find-panel';panel.setAttribute('aria-label','查找替换');
-  panel.innerHTML='<input data-query aria-label="查找内容" placeholder="查找正文…"><span data-count role="status"></span><button data-prev aria-label="上一个匹配">↑</button><button data-next aria-label="下一个匹配">↓</button><button data-close aria-label="关闭查找">×</button><input data-replacement aria-label="替换为" placeholder="替换为…"><button data-replace>替换此处</button><button data-all>全部替换</button>';
+  panel.innerHTML=`
+    <input data-query aria-label="查找内容" placeholder="查找正文…">
+    <div class="find-navigation" role="group" aria-label="匹配导航">
+      <span data-count role="status"></span>
+      <button data-prev aria-label="上一个匹配" title="上一个匹配（Shift+Enter）"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 14 5-5 5 5"/></svg></button>
+      <button data-next aria-label="下一个匹配" title="下一个匹配（Enter）"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg></button>
+      <button data-close aria-label="关闭查找" title="关闭查找（Esc）"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+    </div>
+    <input data-replacement aria-label="替换为" placeholder="替换为…">
+    <div class="find-actions"><button data-replace>替换此处</button><button data-all>全部替换</button></div>`;
   document.body.append(panel);let index=0;
   const query=panel.querySelector('[data-query]'),replacement=panel.querySelector('[data-replacement]');replacement.disabled=readOnly;
   function refresh(jump=false){const matches=findMatches(view.state.doc,query.value);index=Math.max(0,Math.min(index,matches.length-1));panel.querySelector('[data-count]').textContent=matches.length?`${index+1} / ${matches.length}`:'0 个匹配';panel.querySelector('[data-replace]').disabled=panel.querySelector('[data-all]').disabled=readOnly||!matches.length;if(jump&&matches[index]){editor.setSelection(matches[index].from,matches[index].to);const dom=view.domAtPos(matches[index].from).node; (dom.nodeType===1?dom:dom.parentElement)?.scrollIntoView?.({block:'center'});}return matches;}

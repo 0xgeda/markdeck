@@ -8,6 +8,25 @@ class Attachments{
   store(id,data){const doc=this.doc(id);if(typeof data!=='string'||data.length>limits.maxImageDataChars)throw new Error('图片过大');const match=data.match(/^data:(image\/(?:png|jpeg|webp|gif));base64,([A-Za-z0-9+/]+=*)$/);if(!match)throw new Error('图片格式无效');if(!doc.filePath)return {src:data};const bytes=Buffer.from(match[2],'base64'),name=createHash('sha256').update(bytes).digest('hex').slice(0,24)+'.'+formats[match[1]],filename=path.join(this.folder(doc.filePath),name);if(!fs.existsSync(filename))this.write(filename,bytes);return {src:encodeURI(path.relative(path.dirname(doc.filePath),filename).split(path.sep).join('/'))};}
   resolve(doc,src){if(!doc.filePath||typeof src!=='string'||src.length>limits.maxImageSrcChars||/^(?:[a-z]+:|\/|\\)/i.test(src))throw new Error('本地图片地址无效');const relative=decodeURIComponent(src);if(relative.split(/[\\/]/).includes('..'))throw new Error('图片必须在文档目录中');const parent=fs.realpathSync(path.dirname(doc.filePath)),filename=fs.realpathSync(path.resolve(parent,relative));if(!filename.startsWith(parent+path.sep)||![...Object.values(formats),'jpeg'].includes(path.extname(filename).slice(1).toLowerCase()))throw new Error('图片路径无效');if(fs.statSync(filename).size>limits.maxImageBytes)throw new Error('图片超过 10 MB');return filename;}
   read(id,src){const filename=this.resolve(this.doc(id),src),extension=path.extname(filename).slice(1).toLowerCase(),mime=extension==='jpeg'?'image/jpeg':Object.keys(formats).find(type=>formats[type]===extension);return {data:'data:'+mime+';base64,'+fs.readFileSync(filename).toString('base64')};}
-  relocate(doc,filename){if(!doc.filePath||path.dirname(doc.filePath)===path.dirname(filename))return doc.body;return doc.body.replace(/(!\[[^\]]*\]\()([^\s)]+)(\))|(<img\b[^>]*\bsrc=")([^"]+)(")/g,(whole,md,src,close,html,htmlSrc,htmlClose)=>{const location=src||htmlSrc;if(/^(?:data:|https?:)/.test(location))return whole;const original=this.resolve(doc,location),bytes=fs.readFileSync(original),name=createHash('sha256').update(bytes).digest('hex').slice(0,24)+path.extname(original).toLowerCase(),target=path.join(this.folder(filename),name);if(!fs.existsSync(target))this.write(target,bytes);const relative=encodeURI(path.relative(path.dirname(filename),target).split(path.sep).join('/'));return md?md+relative+close:html+relative+htmlClose;});}
+  relocate(doc,filename){
+    if(!doc.filePath||path.dirname(doc.filePath)===path.dirname(filename))return doc.body;
+    const {scanImages}=require('../src/image-scan.js');
+    let body=doc.body;
+    for(const entry of scanImages(doc.body,path.dirname(doc.filePath)).reverse()){
+      if(['remote','data'].includes(entry.status))continue;
+      const original=this.resolve(doc,entry.src),bytes=fs.readFileSync(original);
+      const name=createHash('sha256').update(bytes).digest('hex').slice(0,24)+path.extname(original).toLowerCase();
+      const target=path.join(this.folder(filename),name);
+      if(!fs.existsSync(target))this.write(target,bytes);
+      const relative=encodeURI(path.relative(path.dirname(filename),target).split(path.sep).join('/'));
+      // Replace only the destination inside this scanned occurrence, preserving
+      // titles, attributes and identical examples in code/comments.
+      const replacement=entry.kind==='md'
+        ? entry.raw.replace(/(^!\[[^\]]*\]\(\s*)(<[^>\n]*>|[^\s]+?)(?=\s|\)$)/,(all,prefix)=>prefix+relative)
+        : entry.raw.replace(/(\ssrc\s*=\s*)(?:"[^"]*"|'[^']*'|[^\s>]+)/i,(all,prefix)=>prefix+'"'+relative+'"');
+      body=body.slice(0,entry.index)+replacement+body.slice(entry.index+entry.length);
+    }
+    return body;
+  }
 }
 module.exports={Attachments};
