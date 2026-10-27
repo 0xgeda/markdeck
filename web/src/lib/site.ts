@@ -1,18 +1,16 @@
 export const site = {
   name: 'Markdeck',
-  url: 'https://markdeck.pro',
+  url: 'https://www.markdeck.pro',
   repository: 'https://github.com/0xgeda/markdeck',
   releases: 'https://github.com/0xgeda/markdeck/releases',
 };
 
-// Only show a direct-download CTA after a real public asset has been configured.
-function getDownloadUrl() {
-  try {
-    const url = new URL(process.env.NEXT_PUBLIC_MAC_DOWNLOAD_URL?.trim() ?? '');
-    return url.protocol === 'https:' ? url.href : null;
-  } catch {
-    return null;
-  }
-}
-
-export const macDownloadUrl = getDownloadUrl();
+// Update together only after the public release and asset have been verified.
+export const macRelease = {
+  version: '1.0.0 Preview 1',
+  minimumOS: '13.0',
+  sizeMB: 131,
+  url: `${site.releases}/tag/v1.0.0-preview.1`,
+  downloadUrl: `${site.releases}/download/v1.0.0-preview.1/Markdeck-1.0.0-preview.1-macos-arm64.zip`,
+  checksumUrl: `${site.releases}/download/v1.0.0-preview.1/SHA256SUMS.txt`,
+};

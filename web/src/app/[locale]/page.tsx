@@ -39,6 +39,7 @@ export default async function HomePage({
                 <br />
                 {t('hero.introLine2')}
                 <br />
+                {' '}
                 {t('hero.introLine3')}
               </p>
               <div className="hero-actions">

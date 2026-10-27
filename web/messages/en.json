@@ -189,10 +189,7 @@
     "appSub": "For words, and the thinking behind them.",
     "platformTitle": "macOS",
     "platformSub": "Apple Silicon · M-series chips",
-    "descAvailable": "Download the installer for Apple Silicon Macs, unzip it, and drop Markdeck.app into your Applications folder.",
-    "descUnavailable": "A direct download from the site is not open yet. Check GitHub Releases for installer status; when a build is available, it will be listed on the matching release.",
     "ctaDownload": "Download for Mac",
-    "ctaReleases": "View GitHub releases",
     "footnote": "Builds for Windows, Linux, and Intel Macs are not currently offered.",
     "source": "Interested in the project?",
     "sourceLink": "View source code",
@@ -205,6 +202,29 @@
       "h": "Already have lots of writing?",
       "p": "Bring your .md files along. If the document references local images, keep the images folder and relative paths intact — or bundle the document and images from Markdeck and share them together.",
       "link": "Files and images"
+    },
+    "preview": "Preview",
+    "requirements": "macOS {minimumOS} or later · ZIP · about {size} MB",
+    "previewNote": "This preview is not yet notarized by Apple. macOS may ask you to confirm the first launch. See the steps below.",
+    "releaseNotes": "Release notes / alternate download",
+    "checksum": "SHA-256 checksum",
+    "install": {
+      "label": "READY WHEN YOU ARE",
+      "title": "Three steps to your first page.",
+      "unzip": {
+        "h": "Unzip the download",
+        "p": "Double-click the downloaded ZIP, then open the extracted Markdeck-darwin-arm64 folder."
+      },
+      "move": {
+        "h": "Move to Applications",
+        "p": "Drag Markdeck.app into your Applications folder, then open it from there."
+      },
+      "open": {
+        "h": "Confirm the first launch",
+        "p": "If macOS cannot verify the developer, confirm you downloaded from this site, then go to System Settings → Privacy & Security and click Open Anyway."
+      },
+      "help": "No Open Anyway option? Try opening the app first, then return to System Settings.",
+      "helpLink": "Read Apple’s instructions"
     }
   },
   "guide": {
@@ -218,7 +238,8 @@
       "files": "Files and images",
       "organize": "Outline your thinking",
       "present": "Present the document",
-      "share": "Save and share"
+      "share": "Save and share",
+      "feishu": "Publish to Feishu"
     },
     "end": "Get Markdeck",
     "start": {
@@ -256,12 +277,20 @@
     "share": {
       "title": "05 / Save and share",
       "p1": "New documents start as an app draft. Once you choose Save to File, edits write back to the chosen file automatically — a Saved to file indicator appears at the top. Use <strong>⌘S</strong> to save on demand and <strong>⇧⌘S</strong> to save a copy.",
-      "p2": "To review changes, enable Revision History in settings. If the file is modified by another app, Markdeck surfaces the conflict so you can refresh with the disk version or save your copy elsewhere.",
+      "p2": "To review earlier changes, open Settings → Maintenance → Revision history and recovery. If another app changes the file, Markdeck reports a conflict; reload the disk version or save your edits to another file.",
       "h3": "Pick a share format for your reader",
       "li1": "<strong>Markdown:</strong> good for ongoing edits and compatible with other Markdown tools.",
       "li2": "<strong>Document + images bundle:</strong> export a ZIP that keeps local images and relative paths. Online images still need a connection.",
       "li3": "<strong>HTML:</strong> good for browser reading, with styles and readable images embedded on export.",
       "li4": "<strong>PDF:</strong> good for delivery and print, exported in A4 light pages. Check pagination for long docs or complex tables."
+    },
+    "feishu": {
+      "title": "06 / Publish to Feishu",
+      "p1": "Feishu publishing requires the official lark-cli to be installed and configured on your Mac. Enable the Feishu upload button in Settings, then connect through Feishu account settings. The app shows setup instructions if the CLI is missing.",
+      "li1": "Create a document: click the Feishu icon and choose New document. Enter a cloud folder link, or leave it blank to use My Space.",
+      "li2": "Update a document: choose Update existing document, paste a Feishu /docx/ or /wiki/ link, then read the target and check its title before confirming the overwrite. Your account needs permission to edit it.",
+      "li3": "An update replaces the entire document body with your current text and images, keeping the target title and link. Each overwrite requires confirmation; this is not automatic two-way sync.",
+      "callout": "Review before overwriting: comments on the old content and resources absent from your local document may be lost. Complex formatting may differ. If the connection drops, check the Feishu document before retrying."
     }
   },
   "demo": {

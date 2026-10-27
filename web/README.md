@@ -1,12 +1,12 @@
 # Markdeck 官网
 
-Markdeck 桌面 Markdown 工具的产品官网，基于 **Next.js 15 App Router、React 19、TypeScript**。计划使用 `https://markdeck.pro`，部署目标为 Vercel。
+Markdeck 桌面 Markdown 工具的产品官网，基于 **Next.js 15 App Router、React 19、TypeScript**。线上地址为 `https://www.markdeck.pro`，由 Vercel 部署；`https://markdeck.pro` 重定向到 www。
 
 ## 页面与交互
 
 - `/`：产品介绍、写作 / 梳理 / 展示交互演示、皮肤预览、常见问题。
-- `/download`：Mac Apple Silicon 版本获取入口。
-- `/guide`：写作、本地文件与图片、逻辑画布、章节展示、保存与分享指南。
+- `/download`：Mac Apple Silicon 安装包直达下载、版本与系统要求、首次安装说明。
+- `/guide`：写作、本地文件与图片、逻辑画布、章节展示、保存与分享、飞书上传指南。
 
 首页示例可以编辑正文、切换章节、拖动卡片、修改便笺和切换四种预览皮肤。编辑后的内容会出现在展示模式；数据仅在当前页面内存中保留。它是产品演示，不是完整的浏览器编辑器，也不读写访客的本地文件。
 
@@ -32,9 +32,9 @@ npm start
 
 ## 安装包入口
 
-默认下载页显示「官网直达下载尚未开放」，链接到仓库 Releases 查看发布情况。没有虚构版本号、安装包地址或其他系统的下载入口。
+当前下载 `v1.0.0-preview.1`，适用于 macOS 13 及以上的 Apple Silicon Mac。公开 ZIP 约 131 MB，版本、系统要求和下载地址统一维护在 `src/lib/site.ts` 的 `macRelease` 中，不依赖构建环境变量。页面同时提供发布记录和 SHA-256 校验文件入口。
 
-实际发布安装包后，在 Vercel 设置构建环境变量 `NEXT_PUBLIC_MAC_DOWNLOAD_URL`，值为真实的 HTTPS 安装包地址，再重新部署。未配置或配置无效时回退到发布页。安装包发布、签名和公证属于桌面发布流程，不由官网构建完成。
+更新版本时，先确认 GitHub Release 和安装包已公开可下载，再一起更新上述元数据并部署。原 `NEXT_PUBLIC_MAC_DOWNLOAD_URL` 已不使用。当前预览包尚未完成 Apple 公证，页面按实际状态说明首次打开方式；安装包发布、签名和公证属于桌面发布流程，不由官网构建完成。
 
 ## 代码结构
 
@@ -54,12 +54,16 @@ src/lib/site.ts                域名、仓库与安装包链接
 
 ## 验证与部署
 
+2026-10-28：补齐公开预览包的直达下载、版本／系统要求、首次安装步骤、发布记录与校验文件入口。指南新增飞书新建／覆盖更新的条件和边界，修正历史恢复入口。平板布局提前折叠导航，canonical／OG／sitemap 统一指向实际主域名 www。
+
 2026-10-18：生产构建和真实 Chrome 检查通过。覆盖 EN/zh 首页、指南、下载六页的 1440px / 390px 布局、语言双向切换、移动菜单、演示正文同步和便笺保留、canonical/OG URL、本地安全头、robots、sitemap 和分享图。修复了语言切换未更新 cookie 及语言按钮颜色变量错误。
 
 浏览器回归位于 tests/browser.mjs，使用仓库根目录的 Playwright 开发依赖。先在 web/ 运行 `npm start -- --hostname localhost --port 3188`，再从仓库根目录执行 `CHROME_PATH='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' node web/tests/browser.mjs`；其他环境可安装 Playwright Chromium 后省略 CHROME_PATH。当前没有 npm test 脚本，旧版本测试数量不作为当前证据。
 
+当前浏览器回归覆盖 375 / 768 / 1440px，增加直达下载、安装说明、飞书指南、四套皮肤、FAQ、键盘切换、卡片拖动和章节翻页检查。`tests/download.mjs` 从真实网页点击下载到临时目录，验证 ZIP 文件名、131,409,186 字节和 SHA-256；默认检查生产站，下载约 131 MB。两个脚本均支持 `MARKDECK_WEB_URL` 覆盖站点地址。
+
 构建仍提示 metadataBase fallback；六个公共页面的实际 canonical/OG 域名检查通过。本地响应头验收不代表线上配置已核验。
 
-部署步骤和域名设置见 [docs/deployment.md](docs/deployment.md)。本次未部署 Vercel、未绑定域名。
+部署步骤和域名设置见 [docs/deployment.md](docs/deployment.md)。main 推送会触发现有 Vercel 官网项目部署；部署结果及线上检查需要单独核验。
 
 设计参考：[MarkText](https://marktext.me/) 的产品体验展示、[iA Writer](https://ia.net/writer) 的内容优先与克制排版。新版使用 Markdeck 自身的写作、梳理、展示场景与品牌素材。

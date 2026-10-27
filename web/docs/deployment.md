@@ -1,6 +1,6 @@
 # Markdeck 官网部署
 
-目标域名：`markdeck.pro`。仓库：`0xgeda/markdeck`。框架：Next.js 15 App Router。
+线上主域名：`www.markdeck.pro`，`markdeck.pro` 重定向到 www。仓库：`0xgeda/markdeck`。框架：Next.js 15 App Router。
 
 ## 分支与根目录
 
@@ -18,7 +18,7 @@
 - 官网公共页面不需要 DeepSeek 或 Supabase 环境变量。
 - 品牌字体使用 next/font/google，构建时需要访问字体服务。
 
-可选变量 `NEXT_PUBLIC_MAC_DOWNLOAD_URL` 填入已发布、可公开访问的 HTTPS 安装包地址。该值在构建时读取，修改后需要重新部署；未配置时页面显示「查看 GitHub 发布页」。不要在安装包尚未发布时填写推测地址。
+安装包元数据在 `src/lib/site.ts` 的 `macRelease` 中维护，不依赖 `NEXT_PUBLIC_MAC_DOWNLOAD_URL`。当前为已公开的 `v1.0.0-preview.1`，ZIP 适用于 macOS 13+ / Apple Silicon。发布新版时先验证公开附件和 SHA-256，再同步修改版本、系统要求、体积、下载与发布记录链接，重新部署官网。无需把任何 GitHub 凭证放入网页或构建变量。
 
 ## 验证顺序
 
@@ -30,7 +30,7 @@
 
 ## 绑定 markdeck.pro
 
-在 Vercel 项目 Settings → Domains 添加 `markdeck.pro`，然后在域名服务商按 Vercel 当时提供的记录配置 DNS。添加 `www.markdeck.pro` 时设置重定向到主域名。等待域名验证和 HTTPS 证书就绪，再检查主页、下载及分享预览。
+现有域名使用 `www.markdeck.pro` 为主域名，`markdeck.pro` 重定向到 www。迁移时在 Vercel 项目 Settings → Domains 核对这两个域名，按服务商提供的记录配置 DNS。等待域名验证和 HTTPS 证书就绪，再检查主页、下载及分享预览，不要反转现有重定向方向。
 
 页面 canonical、sitemap、分享 URL 的统一来源是 `src/lib/site.ts`。更换主域名时修改此处。不要因为本地代码已配置域名就认为 DNS 或线上部署已经完成。
 

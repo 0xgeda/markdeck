@@ -17,7 +17,7 @@ export async function generateMetadata({
   return pageMetadata({ locale, path: '/guide', title: t('title'), description: t('description') });
 }
 
-const chapterIds = ['start', 'files', 'organize', 'present', 'share'] as const;
+const chapterIds = ['start', 'files', 'organize', 'present', 'share', 'feishu'] as const;
 
 function RichHtml({ html }: { html: string }) {
   return <span dangerouslySetInnerHTML={{ __html: html }} />;
@@ -122,6 +122,16 @@ export default async function GuidePage({
                 <li><RichHtml html={t('share.li3')} /></li>
                 <li><RichHtml html={t('share.li4')} /></li>
               </ul>
+            </article>
+            <article id="feishu">
+              <h2>{t('feishu.title')}</h2>
+              <p>{t('feishu.p1')}</p>
+              <ol>
+                <li>{t('feishu.li1')}</li>
+                <li>{t('feishu.li2')}</li>
+                <li>{t('feishu.li3')}</li>
+              </ol>
+              <div className="guide-callout"><p>{t('feishu.callout')}</p></div>
             </article>
             <div className="guide-end">
               <Link className="website-button light" href="/download">
