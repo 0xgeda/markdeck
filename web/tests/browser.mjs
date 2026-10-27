@@ -21,7 +21,12 @@ try{
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),`overflow ${route} ${width}`);
    assert.equal(new URL(await page.locator('link[rel="canonical"]').getAttribute('href')).href,new URL('https://www.markdeck.pro'+route).href);
    const og=await page.locator('meta[property="og:image"]').first().getAttribute('content');assert.ok(og.startsWith('https://www.markdeck.pro/'),og);
-   assert.ok(response.headers()['content-security-policy'].includes("object-src 'none'"));assert.ok(response.headers()['strict-transport-security']);
+   // Check each route's first response; cached revalidations can omit headers.
+   if(width===1440){
+    const headers=await response.allHeaders();
+    assert.ok(headers['content-security-policy']?.includes("object-src 'none'"),`CSP ${route}`);
+    assert.ok(headers['strict-transport-security'],`HSTS ${route}`);
+   }
    if(suffix==='/download'){
     const href=await page.locator('.download-primary').getAttribute('href');
     assert.equal(href,'https://github.com/0xgeda/markdeck/releases/download/v1.0.0-preview.1/Markdeck-1.0.0-preview.1-macos-arm64.zip');

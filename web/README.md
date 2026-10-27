@@ -56,13 +56,17 @@ src/lib/site.ts                域名、仓库与安装包链接
 
 2026-10-28：补齐公开预览包的直达下载、版本／系统要求、首次安装步骤、发布记录与校验文件入口。指南新增飞书新建／覆盖更新的条件和边界，修正历史恢复入口。平板布局提前折叠导航，canonical／OG／sitemap 统一指向实际主域名 www。
 
+本轮生产构建通过，`c2d89d4` 已通过 GitHub → Vercel 上线。真实 Chrome 在本地和正式站点通过六个双语页面的 375 / 768 / 1440px 检查，包括下载信息、导航与语言切换、演示交互、首次响应安全头、robots／sitemap／分享图；已人工查看桌面、平板及手机截图。浏览器缓存重验证可能省略原响应头，因此响应头按每条路由首次访问检查。
+
+正式站 `tests/download.mjs` 也已通过：未登录浏览器点击中文下载按钮后取得完整 ZIP，文件名、131,409,186 字节和 SHA-256 与发布记录一致。GitHub 下载在本次网络环境下较慢，测试已等待完整下载完成，不以响应状态或开始下载代替文件校验。
+
 2026-10-18：生产构建和真实 Chrome 检查通过。覆盖 EN/zh 首页、指南、下载六页的 1440px / 390px 布局、语言双向切换、移动菜单、演示正文同步和便笺保留、canonical/OG URL、本地安全头、robots、sitemap 和分享图。修复了语言切换未更新 cookie 及语言按钮颜色变量错误。
 
 浏览器回归位于 tests/browser.mjs，使用仓库根目录的 Playwright 开发依赖。先在 web/ 运行 `npm start -- --hostname localhost --port 3188`，再从仓库根目录执行 `CHROME_PATH='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' node web/tests/browser.mjs`；其他环境可安装 Playwright Chromium 后省略 CHROME_PATH。当前没有 npm test 脚本，旧版本测试数量不作为当前证据。
 
 当前浏览器回归覆盖 375 / 768 / 1440px，增加直达下载、安装说明、飞书指南、四套皮肤、FAQ、键盘切换、卡片拖动和章节翻页检查。`tests/download.mjs` 从真实网页点击下载到临时目录，验证 ZIP 文件名、131,409,186 字节和 SHA-256；默认检查生产站，下载约 131 MB。两个脚本均支持 `MARKDECK_WEB_URL` 覆盖站点地址。
 
-构建仍提示 metadataBase fallback；六个公共页面的实际 canonical/OG 域名检查通过。本地响应头验收不代表线上配置已核验。
+构建仍提示 metadataBase fallback；六个公共页面的实际 canonical/OG 域名及线上首次响应头检查通过。
 
 部署步骤和域名设置见 [docs/deployment.md](docs/deployment.md)。main 推送会触发现有 Vercel 官网项目部署；部署结果及线上检查需要单独核验。
 

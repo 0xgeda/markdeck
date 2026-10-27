@@ -38,4 +38,4 @@
 
 ## 当前验收边界
 
-2026-10-18 已核对仓库结构与脚本。本轮修正说明未执行 Vercel 部署、GitHub 合并或域名绑定，也未核验线上配置。当前版本已通过生产构建及本机 Chrome 的六页双语、桌面／移动布局与语言切换检查。线上配置与域名仍需部署时验证。
+2026-10-28：`c2d89d4` 推送 main 后，现有 Vercel 项目 `0xgedas-projects/markdeck` 返回 Deployment has completed。正式域名 `www.markdeck.pro` 已出现新的 ZIP 直达下载、版本和安装步骤；六个中英文页面在 375 / 768 / 1440px 下的真实 Chrome 回归通过，包含交互、canonical／OG、首次响应安全头、robots、sitemap 与分享图。未改动 Vercel 账号或域名绑定配置。实际可访问与部署状态已核验，不以本地构建代替上线验收。
