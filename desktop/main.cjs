@@ -17,17 +17,33 @@ const primary=app.requestSingleInstanceLock();
 if(!primary)app.quit();
 app.on('second-instance',()=>{window?.show();window?.focus();});
 let window,workspace,allowClose=false,quitAfterClose=false;
+let rendererReady=false;
+const pendingOpenFiles=[];
+function deliverOpenFiles(){
+  if(rendererReady&&window&&pendingOpenFiles.length)window.webContents.send('app:open-files',pendingOpenFiles.splice(0));
+}
+// Finder can deliver files before app.ready or before the editor has loaded.
+app.on('open-file',(event,filename)=>{
+  event.preventDefault();
+  if(!primary)return;
+  pendingOpenFiles.push(filename);
+  if(workspace&&!window)createWindow();
+  if(window){if(window.isMinimized())window.restore();window.show();window.focus();}
+  deliverOpenFiles();
+});
 const startURL='yun-jian://app/index.html';
 const filters=[{name:'Markdown 文档',extensions:['md','markdown','txt']}];
 function action(name){window?.webContents.send('app:action',name);}
 function createWindow(){
   allowClose=false;
+  rendererReady=false;
   window=new BrowserWindow({width:1440,height:1000,minWidth:820,minHeight:600,show:false,title:'Markdeck',backgroundColor:'#ffffff',webPreferences:{preload:path.join(__dirname,'preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true,spellcheck:false,backgroundThrottling:true}});
   window.once('ready-to-show',()=>{window.maximize();window.show();});
   window.webContents.setWindowOpenHandler(()=>({action:'deny'}));
   window.webContents.on('will-navigate',event=>event.preventDefault());
   window.on('close',event=>{if(!allowClose){event.preventDefault();action('close');}});
-  window.on('closed',()=>{window=null;});
+  window.on('closed',()=>{window=null;rendererReady=false;});
+  window.webContents.on('did-start-loading',()=>{rendererReady=false;});
   window.loadURL(startURL);
 }
 function register(name,handler){ipcMain.handle(name,async(event,...args)=>{
@@ -99,6 +115,7 @@ app.whenReady().then(()=>{
   register('feishu:prepare-update',(id,url)=>feishu.prepareUpdate(id,url));
   register('feishu:update',(id,confirmation)=>feishu.update(id,confirmation));
   register('workspace:load',()=>({state:workspace.snapshot()}));
+  register('app:ready',()=>{rendererReady=true;deliverOpenFiles();return {};});
   register('workspace:show-in-folder',id=>{
     const doc=workspace.state.docs.find(doc=>doc.id===id);
     if(!doc?.filePath)throw new Error('请先将文档保存到本地文件');
@@ -115,6 +132,10 @@ app.whenReady().then(()=>{
   register('workspace:save',state=>workspace.save(state));
   register('workspace:open-dropped',filename=>{
     if(typeof filename!=='string'||!path.isAbsolute(filename))throw new Error('拖入文件路径无效');
+    return {state:workspace.open(filename)};
+  });
+  register('workspace:open-system',filename=>{
+    if(typeof filename!=='string'||!path.isAbsolute(filename))throw new Error('本地文件路径无效');
     return {state:workspace.open(filename)};
   });
   register('workspace:open',async()=>{

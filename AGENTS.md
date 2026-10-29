@@ -24,6 +24,7 @@
 - HTML 表格／锚点解析变更跑 `node tests/editor-html-tables.mjs` 和安装版 `tests/desktop-html-tables.mjs`；可用 `MARKDECK_HTML_TABLE_FIXTURE` 指定只读源文件，测试会复制到隔离目录后编辑。
 - 图片排版或加载变更跑 `node tests/image-controls.mjs`；安装版多图持续验收为 `node tests/desktop-image-stress.mjs`，覆盖重复引用尺寸、首次点击与拖动、30 轮保存及重启。其堆采样主动 GC，不等于自然空闲内存。
 - 保存边界变更另跑 `node tests/desktop-recovery.mjs`；只修改隔离临时文件权限，SIGKILL 仅用于测试启动的进程，并在草稿持久化确认后执行。
+- macOS 文件关联或系统打开变更跑 `node tests/desktop-open-file.mjs`；使用独立 bundle ID 的安装包副本与临时数据，避免 LaunchServices 将测试文件交给用户正在运行的实例。
 
 ## 必须保留的边界
 

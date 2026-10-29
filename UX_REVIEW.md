@@ -173,3 +173,12 @@ GUI 测试的文件选择器返回预置路径，远程图由测试响应提供�
 - 指南补齐飞书 CLI 前提、新建文档、链接覆盖更新及评论／资源边界；修正修改记录入口。平板导航调整为折叠菜单，修复英文换行合并时缺失空格，canonical／OG／sitemap 对齐实际 www 主域名。
 - web/ 生产构建通过，`c2d89d4` 已推送且 Vercel 部署成功。六个双语页面的本地和线上真实 Chrome 回归通过，覆盖 375 / 768 / 1440px、下载信息、语言与菜单、正文和便笺、四套皮肤、FAQ、键盘切换、卡片拖动、章节切换、首次响应安全头及搜索／分享元数据。线上证据目录 `markdeck-web-5iyFQH`，已查看多种宽度截图。此轮未改动或重新打包桌面应用。
 - `web/tests/download.mjs` 从正式站中文下载页真实点击按钮，未登录取得完整 ZIP，文件名、131,409,186 字节及 SHA-256 均与公开发布包一致。证据目录 `markdeck-download-QFSQGO`。本次 GitHub 下载较慢，已等待下载完成后校验。
+
+### 2026-10-29 Finder 打开 Markdown
+
+- 安装包补齐 `.md`、`.markdown`、`.txt` 的文档类型与 Markdown UTI 声明；保留原 bundle ID。主进程在 ready 前接收 `open-file`，编辑器准备好后按序打开；已有窗口恢复前台，关闭窗口后可重建。沿用文件校验与保存流程，对话框关闭前延后打开，当前文档未写回时保留内容并提示另存为后重试。其他文档的写回错误不会阻挡打开，仍保留其草稿；工作区草稿持久化失败则继续阻止切换。
+- files、app-flow、show-plan、workspace-startup、save-queue、生产构建、package-size 与 ad-hoc 签名检查通过。打包下载失败后使用已有 Electron 44.7.0 本地缓存完成打包，无 Apple 开发者账号或公证操作。
+- 新增 `tests/desktop-open-file.mjs`，复制安装包并赋予独立 bundle ID、独立数据目录，通过 macOS `open` 发送真实文件事件，覆盖冷启动、热启动、多文件、中文空格路径、重复复用、模态等待、保存后切换、只读失败与重试、非法类型及窗口重开；已查看截图，证据 `markdeck-open-file-emSGqr`。安装版 desktop、desktop-drop、desktop-recovery 回归通过，全部使用临时文档。
+- macOS NSWorkspace 查询确认本机 Markdeck 已列入 `.md` 打开程序，首次检查时默认仍是 WPS；README 补充 ⌘I → 打开方式 → 全部更改的设置入口。已更新本地应用；源码修复纳入本次提交，公开 `v1.0.0-preview.1` 安装包未更新。
+- 用户设置默认程序后，NSWorkspace 查询与按系统默认程序真实打开均确认由 Markdeck 接收，原文件 SHA-256 不变。另发现 WorkBuddy 两个安装中副本仍被系统注册，以及旧 WPS Markdown 类型仍关联 WorkBuddy；未删除其他应用或改写其配置，不能据此断言 WorkBuddy 持续重设默认程序。
+- 后续修正保存检查范围：原先按整个列表的 `fileErrors` 阻止系统打开，某份旧文件丢失且存在草稿时会误报「当前文档」问题。改为仅检查当前文档的写回错误；`desktop-open-file` 新增真实文件移动、保留草稿、切换到正常文档后再从系统打开的回归，并验证文件移回后草稿能写回，证据 `markdeck-open-file-B2vagt`。

@@ -78,10 +78,21 @@ async function fileAction(action,relative){
   const scroll=window.scrollY;document.querySelector('#app').inert=true;
   try{
     const saved=await save();if(!saved.ok){toast(saved.error||'保存失败');return;}
-    const result=action==='drop'?await desktop.openDroppedFile(relative):action==='project'?await desktop.openProjectFile(relative):action==='open'?await desktop.open():action==='reload'?await desktop.reload(active):await desktop.saveAs(active);
+    if(action==='system'&&fileErrors[active]){toast('当前文档尚未写回，草稿已保留。请按 ⌘⇧S 另存为后再打开。');return;}
+    const result=action==='system'?await desktop.openSystemFile(relative):action==='drop'?await desktop.openDroppedFile(relative):action==='project'?await desktop.openProjectFile(relative):action==='open'?await desktop.open():action==='reload'?await desktop.reload(active):await desktop.saveAs(active);
     if(!result.ok){toast(result.error);return;}if(result.canceled)return;
     docs=result.state.docs;active=result.state.active;fileErrors={};document.body.classList.remove('sidebar-open');render();showSaveState();if(action==='reload'){window.scrollTo({top:scroll,behavior:'instant'});toast('已刷新为本地文件的最新内容');}return true;
-  }catch(error){toast(error.message);}finally{document.querySelector('#app').inert=false;fileDialogBusy=false;}
+  }catch(error){toast(error.message);}finally{document.querySelector('#app').inert=false;fileDialogBusy=false;void openSystemFiles();}
+}
+const systemOpenFiles=[];
+let openingSystemFiles=false;
+async function openSystemFiles(files=[]){
+  systemOpenFiles.push(...files);
+  if(openingSystemFiles||fileDialogBusy||document.querySelector('dialog[open]'))return;
+  openingSystemFiles=true;
+  try{
+    while(systemOpenFiles.length&&!document.querySelector('dialog[open]'))await fileAction('system',systemOpenFiles.shift());
+  }finally{openingSystemFiles=false;}
 }
 function changeMode(next,arrange=false){
   // Serialize transitions so loading and saving can never leave a stale mode selected.
@@ -213,6 +224,6 @@ if(desktop){desktop.onAction(async action=>{if(action!=='close'&&document.queryS
 
 render();
 if(desktop){bindDocumentDrop(document);desktop.onDroppedFiles(async tokens=>{for(const token of tokens){if(!await fileAction('drop',token))break;}});}
-if(desktop){await save();setInterval(syncExternal,1500);window.addEventListener('focus',syncExternal);}
+if(desktop){await save();desktop.onOpenFiles?.(openSystemFiles);document.addEventListener('close',()=>void openSystemFiles(),true);await desktop.ready?.();setInterval(syncExternal,1500);window.addEventListener('focus',syncExternal);}
 
 document.addEventListener('markdeck-image-added',()=>hydrateImages(editor,active).catch(()=>{}));
