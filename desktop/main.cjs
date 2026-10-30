@@ -6,6 +6,7 @@ const {pathToFileURL}=require('node:url');
 const {Project}=require('./project.cjs');
 const project=new Project();
 const {Workspace,atomicWrite}=require('./workspace.cjs');
+const {confirmClose}=require('./close-workspace.cjs');
 const {ImageFix}=require('./image-fix.cjs');
 const limits=require('./limits.cjs');
 app.setName('Markdeck');
@@ -16,7 +17,7 @@ app.setPath('userData',path.resolve(dataDirectory));
 const primary=app.requestSingleInstanceLock();
 if(!primary)app.quit();
 app.on('second-instance',()=>{window?.show();window?.focus();});
-let window,workspace,allowClose=false,quitAfterClose=false;
+let window,workspace,allowClose=false,quitAfterClose=false,closeInProgress=false;
 let rendererReady=false;
 const pendingOpenFiles=[];
 function deliverOpenFiles(){
@@ -159,11 +160,13 @@ app.whenReady().then(()=>{
     return {state:workspace.reload(id)};
   });
   register('app:finish-close',async result=>{
-    if(!result?.ok || result.fileErrors){
-      const answer=await dialog.showMessageBox(window,{type:'warning',message:result?.ok?'有修改尚未写回原文件':'保存未完成',detail:result?.ok?'修改已保留在应用草稿中。下次打开可另存为。':'关闭可能丢失最新修改，请返回文档检查保存状态。',buttons:['返回文档','仍然关闭'],defaultId:0,cancelId:0});
-      if(answer.response!==1)return {};
-    }
-    allowClose=true;window.close();if(quitAfterClose)app.quit();return {};
+    if(closeInProgress)return {};
+    closeInProgress=true;
+    try{
+      const decision=await confirmClose(workspace,dialog,window,result,app.getPath('documents'));
+      if(!decision.close){quitAfterClose=false;return decision;}
+      allowClose=true;window.close();if(quitAfterClose)app.quit();return {};
+    }finally{closeInProgress=false;}
   });
   Menu.setApplicationMenu(Menu.buildFromTemplate([
     {label:'Markdeck',submenu:[{role:'about'},{type:'separator'},{role:'hide'},{role:'hideOthers'},{role:'unhide'},{type:'separator'},{label:'退出Markdeck',accelerator:'CmdOrCtrl+Q',click:()=>{quitAfterClose=true;window?window.close():app.quit();}}]},

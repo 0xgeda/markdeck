@@ -32,6 +32,7 @@ class Workspace {
     this.history=new (require('./history.cjs').History)(directory,atomicWrite);
     this.filename = path.join(directory, 'workspace.json');
     this.state = {docs:[], active:null};
+    this.writeErrors = {};
     if (fs.existsSync(this.filename)) {
       // A damaged workspace must never be silently replaced with an empty one.
       const stored = JSON.parse(fs.readFileSync(this.filename, 'utf8'));
@@ -51,13 +52,26 @@ class Workspace {
   fileFields(d) {
     if (!d?.filePath) return {};
     if (typeof d.filePath !== 'string' || !path.isAbsolute(d.filePath) || typeof d.diskHash !== 'string') throw new Error('本地文件关联无效');
-    return {filePath:d.filePath, diskHash:d.diskHash, bom:Boolean(d.bom), eol:d.eol==='\r\n'?'\r\n':'\n', blocked:Boolean(d.blocked)};
+    return {filePath:d.filePath, diskHash:d.diskHash, bom:Boolean(d.bom), eol:d.eol==='\r\n'?'\r\n':'\n', blocked:Boolean(d.blocked), ...(typeof d.acknowledgedDraft==='string'?{acknowledgedDraft:d.acknowledgedDraft}:{})};
   }
   snapshot() {
-    return {active:this.state.active, docs:this.state.docs.map(({diskHash,bom,eol,blocked,revision,...d})=>({...d,...(diskHash?{revision:diskHash}:{})}))};
+    return {active:this.state.active, docs:this.state.docs.map(({diskHash,bom,eol,blocked,revision,acknowledgedDraft,...d})=>({...d,...(diskHash?{revision:diskHash}:{})}))};
   }
   persist() { atomicWrite(this.filename, JSON.stringify(this.state)); }
   encode(d) { return (d.bom?'\ufeff':'') + d.body.replace(/\r?\n/g, d.eol || '\n'); }
+  pendingWrites() {
+    return this.state.docs.filter(d=>d.filePath&&hash(this.encode(d))!==d.diskHash).map(d=>{
+      const fingerprint=hash(JSON.stringify([d.filePath,d.diskHash,this.encode(d)]));
+      return {id:d.id,title:d.title,filePath:d.filePath,error:this.writeErrors[d.id]||'修改尚未写回原文件',fingerprint,acknowledged:d.acknowledgedDraft===fingerprint};
+    });
+  }
+  acknowledgeDrafts(pending) {
+    const current=this.pendingWrites();
+    for(const item of pending)if(!current.some(d=>d.id===item.id&&d.fingerprint===item.fingerprint))throw new Error('文档已变化，请重试关闭');
+    const previous=this.state;
+    this.state={...previous,docs:previous.docs.map(d=>{const item=pending.find(item=>item.id===d.id);return item?{...d,acknowledgedDraft:item.fingerprint}:d;})};
+    try{this.persist();}catch(error){this.state=previous;throw error;}
+  }
   readInto(d, filename) {
     const canonical = fs.realpathSync(filename);
     const stat = fs.statSync(canonical);
@@ -65,6 +79,7 @@ class Workspace {
     const bytes = fs.readFileSync(canonical);
     const raw = new TextDecoder('utf-8', {fatal:true, ignoreBOM:true}).decode(bytes);
     Object.assign(d, {filePath:canonical, diskHash:hash(bytes), bom:raw.startsWith('\ufeff'), eol:raw.includes('\r\n')?'\r\n':'\n', blocked:false, body:raw.replace(/^\ufeff/,'').replace(/\r\n/g,'\n')});
+    delete d.acknowledgedDraft;delete this.writeErrors[d.id];
   }
   open(filename) {
     const canonical = fs.realpathSync(filename);
@@ -88,15 +103,15 @@ class Workspace {
     for (const d of this.state.docs) {
       if (!d.filePath) continue;
       const content=this.encode(d);
-      if (hash(content)===d.diskHash) continue;
+      if (hash(content)===d.diskHash) {delete d.acknowledgedDraft;continue;}
       try {
         if(d.blocked)throw new Error('检测到同时修改，已保留草稿；请另存为或刷新');
         if (!fs.existsSync(d.filePath)) throw new Error('原文件已移动或删除，请另存为');
         if (hash(fs.readFileSync(d.filePath))!==d.diskHash) throw new Error('文件已被其他软件修改，已保留草稿；请另存为或重新读取');
-        atomicWrite(d.filePath, content);d.diskHash=hash(content);
+        atomicWrite(d.filePath, content);d.diskHash=hash(content);delete d.acknowledgedDraft;
       } catch(e) { errors[d.id]=e.message; }
     }
-    this.persist();return {errors,state:this.snapshot()};
+    this.persist();this.writeErrors=errors;return {errors,state:this.snapshot()};
   }
   saveAs(id, filename) {
     const d=this.state.docs.find(d=>d.id===id);
@@ -107,6 +122,7 @@ class Workspace {
     if (d.filePath===canonical && fs.existsSync(canonical) && hash(fs.readFileSync(canonical))!==d.diskHash) throw new Error('原文件已被其他软件修改，请选择新的文件位置');
     const body=this.attachments.relocate(d,canonical);atomicWrite(canonical,body);
     Object.assign(d,{body,filePath:canonical, diskHash:hash(body), bom:false, eol:'\n',blocked:false});
+    delete d.acknowledgedDraft;delete this.writeErrors[id];
     this.persist();return this.snapshot();
   }
   sync(id) {

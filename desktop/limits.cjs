@@ -10,6 +10,8 @@ module.exports={
   maxDocumentBytes:10*MB,
   // Document title, logic group title, etc.
   maxTitleChars:1000,
+  // Native close alert remains readable; all affected documents are still handled.
+  maxCloseIssueDetails:5,
   // Single image stored or imported.
   maxImageBytes:10*MB,
   // Base64 payload accepted by attachments.store (DataURL path).
