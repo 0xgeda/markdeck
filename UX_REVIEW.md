@@ -11,7 +11,7 @@
 | 文档 | changed-and-verified | README 描述当前保存行为及预览包边界；旧优化计划、国际化原型和旧官网方案已明确退役或未接入。 |
 | 规则 | changed-and-verified | 根 AGENTS.md 是桌面入口；web/AGENTS.md 指向 web/CLAUDE.md。修正旧临时 Git 路径和 reinstall 的使用边界。 |
 | 记忆 | not-applicable | 本机 Codex 记忆目录为空；未新建或修改长期记忆、其他平台记忆及生成索引。 |
-| 工作区 | pending | 只有一个本项目 worktree；源码改动已集成，重复产物的清场等待用户确认，恢复材料和证据保留。 |
+| 工作区 | changed-and-verified | 只有一个本项目 worktree；源码改动已集成，用户阅后授权的四项重复产物与一次性脚本已清理，恢复材料和证据保留。 |
 
 桌面源码与本机安装版已经包含 Finder 打开、关闭时处理草稿和保存开销优化。GitHub 当前公开安装包仍为 [v1.0.0-preview.1](https://github.com/0xgeda/markdeck/releases/tag/v1.0.0-preview.1)，不含这些后续改动；源码推送、官网部署与安装包发布是三个独立状态。
 
@@ -19,13 +19,13 @@
 
 当前权威分工：README 说明使用与保存边界；PERFORMANCE_REVIEW.md 维护性能结论；本文件维护交付状态和验证缺口；AGENTS.md 保留 Agent 必须遵守的操作边界。OPTIMIZATION_PLAN.md 只保留归档索引，不生成新的开发排期。
 
-### 清场预览（未执行）
+### 清场完成（2026-11-01）
 
-- `/private/tmp/markdeck-memory-20261101/`：本轮测试打包目录，约 312.8 MiB；应用内容与现安装版一致。
-- `/private/tmp/markdeck-close-20261031/`：上一轮测试打包目录，约 312.9 MiB；应用内容与已保留的更新前备份一致。
-- `/private/tmp/markdeck-install-optimized.cjs`、`/private/tmp/markdeck-optimization-checks.cjs`：绑定上述测试路径的一次性安装和回归编排脚本，任务已完成；正式测试仍在 tests/。
+- 已删除 `/private/tmp/markdeck-memory-20261101/`：本轮测试打包目录，约 312.8 MiB；删除前与当前 release 逐文件比较一致。
+- 已删除 `/private/tmp/markdeck-close-20261031/`：上一轮测试打包目录，约 312.9 MiB；删除前应用与已保留的更新前备份逐文件比较一致。
+- 已删除 `/private/tmp/markdeck-install-optimized.cjs`、`/private/tmp/markdeck-optimization-checks.cjs`：绑定上述测试路径的一次性安装和回归编排脚本，任务已完成；正式测试仍在 tests/。
 
-这四项约 626 MiB，是本轮建议的清理范围；复核现场仍保留，等待用户在完整汇报后确认再清场。
+用户在完整汇报后授权判断并清理无保留必要的项目；本次仅删除上述四项，删除前磁盘占用合计约 626 MiB。进程核验确认使用的是 /Applications 安装版；清理后四项均不存在，安装版、release、更新前备份的 app.asar 与两个源码 bundle 校验值未变，回退目录和本轮性能／堆采样证据仍在。
 
 保留 `/private/tmp/markdeck-before-memory-B3oiHn/`、`/private/tmp/markdeck-before-close-update-4e0M45/`、测试结果／堆采样、archive/、两个源码 bundle 和远端旧分支。`markdeck-website-e52ea2e.bundle` 的提交不在当前对象库；desktop-app 恢复点不是 main 的祖先，不能因年代久就认定可删除。旧 `/private/tmp/markdeck-upload/.git` 本机已不存在，不再作为规则中的操作入口。
 
