@@ -15,7 +15,7 @@
 - npm ci；npx install-electron；npm start。
 - npm run dev：浏览器预览；npm run build：生产构建。
 - npm run package:mac：生成 release/Markdeck-darwin-arm64/Markdeck.app；可设 `MARKDECK_PACKAGE_OUT` 打到独立目录，在旧版仍运行时先验收新版。
-- npm run reinstall：kill 旧进程 + 重打包 + 启动，调试打包版的默认入口。
+- npm run reinstall：仅用于调试；运行前正常保存并退出 Markdeck。脚本包含 pkill，不承担保存流程，且只更新 release/ 内的调试打包版。
 - 本机日常应用位于 `/Applications/Markdeck.app`。交付本机修复时，将验收后的打包版同步到此位置并校验一致性；`reinstall` 当前只更新和启动 `release/` 内的调试打包版。
 - 模式变更运行 node tests/app-flow.mjs、node tests/show-plan.mjs；画布变更另跑 logic-panel、logic-layout、logic-connections。
 - 文件变更运行 npm run test:files；图片修复变更另跑 tests/image-scan.mjs、tests/image-fix.cjs、tests/image-fix-dialog.mjs；Workspace 启动路径改动跑 tests/workspace-startup.cjs（ANR 守门）；打包后运行 node tests/package-size.mjs。
@@ -44,5 +44,5 @@
 ## 当前状态与下一步
 
 见 UX_REVIEW.md 的验证与待办；性能判断见 PERFORMANCE_REVIEW.md。
-本工作区使用根目录 .git，正常执行 git 命令。/private/tmp/markdeck-upload/.git 是旧元数据，不再用于本工作区；未经核验不要删除。
+本工作区使用根目录 .git，正常执行 git 命令；不要切换到历史临时目录作为 Git 操作入口。
 当前按用户要求暂不处理 Apple 开发者账号、Developer ID 证书、公证或 App Store 发布；本地 ad-hoc 打包和功能验收继续。验证范围见 UX_REVIEW.md。禁止把安装体积当作运行内存数据。

@@ -1,13 +1,13 @@
 # Markdeck 网站开发规则
 
-本目录是 Next.js 15 App Router 网站子项目，目标域名 `markdeck.pro`。当前主要工作是桌面产品官网，不是 Electron 编辑器本体。当前页面、交互和验证状态见 README.md；部署见 docs/deployment.md。
+本目录是 Next.js 15 App Router 网站子项目，负责桌面产品官网。当前页面、域名、交互和验证状态见 README.md；部署见 docs/deployment.md。
 
 ## 边界
 
 - 官网首页、指南、下载页无需账号、AI key 或数据库。演示只使用虚构示例，内容仅在当前页面保留。
 - 不宣传未提供的云同步、协作、AI 或跨平台安装包；不填写虚构下载地址、版本或使用人数。
 - Next.js 页面的正文优先使用服务端组件，交互状态集中于 `src/components/website/`。
-- 官网 CSS 限定在 `.website` 下，避免影响旧路由。设计使用深森林绿、纸白与浅鼠尾草绿，DM Serif Display 品牌标题与清晰的无衬线正文。当前品牌字体通过 next/font/google 构建时获取，构建需要字体网络可达。
+- 官网 CSS 限定在 `.website` 下，避免影响其他组件和页面。设计使用深森林绿、纸白与浅鼠尾草绿，DM Serif Display 品牌标题与清晰的无衬线正文。当前品牌字体通过 next/font/google 构建时获取，构建需要字体网络可达。
 - 当前 main 同时管理桌面应用与官网；Vercel Root Directory 使用 web/。保留的 desktop-app 分支不应用于 Vercel 生产部署。
 
 ## 路由与语言

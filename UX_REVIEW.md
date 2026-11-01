@@ -1,8 +1,40 @@
 # Markdeck 当前验收与交接
 
-核对日期：2026-10-20。产品介绍见 README.md；本文件区分当前验收证据与尚未覆盖的发布条件。
+核对日期：2026-11-01。产品介绍见 README.md；本文件的当前状态与待验收项是现役入口，其余按日期保留为历史证据。
 
-## 本轮修正
+## 当前状态与知识收尾
+
+| 事实面 | 状态 | 依据与边界 |
+| --- | --- | --- |
+| 代码 | verified-current | main 已包含桌面优化提交 `99400ed`；本次收尾只改说明文档和规则，不改运行代码。 |
+| 运行态 | verified-current | 正在运行 `/Applications/Markdeck.app`；安装版与 release 内容一致、签名通过，功能验证与包指纹见 PERFORMANCE_REVIEW.md。公开版本单独列在下方。 |
+| 文档 | changed-and-verified | README 描述当前保存行为及预览包边界；旧优化计划、国际化原型和旧官网方案已明确退役或未接入。 |
+| 规则 | changed-and-verified | 根 AGENTS.md 是桌面入口；web/AGENTS.md 指向 web/CLAUDE.md。修正旧临时 Git 路径和 reinstall 的使用边界。 |
+| 记忆 | not-applicable | 本机 Codex 记忆目录为空；未新建或修改长期记忆、其他平台记忆及生成索引。 |
+| 工作区 | pending | 只有一个本项目 worktree；源码改动已集成，重复产物的清场等待用户确认，恢复材料和证据保留。 |
+
+桌面源码与本机安装版已经包含 Finder 打开、关闭时处理草稿和保存开销优化。GitHub 当前公开安装包仍为 [v1.0.0-preview.1](https://github.com/0xgeda/markdeck/releases/tag/v1.0.0-preview.1)，不含这些后续改动；源码推送、官网部署与安装包发布是三个独立状态。
+
+2026-11-01 只读核验：`99400ed` 的 GitHub Vercel 检查为 success；官网中文下载页和指南返回 200，canonical 使用 www，裸域名重定向到 www。下载页指向 Preview 1，Release API 的 ZIP 大小与校验摘要仍匹配原发布记录。本次没有重新下载完整 ZIP 或重跑官网视觉验收，历史验证见 [web/README.md](web/README.md)；未进入 Vercel 控制台修改配置。
+
+当前权威分工：README 说明使用与保存边界；PERFORMANCE_REVIEW.md 维护性能结论；本文件维护交付状态和验证缺口；AGENTS.md 保留 Agent 必须遵守的操作边界。OPTIMIZATION_PLAN.md 只保留归档索引，不生成新的开发排期。
+
+### 清场预览（未执行）
+
+- `/private/tmp/markdeck-memory-20261101/`：本轮测试打包目录，约 312.8 MiB；应用内容与现安装版一致。
+- `/private/tmp/markdeck-close-20261031/`：上一轮测试打包目录，约 312.9 MiB；应用内容与已保留的更新前备份一致。
+- `/private/tmp/markdeck-install-optimized.cjs`、`/private/tmp/markdeck-optimization-checks.cjs`：绑定上述测试路径的一次性安装和回归编排脚本，任务已完成；正式测试仍在 tests/。
+
+这四项约 626 MiB，是本轮建议的清理范围；复核现场仍保留，等待用户在完整汇报后确认再清场。
+
+保留 `/private/tmp/markdeck-before-memory-B3oiHn/`、`/private/tmp/markdeck-before-close-update-4e0M45/`、测试结果／堆采样、archive/、两个源码 bundle 和远端旧分支。`markdeck-website-e52ea2e.bundle` 的提交不在当前对象库；desktop-app 恢复点不是 main 的祖先，不能因年代久就认定可删除。旧 `/private/tmp/markdeck-upload/.git` 本机已不存在，不再作为规则中的操作入口。
+
+`web/docs/superpowers/` 中两份旧 AI 网站方案被既有 web/.gitignore 忽略；本次仅加本地退役标记，不强行纳入版本库或据此重启旧任务。`.claude/settings.local.json` 是被用户全局 Git ignore 排除的本地配置，当前 Codex 规则入口不依赖它，未改动。
+
+**out-of-scope**：发布新版公开安装包、Apple 账号／证书／公证、其他项目及全局配置、其他平台记忆。
+**未消除的验证缺口**：真实隐私授权弹窗、系统输入法与触控板体验、业务文档长时间编辑，见下方待验收清单。官网此前构建的 metadataBase fallback 警告仍按 web/README.md 记录，本轮没有重建官网来宣称消除。
+
+## 2026-10-18—20 修正记录（历史）
 
 - 图片扫描使用已有 markdown-it 识别缩进和嵌套代码块，并跳过转义图片标记；修复与删除仍按字符偏移操作，保留代码示例。
 - 启动守门测试使用匹配的正文哈希，直接验证构造期间不读取外部文件、下一轮执行读取、失败保留内容及提前编辑不被覆盖。将预读改回同步的变异版本会被测试拒绝。没有用 500ms 经验阈值判断运行时 ANR。
@@ -15,7 +47,7 @@
 - 原子替换会绕过原文件只读权限；现在替换前检查目标可写性。无法写回时保留草稿和原文件，恢复权限后允许重试。
 - 用户截图反馈长目录标题露出半行、选中背景与文字错位。目录项现在禁止纵向 flex 压缩，文字使用独立无内边距的两行截断层，链接保留点击留白与完整标题提示。`tests/desktop-outline.mjs` 在安装版使用 49 个长中文／英文／日文标题，核验 900px／1440px 和 125% 缩放下行高、边界、独立滚动、搜索及折叠；完整窗口截图已查看，证据目录 `markdeck-outline-Tyw1Mf`。app-flow 和包内一致性回归通过。
 
-## 当前验证证据
+## 2026-10-18—20 验证记录（历史）
 
 - 图片扫描、图片修复后端、修复弹窗、文件保存与启动守门共 65 项测试通过。
 - app-flow、show-plan 和桌面 Vite 生产构建通过。
@@ -32,12 +64,6 @@ GUI 测试的文件选择器返回预置路径，远程图由测试响应提供�
 
 本轮 GUI 截图和隔离文档保留在系统临时目录 `markdeck-images-*`，脚本结束时打印具体路径。初次失败样本一并保留；以修补后成功运行的日志为准。
 
-## 仓库与发布状态
-
-当前工作区使用根目录 .git，main HEAD 为 6715823（本轮改动前），桌面端与 web/ 官网已在同一仓库。web/ 使用自己的安装、构建命令；Vercel 目标根目录是 web/。旧 /private/tmp/markdeck-upload/.git 和源码 bundle 保留，不作为当前 Git 操作入口。
-
-此前验收修复提交 a108d98、8447ee6 已推送 GitHub origin/main；目录显示补充修复已提交为 fdca6bb。未发布安装包 Release，未核验 Vercel 线上配置或域名状态。已重建 macOS arm64 安装版，执行本地 ad-hoc 签名。package-size 校验包内扫描器、工作区、图片修复和所有前端产物与当前源码／构建逐字节一致，app.asar 为 6.38 MiB。
-
 ## 边界验收补充（2026-10-18）
 
 - `tests/desktop-boundaries.mjs`：240 行长代码和 16 列表格实际导出 27 页 A4 PDF，首尾代码、最右列与结束标记均保留。初测发现宽表右侧被裁切，已在打印样式中固定表格宽度并允许单元格内换行。16 列在 A4 纵向纸面上仍较拥挤，内容完整不代表所有表格都适合纵向排版。
@@ -50,7 +76,7 @@ GUI 测试的文件选择器返回预置路径，远程图由测试响应提供�
 - 本地 Next.js 预览统一使用 `localhost`。`--hostname 127.0.0.1` 与框架内部规范化的 localhost 混用会令默认语言 rewrite 变成自循环；此项是本地启动参数问题，未据此宣称线上故障。
 - 官网构建仍有 metadataBase fallback 警告；六个实际公共页面的 canonical 和 OG 图片域名已验证为 markdeck.pro。线上响应和真实域名配置尚未核验。
 
-## 多图持续验收补充
+## 2026-10-18 多图持续验收（历史）
 
 `tests/desktop-image-stress.mjs` 在安装版中验证 12 个 1024×768 生成 JPEG、24 处引用、中文及空格路径、24 个表格和嵌套列表、代码示例，完成 30 轮编辑保存、模式与文档切换及重启。修复后大图首次点击不跳转，角点拖动和排版按钮尺寸保持在各自引用上；重复引用另一处不受影响。所有附件 SHA-256 保持不变，无渲染异常。第 10／20／30 轮主动 GC 后的堆约 26.1／25.7／24.4 MiB，细节见 PERFORMANCE_REVIEW.md。证据目录为 `markdeck-image-stress-hmMxae`，不是实际照片或全天测试。原有 desktop-images 图片粘贴、修复、指针缩放和重启回归也通过；安装包已重建，包内产物一致性与 ad-hoc 签名校验通过。
 
@@ -63,7 +89,7 @@ GUI 测试的文件选择器返回预置路径，远程图由测试响应提供�
 1. macOS 实际 Documents / Downloads 隐私授权弹窗。EACCES 已覆盖，但 setImmediate 内仍有同步磁盘操作，不能由拒绝访问测试推断等待授权永不阻塞。
 2. 系统中文输入法候选窗、真实触控板惯性／手势，以及不同显示器缩放下的操作手感。组合输入、指针和滚轮事件已有自动化证据。
 3. 真实照片与业务长文档抽样；当前为受控测试文档，不宣称穷尽所有 Markdown 组合。
-4. 线上官网与公开下载入口，仅在决定部署／发布时验证；Apple 账号相关流程继续暂缓。
+4. 发布新安装包时重新核对附件、签名、校验和与官网入口；当前公开 Preview 1 的下载验收见 web/README.md。Apple 账号相关流程继续暂缓。
 
 补充运行检查：`tests/desktop-memory.mjs` 在真实安装版执行 60 轮模式和长短文档切换，无渲染异常、正文保持不变，结束后仍能编辑保存。初次 RSS 采样发现增长，进一步堆快照定位到 TOAST UI 全局解析节点索引持有已销毁文档。现已在依赖修补脚本中按文档释放节点，UMD／ESM 双编辑器测试验证不会清掉另一存活编辑器的索引。
 
@@ -71,7 +97,7 @@ GUI 测试的文件选择器返回预置路径，远程图由测试响应提供�
 
 未清理旧方案、历史源码、Git 元数据、恢复包或用户文档。真实输入法、物理触控板和隐私弹窗尚未收到人工验收反馈。
 
-## 当前交付边界
+## 2026-10-19 文件与链接交付记录（历史）
 
 2026-10-19 文件与链接导航补充：顶部原文件夹按钮改为在 Finder 中显示当前文档，未保存文档禁用，文件已移动或删除时提示；左侧「打开文档」和 ⌘O 保留。正文 Markdown 链接与裸 HTTP/HTTPS 网址单击交给默认浏览器，Option 点击保留编辑操作，并修正 TOAST UI 对网址参数的额外实体转义。
 
@@ -122,7 +148,7 @@ GUI 测试的文件选择器返回预置路径，远程图由测试响应提供�
 - 跨目录另存为复用图片扫描器，按引用字符偏移倒序替换；保留代码块、行内代码、缩进代码和注释中的示例，以及真实图片的标题和 HTML 属性。原文文件保留。
 - 飞书“复制链接”改用已有原生剪贴板接口。
 - 验证通过：files、attachments（新增代码示例与真实引用混合用例）、app-flow（新增原生菜单跨文档防护）、image-scan、image-fix、image-fix-dialog、show-plan；desktop-feishu 使用模拟 CLI 验证真实剪贴板，没有上传用户文档。
-- 已重打包；打包版 desktop-images、desktop-save-as（真实 IPC 另存为与扫描器加载）、package-size 均通过。未修改界面布局，未做新一轮全应用视觉验收。本轮尚未提交或推送。
+- 已重打包；打包版 desktop-images、desktop-save-as（真实 IPC 另存为与扫描器加载）、package-size 均通过。未修改界面布局，未做新一轮全应用视觉验收。当时尚未提交或推送；该修复现已包含于 main 的历史中。
 
 ### 2026-10-23 查找替换浮层
 

@@ -11,7 +11,7 @@
 - **梳理**：把标题变成可拖动的卡片，便笺、连线、分组框自由组织
 - **展示**：同一份文档一键演示，无需额外导出
 - **本地优先**：所有文件保存在本地磁盘，无云端账号，无追踪
-- **自动保存**：输入自动落盘，外部修改冲突可选择性合并
+- **自动保存**：桌面版将编辑写回关联文件；外部修改冲突时保留草稿，可另存为或刷新采用磁盘版本
 
 将 `.md`、`.markdown` 或 `.txt` 文件拖入窗口即可打开并关联原文件；拖动时显示「松开以打开文档」，平时不显示提示。重复拖入同一文件会切换到已有文档，图片仍由正文编辑器处理。
 
@@ -24,6 +24,8 @@
 文档列表支持拖动调整顺序，顺序保存在本机。鼠标移到文档行上可选择「从列表移除」；本地 Markdown 文件保留，未关联文件的草稿会在确认时特别提示。
 
 关闭时若有修改未写回原文件，提示会列出具体文档、原路径和原因。可选「保存副本并关闭」，直接选择新位置；多份文档只需选择一次文件夹。也可选「保留草稿并关闭」，相同草稿在重启后不再重复提醒，有新修改时仍会提醒。草稿本身保存失败时始终提示，不会沿用之前的确认。
+
+新文档先保存在应用草稿中，选择本地文件位置后才会自动写回该文件。外部冲突不会自动合并正文；刷新会采用磁盘版本，需要保留当前修改时先另存为。浏览器开发预览仅使用 localStorage，与桌面工作区和原文件不自动同步。
 
 设置中的常用文档操作直接显示；「导出与分享」「维护工具」默认折叠，展开后可使用导出、打包、图片修复与历史恢复。
 
@@ -41,11 +43,21 @@
 
 当前提供 [v1.0.0-preview.1 预览版](https://github.com/0xgeda/markdeck/releases/tag/v1.0.0-preview.1)，适用于 **macOS 13 及以上、Apple Silicon（M 系列）Mac**。
 
+本 README 的功能说明以当前源码为准。公开 Preview 1 尚不包含后续 Finder 打开、关闭时直接保存副本及保存开销优化；推送源码不会自动更新 Release 安装包。各交付面的当前状态见 [验收与交接](UX_REVIEW.md)。
+
 下载发布页 Assets 中的 `Markdeck-1.0.0-preview.1-macos-arm64.zip`，解压后进入 `Markdeck-darwin-arm64` 文件夹，将 `Markdeck.app` 拖到「应用程序」。同时提供 `SHA256SUMS.txt` 校验文件；GitHub 自动生成的 Source code 压缩包是源码，不是应用安装包。
 
 当前预览包使用 ad-hoc 签名，尚未使用 Developer ID 证书或完成 Apple 公证。首次运行如提示无法验证开发者，确认下载来源后，可按 [Apple 官方说明](https://support.apple.com/zh-cn/102445)，在尝试打开应用后进入「系统设置 → 隐私与安全性 → 仍要打开」。
 
 数据保存在 `~/Library/Application Support/云笺/`。
+
+## 使用边界
+
+- 当前桌面界面为中文，没有自动更新、云同步或完整工作区导入／导出。文档打包功能只导出选定 Markdown 及其图片。
+- 本地图片按当前文档目录解析；目录外或失效引用可通过「维护工具 → 修复图片引用」处理，正文修改与文件导入遵循界面确认流程。
+- 梳理、便笺和展示方案独立保存，不改变正文顺序。章节关联依赖标题及同名出现次数；标题改名后，原有批注或展示选择可能需要重新设置。
+- 文档、图片、批量操作和历史保留限制统一定义于 [desktop/limits.cjs](desktop/limits.cjs)。
+- 当前验收范围与待验证项见 [UX_REVIEW.md](UX_REVIEW.md)，内存和体积实测见 [PERFORMANCE_REVIEW.md](PERFORMANCE_REVIEW.md)。
 
 ## 本地开发
 
@@ -57,12 +69,15 @@ npm ci
 npx install-electron
 npm start           # 构建并启动 Electron
 npm run dev         # 浏览器预览 http://127.0.0.1:5173
+npm run package:mac # 生成 release/Markdeck-darwin-arm64/Markdeck.app
 
 # 展示站 (Next.js)
 cd web
 npm install
 npm run dev         # http://localhost:3000
 ```
+
+打包只生成应用，不会更新「应用程序」中的副本。本机日常安装位置为 `/Applications/Markdeck.app`；更新时正常退出旧版，将验收后的应用替换到该位置。`npm run reinstall` 是会终止进程的调试脚本，使用前需正常保存并退出 Markdeck。
 
 ## 目录结构
 
@@ -71,7 +86,7 @@ npm run dev         # http://localhost:3000
 ├── src/           # 编辑器核心（三种模式共享导航）
 ├── desktop/       # Electron 主进程、文件、打包
 ├── tests/         # DOM、文件、打包、Playwright 检查
-├── locales/       # 多语言资源
+├── locales/       # 尚未接入界面的翻译原型
 └── web/           # Next.js 官网 (markdeck.pro)
 ```
 

@@ -41,8 +41,4 @@ coverage/
 # Misc
 .playwright-mcp/
 .superpowers/
-
-# Misc
-.playwright-mcp/
-.superpowers/
 docs/superpowers/

@@ -1,69 +1,19 @@
-# 国际化（i18n）迁移指南
+# 桌面国际化原型说明
 
-生成日期：2026-10-17。本文件配合 `OPTIMIZATION_PLAN.md` 阶段 3.3，记录如何把目前写死在 JS 里的中文字符串逐步抽到 `locales/` 词典。
+状态核对：2026-11-01。`src/i18n.js` 和 `locales/` 是尚未接入的原型，不代表桌面应用已支持语言切换，也不是已批准的开发排期。官网的 en／zh 页面是独立实现，见 [web/README.md](web/README.md)。
 
-## 骨架结构
+## 当前代码事实
 
-- `src/i18n.js`：运行时翻译函数。
-  - `t(key, params?)`：返回当前语言的译文；缺 key 回退到 `zh-CN`；再缺就返回 key 本身。支持 `{name}` 占位符。
-  - `getLocale()` / `setLocale(code)`：切换语言，广播 `markdeck-locale` 事件；写入 `localStorage['markdeck.locale']`。
-  - `toastUiLocale()`：返回小写短横形式（如 `zh-cn`），用于 TOAST UI Editor 的 `language` 配置。
-- `locales/zh-CN.json`：默认词典（权威源）。
-- `locales/en-US.json`：英文词典。
-- 语言检测顺序：`localStorage` → `navigator.language` → `navigator.language` 主语种匹配 → 回退 `zh-CN`。
+- `src/main.js` 没有导入该原型；桌面文字仍写在各模块中，TOAST UI 固定使用中文语言包。
+- 原型提供 `t()`、`getLocale()`、`setLocale()`、`toastUiLocale()`，语言选择使用 localStorage 和浏览器语言，缺少译文时回退中文，再回退 key。
+- 两份词典仅含少量示例 key，未覆盖完整界面。没有语言设置 UI，也没有主进程错误及原生菜单的翻译流程。
+- 当前构建不会验证未引用原型的行为；`locales/` 被桌面打包规则排除。不要把开发目录中存在翻译文件视作产品能力。
 
-## 两条迁移路线
+## 若将来明确启用
 
-### 快速路线：先替换"用户可见、高频"字符串
+1. 在实际入口导入原型，逐项迁移用户可见文本，补齐中文和英文词典。
+2. 为设置、原生菜单和错误信息设计一致的语言行为；语言切换需真正刷新界面和编辑器。
+3. 核对打包产物中的翻译资源；使用 Vite 打包或浏览器测试执行原型。它依赖浏览器 API 并导入 JSON，不能直接以普通 Node import 命令作为验收。
+4. 增加缺 key、占位符、语言偏好持久化、界面切换及打包版回归。
 
-优先级：**顶部按钮 label → toast / alert → dialog 标题 → 其他**。
-
-当前已覆盖的 key 清单：顶部动作（save/open/new/saveAs/reload/export/find/settings）、三模式名、常见 toast、默认标题 "无标题文档"、搜索 placeholder。
-
-### 完整路线：静态扫描 + 逐文件替换
-
-逐个文件：
-
-1. 顶部加 `import {t} from './i18n.js';`
-2. 把中文字符串字面量替换成 `t('xxx.yyy')`，并在 `locales/zh-CN.json` + `locales/en-US.json` 都加 key。
-3. 命名约定：
-   - `action.<verb>`：动作/按钮
-   - `toast.<name>`：toast 文案
-   - `dialog.<name>.<field>`：弹窗标题/正文/按钮
-   - `error.<code>`：错误消息（主进程抛出的也应加）
-   - `menu.<path>`：原生菜单项
-4. 带参数的用占位符：`t('toast.referenceFailed', {message: e.message})`。
-5. HTML 模板里的中文：模板字面量生成 DOM 的位置改用 `t()`；真正的 `<title>` 等暂保留。
-
-## 主进程（desktop/*.cjs）如何办？
-
-主进程抛出的 `throw new Error('文档不存在')` 之类，走的是 IPC 返回给渲染端。两种做法：
-
-1. **主进程继续用中文**，渲染端拦截 `error.message` 后根据正则/映射表翻译。短期可行。
-2. **主进程改抛 code**：`throw new Error('ERR_DOC_NOT_FOUND')`，渲染端用 `t('error.ERR_DOC_NOT_FOUND')` 翻译。长期正确做法。
-
-本次只搭骨架未改主进程，建议按（2）在下一次迁移窗口统一动。
-
-## TOAST UI Editor 语言
-
-目前 `src/main.js:16` 静态 `import '@toast-ui/editor/dist/i18n/zh-cn'`。
-后续应改为按 `toastUiLocale()` 动态 `import()`，并在 Editor 构造时传 `language`。
-
-TOAST UI 自带多语言文件在 `node_modules/@toast-ui/editor/dist/i18n/`（含 en 没有独立包，默认 fallback 到英文）。
-
-## 设置界面入口（未做）
-
-当前应用没有"切换语言"的 UI。阶段 3.3 完成需要在设置弹窗加一个下拉；代码接口已就绪，只缺 UI。
-
-## 验证
-
-- `node -e "import('./src/i18n.js').then(m=>{console.log(m.t('mode.write'));m.setLocale('en-US');console.log(m.t('mode.write'))})"` 应打印 "写作" / "Write"。
-- 完整迁移完成后，`grep -nE "'[^']*[\u4e00-\u9fa5]+[^']*'" src/*.js` 应为空（CSS 注释除外）。
-
-## 下一次迁移窗口建议
-
-1. 把 `src/main.js` 剩余中文全部替换（最高频面板）。
-2. `src/image-controls.js` / `src/logic-panel.js` / `src/show-plan.js` 三个大户。
-3. 主进程错误 code 化。
-4. 设置界面加语言下拉。
-5. TOAST UI 动态语言加载。
+当前没有该原型的专用验收测试，不宣称已完成国际化。旧迁移步骤可从 Git 历史查询。
