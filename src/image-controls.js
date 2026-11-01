@@ -21,6 +21,8 @@ export function imageBlobHook(blob,callback,docId){
 // Toast UI drops HTML image attributes while parsing Markdown; restore only our
 // constrained layout metadata into its existing image nodes (never arbitrary CSS).
 export function restoreImageLayout(editor,markdown){
+  // Untagged images have no layout to restore; skip a second full Markdown/DOM parse.
+  if(!/data-larkdown-image/i.test(markdown))return;
   // Include plain images in occurrence matching; otherwise a later styled
   // occurrence of the same source steals an earlier plain image's position.
   // Rendering Markdown also excludes image examples inside code blocks.

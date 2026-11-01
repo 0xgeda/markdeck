@@ -10,6 +10,9 @@ w.eval(bundle.outputFiles[0].text);w.make();
 const root=w.document.querySelector('#editor');
 const body=w.editor.getEditorElements().wwEditor;
 const initial=w.editor.getMarkdown();
+// Ordinary text and unstyled images must not build a second full document DOM.
+const Parser=w.DOMParser;w.DOMParser=class{parseFromString(){throw new Error('unnecessary image-layout parse');}};
+w.restore(w.editor,'# Text only\n\nNo layout metadata.');w.restore(w.editor,initial);w.DOMParser=Parser;
 const duplicate='![same](repeat.png)\n\n```html\n<img src="repeat.png" data-larkdown-image="true" data-size="99%">\n```\n\n<img src="repeat.png" alt="same" data-larkdown-image="true" data-size="25%">\n\n<img src="repeat.png" alt="same" data-larkdown-image="true" data-size="75%">';
 w.editor.setMarkdown(duplicate,false);w.restore(w.editor,duplicate);
 let repeated=[...body.querySelectorAll('.ProseMirror img[src="repeat.png"]')];assert.equal(repeated.length,3);

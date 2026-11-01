@@ -190,3 +190,10 @@ GUI 测试的文件选择器返回预置路径，远程图由测试响应提供�
 - 关闭决定期间冻结正文输入、文件操作及外部同步，合并重复关闭请求；取消后恢复。当前文档的快捷键保存反馈只看当前文档，避免被列表中的旧文件错误干扰。打包支持 `MARKDECK_PACKAGE_OUT`，可在旧版仍运行时先完成独立安装包验收。
 - 7 项 close-workspace、11 项 files、attachments、workspace-startup、save-queue、app-flow、show-plan 与生产构建通过。安装版 desktop-close 覆盖旧草稿确认、重启不重提醒、新编辑再次提醒、取消、真实写入失败及从关闭提示保存副本，最终证据 `markdeck-close-gui-DgZRPK`；desktop-recovery、desktop 和 desktop-open-file 回归通过，恢复证据 `markdeck-recovery-xNM6q3`、系统打开证据 `markdeck-open-file-SZYSaf`。原生对话框选择使用模拟返回值，文件系统、编辑器、IPC 与窗口生命周期真实执行，未声称原生弹窗视觉验收。
 - 已更新本机安装包并通过 ad-hoc 签名与 package-size 一致性检查；未更新公开 Release 安装包。
+
+### 2026-11-01 保存与内存开销优化
+
+- 历史记录仅缓存最近文档的最新版本时间，避免一分钟内每次编辑都读取所有旧正文；保存回执只传错误和 revision，恢复历史仍返回正文。草稿前后两次持久化和原文件冲突保护保留。
+- 参考面板关闭后释放内容与关闭回调，滚动记忆和重复关闭行为保留；无图片布局标记时跳过额外全文解析。安装包排除归档和开发辅助材料，仓库原件保留。
+- 21 项文件／关闭／历史缓存测试，history-find、save-queue、reference-pane、image-controls、app-flow、show-plan、构建和包内一致性通过。打包版 desktop、desktop-images、desktop-clipboard、desktop-export、desktop-boundaries、desktop-interactions、desktop-recovery、desktop-close、desktop-image-stress 全部通过，剪贴板已恢复。恢复证据 `markdeck-recovery-sDleaR`，关闭证据 `markdeck-close-gui-Y93ThS`，多图证据 `markdeck-image-stress-1yUcPJ`。
+- 同样的 60 轮切换和编辑保存通过，关闭参考面板的 WeakRef 回收检查通过。空闲 RSS 仍约 400 MiB，不声称整体内存显著下降。三组配对保存基准的中位耗时从 48.7 ms 到 28.7 ms；场景与测量边界见 PERFORMANCE_REVIEW.md。未将 GUI 自动化通过表述为全部人工视觉验收。

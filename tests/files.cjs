@@ -88,6 +88,6 @@ test('automatic sync preserves conflicting drafts and handles temporary file rem
 });
 test('consecutive acknowledged saves advance the file revision without false conflicts',t=>{
   const f=fixture(t);fs.writeFileSync(f.file,'原内容');const w=new Workspace(f.store);let state=w.open(f.file);
-  for(let i=0;i<5;i++){state.docs[0].body+='修改';const result=w.save(state);assert.deepEqual(result.errors,{});state=result.state;}
+  for(let i=0;i<5;i++){state.docs[0].body+='修改';const result=w.save(state);assert.deepEqual(result.errors,{});assert.equal(result.state,undefined);for(const stored of result.revisions)state.docs.find(d=>d.id===stored.id).revision=stored.revision;}
   assert.equal(fs.readFileSync(f.file,'utf8'),state.docs[0].body);
 });

@@ -16,6 +16,7 @@
 - npm run dev：浏览器预览；npm run build：生产构建。
 - npm run package:mac：生成 release/Markdeck-darwin-arm64/Markdeck.app；可设 `MARKDECK_PACKAGE_OUT` 打到独立目录，在旧版仍运行时先验收新版。
 - npm run reinstall：kill 旧进程 + 重打包 + 启动，调试打包版的默认入口。
+- 本机日常应用位于 `/Applications/Markdeck.app`。交付本机修复时，将验收后的打包版同步到此位置并校验一致性；`reinstall` 当前只更新和启动 `release/` 内的调试打包版。
 - 模式变更运行 node tests/app-flow.mjs、node tests/show-plan.mjs；画布变更另跑 logic-panel、logic-layout、logic-connections。
 - 文件变更运行 npm run test:files；图片修复变更另跑 tests/image-scan.mjs、tests/image-fix.cjs、tests/image-fix-dialog.mjs；Workspace 启动路径改动跑 tests/workspace-startup.cjs（ANR 守门）；打包后运行 node tests/package-size.mjs。
 - GUI 检查需可用桌面环境，DOM 通过不能表述为视觉验收通过。安装版回归使用 YUNJIAN_EXECUTABLE 指向 .app/Contents/MacOS/Markdeck，运行 tests/desktop.mjs、desktop-images、desktop-clipboard、desktop-export、desktop-boundaries、desktop-interactions（后五项同目录 .mjs）；PDF 检查需 Poppler 的 pdfinfo/pdftotext/pdftoppm。测试只操作隔离临时文档。
@@ -24,6 +25,7 @@
 - HTML 表格／锚点解析变更跑 `node tests/editor-html-tables.mjs` 和安装版 `tests/desktop-html-tables.mjs`；可用 `MARKDECK_HTML_TABLE_FIXTURE` 指定只读源文件，测试会复制到隔离目录后编辑。
 - 图片排版或加载变更跑 `node tests/image-controls.mjs`；安装版多图持续验收为 `node tests/desktop-image-stress.mjs`，覆盖重复引用尺寸、首次点击与拖动、30 轮保存及重启。其堆采样主动 GC，不等于自然空闲内存。
 - 保存边界变更另跑 `node tests/desktop-recovery.mjs`；只修改隔离临时文件权限，SIGKILL 仅用于测试启动的进程，并在草稿持久化确认后执行。
+- 历史记录读取或节流变更跑 `node --test tests/history-cache.cjs` 和 `node tests/history-find.mjs`；`desktop-memory.mjs` 另检查已关闭参考面板可被回收，该 GC 检查在 RSS 采样结束后执行。
 - 关闭提示或草稿确认变更跑 `node --test tests/close-workspace.cjs` 和安装版 `tests/desktop-close.mjs`，覆盖确认持久化、新编辑再次提醒、副本保存及失败保留。
 - macOS 文件关联或系统打开变更跑 `node tests/desktop-open-file.mjs`；使用独立 bundle ID 的安装包副本与临时数据，避免 LaunchServices 将测试文件交给用户正在运行的实例。
 

@@ -111,7 +111,9 @@ class Workspace {
         atomicWrite(d.filePath, content);d.diskHash=hash(content);delete d.acknowledgedDraft;
       } catch(e) { errors[d.id]=e.message; }
     }
-    this.persist();this.writeErrors=errors;return {errors,state:this.snapshot()};
+    this.persist();this.writeErrors=errors;
+    // Autosave only acknowledges revisions; do not send every body back over IPC.
+    return {errors,revisions:this.state.docs.map(d=>({id:d.id,revision:d.diskHash}))};
   }
   saveAs(id, filename) {
     const d=this.state.docs.find(d=>d.id===id);
@@ -144,7 +146,8 @@ class Workspace {
     if(!version)throw new Error('历史版本不存在');
     if(d.filePath&&hash(fs.readFileSync(d.filePath))!==d.diskHash)throw new Error('原文件又有修改，请先刷新后再恢复');
     this.history.record(d,'恢复前',true);d.body=version.body;d.updated=Date.now();d.blocked=false;
-    return this.save(this.snapshot());
+    const result=this.save(this.snapshot());
+    return {...result,state:this.snapshot()};
   }
   hasUnsavedChanges(id) {
     const d=this.state.docs.find(d=>d.id===id);

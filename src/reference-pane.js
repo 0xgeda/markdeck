@@ -8,7 +8,7 @@ export function openReference(docs,active,onClose=()=>{}){
   document.querySelector('.reference-pane')?.remove();
   const pane=document.createElement('aside');pane.className='reference-pane';pane.setAttribute('aria-label','参考文档');
   pane.innerHTML='<header><strong>参考文档 · 只读</strong><button aria-label="关闭参考文档">×</button></header><select aria-label="选择参考文档"></select><article></article>';
-  const select=pane.querySelector('select'),content=pane.querySelector('article');let revision=0;
+  const select=pane.querySelector('select'),content=pane.querySelector('article');let revision=0,closed=false;
   const session=sessions.get(active)||{selected:null,scroll:{}};sessions.delete(active);sessions.set(active,session);if(sessions.size>30)sessions.delete(sessions.keys().next().value);
   content.addEventListener('scroll',()=>{if(select.value)session.scroll[select.value]=content.scrollTop;});
   const candidates=docs.filter(doc=>doc.id!==active).sort((a,b)=>(b.updated||0)-(a.updated||0));
@@ -25,7 +25,7 @@ export function openReference(docs,active,onClose=()=>{}){
   };
   // Keep navigation in the main document independent; reference links never replace the app.
   content.onclick=event=>{if(event.target.closest('a'))event.preventDefault();};
-  function close(){if(select.value)session.scroll[select.value]=content.scrollTop;revision++;pane.remove();document.body.classList.remove('reference-open');trigger?.setAttribute('aria-pressed','false');if(trigger?.isConnected)trigger.focus();onClose();}
+  function close(){if(closed)return;closed=true;if(select.value)session.scroll[select.value]=content.scrollTop;revision++;pane.remove();content.replaceChildren();candidates.length=0;select.onchange=null;document.body.classList.remove('reference-open');trigger?.setAttribute('aria-pressed','false');if(trigger?.isConnected)trigger.focus();onClose();}
   pane.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();close();}});
   pane.querySelector('button').onclick=close;document.body.append(pane);document.body.classList.add('reference-open');if(candidates.length){select.value=candidates.some(doc=>doc.id===session.selected)?session.selected:candidates[0].id;select.onchange();}select.focus();return close;
 }

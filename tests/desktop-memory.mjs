@@ -66,6 +66,14 @@ try{
  await sample('edited-and-saved');assert.deepEqual(errors,[]);
  // Diagnostic only: never confuse forced collection with normal idle behavior.
  await cdp.send('HeapProfiler.collectGarbage');await sample('diagnostic-forced-gc');
+ // A closed reference pane must become collectible without opening another one.
+ // This runs after all RSS samples so it cannot change the 60-cycle comparison.
+ await page.locator('[data-action="reference"]').click();await page.locator('.reference-pane').waitFor();
+ await page.evaluate(()=>{window.referenceForCollection=new WeakRef(document.querySelector('.reference-pane'));});
+ await page.getByRole('button',{name:'关闭参考文档',exact:true}).click();
+ await delay(100);await cdp.send('HeapProfiler.collectGarbage');
+ const referenceReleased=await page.evaluate(()=>{const released=!window.referenceForCollection.deref();delete window.referenceForCollection;return released;});
+ assert.equal(referenceReleased,true,'Closed reference pane is still retained');
  await fs.writeFile(path.join(root,'memory.json'),JSON.stringify({platform:process.platform,arch:process.arch,bytes:Buffer.byteLength(bodies[0]),cyclesMs:cycles,samples,diagnose,note:'Sum of process RSS may double-count shared pages; not physical footprint. Final sample and diagnostic collected stages force GC. Short run cannot establish absence of leaks.'},null,2));
- console.log('PASS: 60 mode/document cycles retain source; subsequent editing saves; no renderer errors');
+ console.log('PASS: 60 mode/document cycles retain source; subsequent editing saves; no renderer errors; closed reference pane is collectible');
 }finally{if(app)await app.close();console.log('Evidence:',root);}
