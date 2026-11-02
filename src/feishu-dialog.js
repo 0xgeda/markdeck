@@ -2,8 +2,9 @@ const guide='https://www.feishu.cn/content/article/7623291503305083853';
 export async function openFeishu({doc,save,configure=false}){
  if(document.querySelector('.feishu-dialog'))return;
  const api=window.desktop,dialog=document.createElement('dialog');dialog.className='feishu-dialog';
- dialog.innerHTML=`<header><h3>上传到飞书</h3><button data-close aria-label="关闭飞书窗口">×</button></header>
- <p data-status role="status">正在检查连接…</p>
+ dialog.setAttribute('aria-labelledby','feishu-title');dialog.setAttribute('aria-describedby','feishu-status');
+ dialog.innerHTML=`<header><span data-success class="feishu-success" hidden aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 12 4 4 8-8"/></svg></span><h3 id="feishu-title">上传到飞书</h3><button data-close aria-label="关闭飞书窗口"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></header>
+ <p id="feishu-status" data-status role="status">正在检查连接…</p>
  <section data-setup hidden>
   <label>上传方式<select data-mode aria-label="上传方式"><option value="create">新建文档</option><option value="update">更新已有文档</option></select></label>
   <div data-create-fields><label>保存位置<input data-folder aria-label="飞书文件夹链接" placeholder="粘贴飞书文件夹链接；留空使用我的空间"></label><p>每次新建一份可编辑文档，本地文件保持不变。</p></div>
@@ -14,13 +15,15 @@ export async function openFeishu({doc,save,configure=false}){
   </div>
  </section>
  <section data-auth hidden><a data-auth-link target="_blank" rel="noopener">打开飞书授权</a><img data-qr alt="飞书授权二维码"></section>
- <section data-result hidden><a data-url target="_blank" rel="noopener">在飞书打开</a><button data-copy>复制链接</button></section>
+ <section data-result hidden><button data-copy>复制链接</button><a data-url target="_blank" rel="noopener">在飞书打开<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg></a></section>
  <footer><button data-guide hidden>连接设置说明</button><button data-connect hidden>连接飞书</button><button data-finish hidden>已完成授权</button><button data-upload hidden>上传当前文档</button></footer>`;
  document.body.append(dialog);dialog.showModal();const el=key=>dialog.querySelector('[data-'+key+']');let busy=false,ready=false,finished=false,preview=null;
  const message=text=>{el('status').textContent=text;};
  const check=result=>{if(!result.ok)throw new Error(result.error);return result;};
  const updating=()=>el('mode').value==='update';
  function controls(){
+  dialog.classList.toggle('is-complete',finished);el('success').hidden=!finished;dialog.querySelector('footer').hidden=finished;
+  dialog.querySelector('h3').textContent=finished?(updating()?'已更新到飞书':'已上传到飞书'):'上传到飞书';
   el('setup').hidden=!ready||finished;el('create-fields').hidden=updating();el('update-fields').hidden=!updating();
   el('target-preview').hidden=!preview;el('upload').hidden=!ready||finished||(updating()&&!preview);
   el('upload').textContent=updating()?'覆盖更新':'上传当前文档';

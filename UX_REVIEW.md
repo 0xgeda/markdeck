@@ -1,17 +1,17 @@
 # Markdeck 当前验收与交接
 
-核对日期：2026-11-01。产品介绍见 README.md；本文件的当前状态与待验收项是现役入口，其余按日期保留为历史证据。
+核对日期：2026-11-02。产品介绍见 README.md；本文件的当前状态与待验收项是现役入口，其余按日期保留为历史证据。
 
 ## 当前状态与知识收尾
 
 | 事实面 | 状态 | 依据与边界 |
 | --- | --- | --- |
-| 代码 | verified-current | main 已包含桌面优化提交 `99400ed`；本次收尾只改说明文档和规则，不改运行代码。 |
-| 运行态 | verified-current | 正在运行 `/Applications/Markdeck.app`；安装版与 release 内容一致、签名通过，功能验证与包指纹见 PERFORMANCE_REVIEW.md。公开版本单独列在下方。 |
+| 代码 | verified-current | main 包含桌面优化提交 `99400ed` 与已验证的飞书结果弹窗视觉调整。 |
+| 运行态 | verified-current | 正在运行 `/Applications/Markdeck.app`；安装版与 release 内容一致、签名通过，最新包指纹见下方 2026-11-02 记录，性能结论见 PERFORMANCE_REVIEW.md。公开版本单独列在下方。 |
 | 文档 | changed-and-verified | README 描述当前保存行为及预览包边界；旧优化计划、国际化原型和旧官网方案已明确退役或未接入。 |
 | 规则 | changed-and-verified | 根 AGENTS.md 是桌面入口；web/AGENTS.md 指向 web/CLAUDE.md。修正旧临时 Git 路径和 reinstall 的使用边界。 |
 | 记忆 | not-applicable | 本机 Codex 记忆目录为空；未新建或修改长期记忆、其他平台记忆及生成索引。 |
-| 工作区 | changed-and-verified | 只有一个本项目 worktree；源码改动已集成，用户阅后授权的四项重复产物与一次性脚本已清理，恢复材料和证据保留。 |
+| 工作区 | changed-and-verified | 只有一个本项目 worktree；此前授权的四项重复产物与一次性脚本已清理，恢复材料和证据保留；本轮弹窗调整与验收记录随本次提交集成。 |
 
 桌面源码与本机安装版已经包含 Finder 打开、关闭时处理草稿和保存开销优化。GitHub 当前公开安装包仍为 [v1.0.0-preview.1](https://github.com/0xgeda/markdeck/releases/tag/v1.0.0-preview.1)，不含这些后续改动；源码推送、官网部署与安装包发布是三个独立状态。
 
@@ -33,6 +33,14 @@
 
 **out-of-scope**：发布新版公开安装包、Apple 账号／证书／公证、其他项目及全局配置、其他平台记忆。
 **未消除的验证缺口**：真实隐私授权弹窗、系统输入法与触控板体验、业务文档长时间编辑，见下方待验收清单。官网此前构建的 metadataBase fallback 警告仍按 web/README.md 记录，本轮没有重建官网来宣称消除。
+
+## 2026-11-02 飞书结果弹窗
+
+成功状态增加勾选标识与明确标题，结果窗口收窄至 440px；“复制链接”和“在飞书打开”改为等高、有间距的次要／主要操作，统一关闭图标、圆角、焦点与主题色。失败状态不显示成功标识，保留原有转换提示、覆盖确认和复制行为。
+
+浏览器截图覆盖九套主题、360px 窄窗口、长转换提示与失败状态；已查看浅绿、深色、窄窗口和长提示截图，证据位于 `/private/tmp/markdeck-feishu-visual-uStdje/`。打包版通过 package-size、desktop-feishu、desktop-feishu-update 及 AGENTS.md 规定的六项安装版回归；飞书使用模拟 CLI，未上传或覆盖真实远端文档。飞书更新回归证据为 `markdeck-feishu-update-gui-OUm5V4`。
+
+通过正常保存退出流程重启后，已更新并启动 `/Applications/Markdeck.app`。安装版与 release 的 app.asar SHA-256 均为 `0225aaf99a3c1d4856fab091b75a9ee26bac346c51cf059a03d32a229394ce92`，签名校验通过；旧安装版保留于 `/private/tmp/markdeck-before-feishu-ui-16JUEF/Markdeck.app`。本次未重做性能采样或发布公开安装包。
 
 ## 2026-10-18—20 修正记录（历史）
 
