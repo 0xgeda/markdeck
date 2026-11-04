@@ -11,7 +11,8 @@ import {JSDOM} from 'jsdom';
 const require=createRequire(import.meta.url),md=new MarkdownIt({html:true});
 const root=await fs.mkdtemp(path.join(os.tmpdir(),'markdeck-html-tables-'));
 const fixture=process.env.MARKDECK_HTML_TABLE_FIXTURE;
-const original=fixture?await fs.readFile(fixture,'utf8'):'# 表格解析回归\n\n<a id="section"></a>\n\n[跳转](#item)\n\n| 编号 | 内容 |\n| --- | --- |\n| <a id="item"></a>A01 | **表格内容** |\n| A02 | 内容<a name="end"></a> |\n\n最后一段。\n';
+// Leave enough content after the table for scroll-to-top on a maximized window.
+const original=fixture?await fs.readFile(fixture,'utf8'):'# 表格解析回归\n\n<a id="section"></a>\n\n[跳转](#item)\n\n| 编号 | 内容 |\n| --- | --- |\n| <a id="item"></a>A01 | **表格内容** |\n| A02 | 内容<a name="end"></a> |\n\n最后一段。\n'+ '\n滚动定位测试段落。\n'.repeat(40);
 const digest=value=>createHash('sha256').update(value).digest('hex'),originalHash=digest(original);
 const file=path.join(root,'解析回归.md');await fs.writeFile(file,original);
 function inspect(markdown){

@@ -1,17 +1,17 @@
 # Markdeck 当前验收与交接
 
-核对日期：2026-11-02。产品介绍见 README.md；本文件的当前状态与待验收项是现役入口，其余按日期保留为历史证据。
+核对日期：2026-11-04。产品介绍见 README.md；本文件的当前状态与待验收项是现役入口，其余按日期保留为历史证据。
 
 ## 当前状态与知识收尾
 
 | 事实面 | 状态 | 依据与边界 |
 | --- | --- | --- |
-| 代码 | verified-current | main 包含桌面优化提交 `99400ed` 与已验证的飞书结果弹窗视觉调整。 |
-| 运行态 | verified-current | 正在运行 `/Applications/Markdeck.app`；安装版与 release 内容一致、签名通过，最新包指纹见下方 2026-11-02 记录，性能结论见 PERFORMANCE_REVIEW.md。公开版本单独列在下方。 |
+| 代码 | verified-current | main 包含桌面优化、飞书结果弹窗调整及 HTML 块注释解析／编辑器重建修复。 |
+| 运行态 | verified-current | 正在运行 `/Applications/Markdeck.app`；安装版与 release 内容一致、签名通过，最新包指纹见下方 2026-11-04 记录，性能结论见 PERFORMANCE_REVIEW.md。公开版本单独列在下方。 |
 | 文档 | changed-and-verified | README 描述当前保存行为及预览包边界；旧优化计划、国际化原型和旧官网方案已明确退役或未接入。 |
-| 规则 | changed-and-verified | 根 AGENTS.md 是桌面入口；web/AGENTS.md 指向 web/CLAUDE.md。修正旧临时 Git 路径和 reinstall 的使用边界。 |
+| 规则 | changed-and-verified | 根 AGENTS.md 是桌面入口，补充注释解析与编辑器加载失败恢复检查；web/AGENTS.md 指向 web/CLAUDE.md。 |
 | 记忆 | not-applicable | 本机 Codex 记忆目录为空；未新建或修改长期记忆、其他平台记忆及生成索引。 |
-| 工作区 | changed-and-verified | 只有一个本项目 worktree；此前授权的四项重复产物与一次性脚本已清理，恢复材料和证据保留；本轮弹窗调整与验收记录随本次提交集成。 |
+| 工作区 | changed-and-verified | 只有一个本项目 worktree；此前授权的四项重复产物与一次性脚本已清理，恢复材料和证据保留；本轮解析修复、回归检查与验收记录随本次提交集成。 |
 
 桌面源码与本机安装版已经包含 Finder 打开、关闭时处理草稿和保存开销优化。GitHub 当前公开安装包仍为 [v1.0.0-preview.1](https://github.com/0xgeda/markdeck/releases/tag/v1.0.0-preview.1)，不含这些后续改动；源码推送、官网部署与安装包发布是三个独立状态。
 
@@ -33,6 +33,16 @@
 
 **out-of-scope**：发布新版公开安装包、Apple 账号／证书／公证、其他项目及全局配置、其他平台记忆。
 **未消除的验证缺口**：真实隐私授权弹窗、系统输入法与触控板体验、业务文档长时间编辑，见下方待验收清单。官网此前构建的 metadataBase fallback 警告仍按 web/README.md 记录，本轮没有重建官网来宣称消除。
+
+## 2026-11-04 注释解析与编辑器重建
+
+含连续短横线的 HTML 块注释被 ToastMark 正确分类，但 TOAST UI 后续用更严格的正则重新判断，误入普通标签转换并解引用空匹配，导致编辑器创建失败。此时主界面仍引用上一个已销毁实例，再次打开文档就报 `Cannot read properties of undefined (reading 'destroy')`。修补改为使用解析器已有的块类型，沿用可保留原文的注释节点；重建前清空旧编辑器引用，构造失败后仍可打开其他文档。
+
+UMD／ESM 注释回归验证普通、空、未闭合及含 `--` 的块注释，编辑与重复转换后原文保留；editor-lifecycle、editor-html-tables、app-flow（含构造失败恢复）、show-plan 均通过。安装版通过注释回归（合成样本及只读报告副本）、HTML 表格回归、package-size 和六项桌面回归。旧表格 GUI 测试的短样本无法滚到原先要求的位置，已增加默认样本的后续段落，保留原滚动断言后通过。
+
+报告副本完成三次打开／切换、展示、编辑保存和重启，注释逐字保留；已查看正文及目录恢复的截图，证据为 `markdeck-editor-comments-KE8wFf`。原始业务文档未用于编辑测试。安装期间外部文件的校验值保持一致，重启后当前报告草稿与磁盘最新内容一致。
+
+已通过正常保存退出流程更新并启动 /Applications 安装版，同时同步 release。app.asar SHA-256 均为 `f6ea251f67fdebe532b3c852af720c3bfffacae6d35273bf984c838b7d4364c4`，签名通过；旧版应用及退出前后的工作区备份位于 `/private/tmp/markdeck-before-comments-MsCTMV/`。本次没有重新测量运行内存，也未发布新的公开安装包。
 
 ## 2026-11-02 飞书结果弹窗
 

@@ -103,5 +103,15 @@ w.document.querySelector('.image-fix-dialog [data-select-broken]').click();
 [...w.document.querySelectorAll('.image-fix-dialog button')].find(b=>b.textContent.includes('删除选中')).click();
 await until(()=>workspace.state.docs.find(d=>d.id===originalId).body==='repaired original');
 w.document.querySelector('.image-fix-dialog').close();await settled();await appAction('new');await settled();assert.notEqual(workspace.state.active,originalId);
-console.log('Whole renderer: find/replace, save after closing find, outline search, display exit and version capture passed.');
+// A failed constructor must not leave the retired instance to be destroyed again.
+const unsupported=path.join(root,'unsupported.md'),healthy=path.join(root,'healthy.md');
+const unsupportedBody='<?markdeck regression?>\n\n# 保留失败文档原文\n';
+fs.writeFileSync(unsupported,unsupportedBody);fs.writeFileSync(healthy,'# 恢复显示\n\n仍可打开其他文档。\n');
+w.desktop.open=async()=>({ok:true,state:workspace.open(unsupported)});await appAction('open');
+assert.equal(w.document.querySelector('[aria-label="文档正文"]'),null);
+assert.equal(fs.readFileSync(unsupported,'utf8'),unsupportedBody);
+w.desktop.open=async()=>({ok:true,state:workspace.open(healthy)});await appAction('open');
+assert.match(w.document.querySelector('[aria-label="文档正文"]').textContent,/仍可打开其他文档/);
+assert.equal(fs.readFileSync(unsupported,'utf8'),unsupportedBody);
+console.log('Whole renderer: find/replace, save after closing find, outline search, display exit, version capture and recovery after editor initialization failure passed.');
 }finally{dom.window.close();fs.rmSync(root,{recursive:true,force:true});}

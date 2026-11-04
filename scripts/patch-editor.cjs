@@ -25,6 +25,15 @@ for(const file of ['toastui-editor.js','esm/index.js']){
     if(source.split(target).length!==2)throw new Error(`Review editor lifecycle patch after editor upgrade: ${file}`);
     source=source.replace(target,insertion+target);
   }
+  // ToastMark already classifies comment blocks. The converter's stricter
+  // HTML regex rejects empty/unclosed comments and comments containing "--",
+  // then dereferences a missing tag match. Keep its lossless comment node.
+  const commentBefore='        var isHTMLComment = reHTMLComment.test(html);';
+  const commentAfter='        var isHTMLComment = node.htmlBlockType === 2; // Markdeck: use the parsed comment block type';
+  if(!source.includes(commentAfter)){
+    if(source.split(commentBefore).length!==2)throw new Error('Review HTML comment patch after editor upgrade: '+file);
+    source=source.replace(commentBefore,commentAfter);
+  }
   // Keep this control inside the node view but outside contentDOM: it must
   // never enter Markdown, undo history or the copied text.
   const oldClick=`            var target = ev.target;
